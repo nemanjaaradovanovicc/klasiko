@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://klasiko.rs/sitemap.xml
+Sitemap: https://www.klasiko.rs/sitemap.xml
