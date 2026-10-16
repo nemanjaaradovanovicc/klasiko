@@ -68,6 +68,10 @@ def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=N
 {extra}<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/manrope-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/site.css">
+<script>
+window.va = window.va || function () {{ (window.vaq = window.vaq || []).push(arguments); }};
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 {ld_html}</head>
 <body>
 <a class="skip" href="#sadrzaj">Preskoči na sadržaj</a>
@@ -160,7 +164,6 @@ def footer():
 </footer>
 <div class="m-sticky"><div><strong>Popust za rane korisnike</strong><small>Lista čekanja je otvorena</small></div><a class="btn sm" href="#prijava">Prijavi se</a></div>
 <script src="/assets/site.js" defer></script>
-<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
 '''
