@@ -67,7 +67,7 @@ def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=N
 <meta name="twitter:image" content="{SITE}/og-image.png">
 {extra}<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/manrope-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/site.css?v=2">
 <script>
 window.va = window.va || function () {{ (window.vaq = window.vaq || []).push(arguments); }};
 </script>
@@ -167,7 +167,7 @@ def footer():
 <p>Koristimo kolačiće za merenje uspešnosti reklama (Meta Pixel). Više u <a href="/privatnost">Politici privatnosti</a>.</p>
 <button class="no" type="button" data-consent="no">Odbij</button><button class="ok" type="button" data-consent="yes">Prihvatam</button>
 </div>
-<script src="/assets/site.js" defer></script>
+<script src="/assets/site.js?v=2" defer></script>
 </body>
 </html>
 '''
