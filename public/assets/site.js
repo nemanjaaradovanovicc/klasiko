@@ -77,6 +77,22 @@
     });
   });
 
+  // Meta Pixel, učitava se tek posle pristanka (isti izbor važi na celom sajtu)
+  (function(){
+    var PIXEL_ID='1946167949681001',KEY='klasiko_consent';
+    function load(){
+      if(!PIXEL_ID||window.fbq)return;
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init',PIXEL_ID);fbq('track','PageView');
+    }
+    var c=null;try{c=localStorage.getItem(KEY);}catch(e){}
+    var box=document.getElementById('cookie');
+    if(c==='yes'){load();}else if(c!=='no'&&PIXEL_ID&&box){box.hidden=false;}
+    if(box)box.addEventListener('click',function(e){var v=e.target.getAttribute('data-consent');if(!v)return;
+      try{localStorage.setItem(KEY,v);}catch(err){}box.hidden=true;if(v==='yes')load();});
+    window.klasikoTrackLead=function(src){if(window.fbq)fbq('track','Lead',{content_name:'Lista cekanja',source:src});};
+  })();
+
   // Forme za listu čekanja
   var re=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   document.querySelectorAll('form[data-waitlist]').forEach(function(f){
@@ -91,7 +107,7 @@
         body:JSON.stringify({email:email,company:(f.querySelector('input[name=company]')||{}).value||'',source:f.getAttribute('data-waitlist')})})
       .then(function(res){return res.json().catch(function(){return{};}).then(function(j){return{ok:res.ok,j:j};});})
       .then(function(x){
-        if(x.ok){st.textContent='Hvala! Prijava je primljena. Proveri inbox i potvrdi email.';st.classList.add('ok');f.reset();confetti(btn);setTimeout(function(){window.location.href='/hvala';},700);return;}
+        if(x.ok){st.textContent='Hvala! Prijava je primljena. Proveri inbox i potvrdi email.';st.classList.add('ok');f.reset();if(window.klasikoTrackLead)window.klasikoTrackLead(f.getAttribute('data-waitlist'));confetti(btn);setTimeout(function(){window.location.href='/hvala';},700);return;}
         else{st.textContent=(x.j&&x.j.error)||'Nešto nije u redu. Pokušaj ponovo za minut.';st.classList.add('err');}
       })
       .catch(function(){st.textContent='Nema veze sa serverom. Pokušaj ponovo.';st.classList.add('err');})

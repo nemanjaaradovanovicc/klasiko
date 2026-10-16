@@ -4,3 +4,4 @@ node_modules
 .env.local
 .env*
 !.env.example
+.DS_Store
