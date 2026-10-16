@@ -1,0 +1,7 @@
+{
+  "name": "klasiko-landing",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Klasiko landing stranica sa listom čekanja",
+  "engines": { "node": ">=18" }
+}

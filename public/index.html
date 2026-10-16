@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="sr-Latn" class="no-js">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.className="js";</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Klasiko | Vodi školu, ne tabele</title>
+<meta name="description" content="Klasiko je platforma u razvoju za škole jezika, plesne škole, borilačke veštine, edukativne centre i akademije. Učenici, rasporedi, članarine i poruke na jednom mestu. Prijavi se na listu čekanja i obezbedi popust za rane korisnike.">
+<meta name="theme-color" content="#5B2A86">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="sr_RS">
+<meta property="og:title" content="Klasiko | Vodi školu, ne tabele">
+<meta property="og:description" content="Učenici, grupe, rasporedi, članarine i poruke roditelja na jednom mestu. Lista čekanja je otvorena, rani korisnici dobijaju popust.">
+<meta property="og:image" content="https://klasiko.rs/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:#FFFFFF}
+*{box-sizing:border-box}
+img{max-width:100%}
+.k .hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
+.k .form-note{font-size:13px;font-weight:600;color:#6F5390;line-height:1.5}
+.k .form-note a{color:inherit;font-weight:800}
+.k .form-note.on-dark{color:#E6DAF2}
+.k .form-status{font-size:15px;font-weight:800;min-height:0}
+.k .form-status:empty{display:none}
+.k .form-status.ok{padding:12px 16px;border-radius:14px;background:#F3ECF9;color:#5B2A86}
+.k .form-status.err{padding:12px 16px;border-radius:14px;background:#FFE8E5;color:#8C3A31}
+.k .form-status.on-dark.ok{background:#FFFFFF;color:#5B2A86}
+.k .form-status.on-dark.err{background:#FFE8E5;color:#8C3A31}
+.k button[type=submit][disabled]{opacity:.7;cursor:progress}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+.k input[type=range]{-webkit-appearance:none;appearance:none;height:10px!important;border-radius:999px;background:rgba(255,255,255,0.25);outline-offset:6px}
+.k input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#FFFFFF;border:5px solid #FF6B5E;cursor:grab}
+.k input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#FFFFFF;border:5px solid #FF6B5E;cursor:grab}
+/* Animacije: samo kada korisnik nije uključio smanjeno kretanje */
+.k a,.k button{transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease}
+.k .m-sticky{transition:transform .3s ease}
+.k .m-sticky:not(.show){transform:translateY(120%)}
+@media (hover:hover){
+.k a[href="#prijava"]:hover,.k button[type=submit]:hover{transform:translateY(-2px)}
+.k .card-hover:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(91,42,134,0.12)}
+}
+.k .card-hover{transition:transform .25s ease,box-shadow .25s ease}
+@media (prefers-reduced-motion: no-preference){
+.js .k .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0ms)}
+.js .k .reveal.in{opacity:1;transform:none}
+.k .float-a{animation:kFloatA 6s ease-in-out infinite}
+.k .float-b{animation:kFloatB 7s ease-in-out infinite}
+.k .hero-in{animation:kUp .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0ms)}
+@keyframes kFloatA{0%,100%{transform:rotate(3deg) translateY(0)}50%{transform:rotate(3deg) translateY(-10px)}}
+@keyframes kFloatB{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(-3deg) translateY(8px)}}
+@keyframes kUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+}
+@media (prefers-reduced-motion: reduce){.k *,.k *::before,.k *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div style="font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif; color: #2E1A42; background: #FFFFFF; overflow: hidden; -webkit-font-smoothing: antialiased">
+<style>
+.k a{color:#5B2A86}
+.k details summary{list-style:none;cursor:pointer}
+.k details summary::-webkit-details-marker{display:none}
+.k details[open] .faq-plus{transform:rotate(45deg)}
+.k .faq-plus{transition:transform .2s ease}
+.k input:focus-visible,.k button:focus-visible,.k a:focus-visible,.k summary:focus-visible{outline:3px solid #FF6B5E;outline-offset:3px}
+.k .m-sticky{display:none}
+.k input[type=range]{accent-color:#5B2A86}
+@media (max-width: 760px){
+.k .nav-links{display:none!important}
+.k .hdr-cta{height:42px!important;padding:0 16px!important;font-size:14px!important}
+.k .stack-btn{flex:1 1 100%!important}
+.k .m-sticky{display:flex}
+.k .m-pad{padding-bottom:96px!important}
+.k .hide-m{display:none!important}
+}
+@media (prefers-reduced-motion: reduce){.k *{transition:none!important;animation:none!important}}
+</style>
+<div class="k m-pad">
+
+<header style="position: sticky; top: 0; z-index: 5; border-bottom: 1px solid #EFE7F6; background: rgba(255,255,255,0.94); backdrop-filter: blur(10px)">
+<div style="max-width: 1200px; margin: 0 auto; padding: 12px clamp(16px, 4vw, 48px); display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<a href="#vrh" aria-label="Klasiko, početna" style="flex: 0 0 auto; display: block; width: 44px; height: 48px; position: relative; overflow: hidden"><img src="/logo.png" alt="Klasiko logo" style="position: absolute; left: -10px; top: -7px; width: 64px; height: 64px; max-width: none"></a>
+<nav class="nav-links" aria-label="Glavni meni" style="display: flex; gap: clamp(16px, 2.4vw, 32px); font-size: 15px; font-weight: 700">
+<a href="#problem" style="text-decoration: none; color: #2E1A42">Problem</a>
+<a href="#kako-radi" style="text-decoration: none; color: #2E1A42">Kako radi</a>
+<a href="#za-koga" style="text-decoration: none; color: #2E1A42">Za koga</a>
+<a href="#cene" style="text-decoration: none; color: #2E1A42">Cene</a>
+<a href="#faq" style="text-decoration: none; color: #2E1A42">FAQ</a>
+</nav>
+<a class="hdr-cta" href="#prijava" style="display: inline-flex; align-items: center; height: 46px; padding: 0 22px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap">Rani pristup</a>
+</div>
+</header>
+
+<section id="vrh" style="position: relative">
+<div aria-hidden="true" style="position: absolute; right: -200px; top: -160px; width: 640px; height: 640px; border-radius: 50%; background: #F7F3FB"></div>
+<div aria-hidden="true" class="hide-m" style="position: absolute; left: 46%; top: 96px; width: 20px; height: 20px; border-radius: 50%; background: #FF6B5E"></div>
+<div style="position: relative; max-width: 1200px; margin: 0 auto; padding: clamp(36px, 7vw, 100px) clamp(16px, 4vw, 48px) clamp(40px, 5vw, 72px); display: flex; flex-wrap: wrap; align-items: center; gap: clamp(32px, 5vw, 64px)">
+<div style="flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(18px, 2.2vw, 24px)">
+<span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: #FFE8E5; color: #8C3A31; font-size: 14px; font-weight: 800"><span style="width: 8px; height: 8px; border-radius: 50%; background: #FF6B5E"></span>U razvoju. Lista čekanja je otvorena.</span>
+<h1 style="margin: 0; font-size: clamp(46px, 6.4vw, 84px); line-height: 0.98; font-weight: 800; letter-spacing: -0.055em; color: #5B2A86; text-wrap: balance">Vodi školu, ne tabele<span style="color: #FF6B5E">.</span></h1>
+<p style="margin: 0; max-width: 540px; font-size: clamp(18px, 1.6vw, 21px); line-height: 1.5; font-weight: 500; color: #4A3A5C">Učenici, grupe, rasporedi, članarine i poruke roditelja, na jednom mestu. Klasiko pravimo za vlasnike škola koji žele manje administracije i više vremena za nastavu.</p>
+<form id="prijava" data-waitlist="hero" novalidate style="width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 12px">
+<label for="hero-email" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Email adresa</label>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<input id="hero-email" name="email" type="email" required autocomplete="email" placeholder="Tvoj email" style="flex: 1 1 240px; min-width: 0; height: 58px; box-sizing: border-box; padding: 0 22px; border: 1.5px solid #E4D9EF; border-radius: 999px; font-family: inherit; font-size: 17px; font-weight: 500; color: #2E1A42; background: #FFFFFF">
+<button class="stack-btn" type="submit" style="flex: 0 0 auto; height: 58px; padding: 0 28px; border: 0; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 800; box-shadow: 0 12px 28px rgba(91,42,134,0.30); cursor: pointer">Želim rani pristup</button>
+</div>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; font-weight: 700; color: #6F5390">
+<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#FF6B5E"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#3A0F0A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>Popust za rane korisnike</li>
+<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#5B2A86"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>Bez obaveze</li>
+<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#5B2A86"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>Bez spama</li>
+</ul>
+<input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true"><div class="form-note">Prijavom prihvataš <a href="/privatnost">Politiku privatnosti</a>. Odjava je moguća u svakom trenutku.</div><div class="form-status" role="status" aria-live="polite"></div>
+</form>
+</div>
+
+<div style="flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="position: relative; padding: clamp(0px, 2vw, 24px) 0">
+<div style="position: relative; border-radius: clamp(20px, 2.4vw, 28px); background: #FFFFFF; border: 1px solid #EFE7F6; box-shadow: 0 40px 90px rgba(91,42,134,0.22); overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px; border-bottom: 1px solid #EFE7F6; background: #FAF7FC">
+<div style="display: flex; gap: 7px"><div style="width: 10px; height: 10px; border-radius: 50%; background: #E4D9EF"></div><div style="width: 10px; height: 10px; border-radius: 50%; background: #E4D9EF"></div><div style="width: 10px; height: 10px; border-radius: 50%; background: #E4D9EF"></div></div>
+<div style="display: flex; gap: 6px"><span style="padding: 6px 12px; border-radius: 999px; background: #5B2A86; font-size: 12px; font-weight: 800; color: #FFFFFF">Pregled</span><span class="hide-m" style="padding: 6px 12px; font-size: 12px; font-weight: 700; color: #6F5390">Učenici</span><span class="hide-m" style="padding: 6px 12px; font-size: 12px; font-weight: 700; color: #6F5390">Raspored</span><span class="hide-m" style="padding: 6px 12px; font-size: 12px; font-weight: 700; color: #6F5390">Članarine</span></div>
+</div>
+<div style="padding: clamp(16px, 2vw, 22px); display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px"><div><div style="font-size: clamp(18px, 1.8vw, 22px); font-weight: 800; letter-spacing: -0.02em; color: #2E1A42">Dobar dan, Marija</div><div style="font-size: 13px; font-weight: 600; color: #6F5390">Utorak, danas su tri časa i dve uplate čekaju</div></div><div style="flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: #FF6B5E; color: #3A0F0A; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center">MS</div></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="padding: 12px; border-radius: 14px; background: #F7F3FB"><div style="font-size: 12px; font-weight: 700; color: #6F5390">Časovi danas</div><div style="font-size: clamp(20px, 2vw, 26px); font-weight: 800; color: #2E1A42; font-variant-numeric: tabular-nums">3</div></div>
+<div style="padding: 12px; border-radius: 14px; background: #F7F3FB"><div style="font-size: 12px; font-weight: 700; color: #6F5390">Aktivne grupe</div><div style="font-size: clamp(20px, 2vw, 26px); font-weight: 800; color: #2E1A42; font-variant-numeric: tabular-nums">12</div></div>
+<div style="padding: 12px; border-radius: 14px; background: #FFE8E5"><div style="font-size: 12px; font-weight: 700; color: #8C3A31">Čeka uplatu</div><div style="font-size: clamp(20px, 2vw, 26px); font-weight: 800; color: #8C3A31; font-variant-numeric: tabular-nums">2</div></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px">
+<div style="border: 1.5px solid #EFE7F6; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 14px; font-weight: 800; color: #2E1A42">Današnji časovi</div>
+<div style="display: flex; gap: 10px; align-items: center; padding: 9px 11px; border-radius: 11px; background: #F3ECF9"><span style="font-size: 12px; font-weight: 800; color: #5B2A86; font-variant-numeric: tabular-nums">16:00</span><span style="font-size: 13px; font-weight: 700; color: #2E1A42">Engleski B1, sala 2</span></div>
+<div style="display: flex; gap: 10px; align-items: center; padding: 9px 11px; border-radius: 11px; background: #FFE8E5"><span style="font-size: 12px; font-weight: 800; color: #8C3A31; font-variant-numeric: tabular-nums">17:30</span><span style="font-size: 13px; font-weight: 700; color: #2E1A42">Savremeni ples</span></div>
+<div style="display: flex; gap: 10px; align-items: center; padding: 9px 11px; border-radius: 11px; background: #F3ECF9"><span style="font-size: 12px; font-weight: 800; color: #5B2A86; font-variant-numeric: tabular-nums">19:00</span><span style="font-size: 13px; font-weight: 700; color: #2E1A42">Karate, juniori</span></div>
+</div>
+<div style="border-radius: 16px; padding: 14px; background: #5B2A86; display: flex; flex-direction: column; gap: 9px">
+<div style="font-size: 14px; font-weight: 800; color: #FFFFFF">Članarine, novembar</div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 13px; font-weight: 700; color: #FFFFFF">Ana Petrović</span><span style="padding: 3px 9px; border-radius: 999px; background: #FFFFFF; font-size: 11px; font-weight: 800; color: #5B2A86">Plaćeno</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 13px; font-weight: 700; color: #FFFFFF">Luka Ilić</span><span style="padding: 3px 9px; border-radius: 999px; background: #FF6B5E; font-size: 11px; font-weight: 800; color: #3A0F0A">Čeka uplatu</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 13px; font-weight: 700; color: #FFFFFF">Mina Popović</span><span style="padding: 3px 9px; border-radius: 999px; background: #FFFFFF; font-size: 11px; font-weight: 800; color: #5B2A86">Plaćeno</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="hide-m float-a" style="position: absolute; right: -18px; top: -6px; width: 230px; padding: 14px 16px; border-radius: 18px; background: #FFFFFF; border: 1px solid #EFE7F6; box-shadow: 0 20px 44px rgba(91,42,134,0.18); transform: rotate(3deg); display: flex; gap: 12px; align-items: flex-start">
+<div style="flex: 0 0 34px; height: 34px; border-radius: 10px; background: #FFE8E5; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="5" width="22" height="20" rx="4" stroke="#8C3A31" stroke-width="2.4"></rect><path d="M3 11h22M9 2v6M19 2v6" stroke="#8C3A31" stroke-width="2.4" stroke-linecap="round"></path></svg></div>
+<div><div style="font-size: 13px; font-weight: 800; color: #2E1A42">Termin pomeren</div><div style="font-size: 12px; font-weight: 600; color: #6F5390; margin-top: 2px">Grupa B1 prelazi na četvrtak u 18:00</div></div>
+</div>
+<div class="hide-m float-b" style="position: absolute; left: -26px; bottom: -4px; padding: 12px 16px; border-radius: 16px; background: #5B2A86; box-shadow: 0 20px 44px rgba(91,42,134,0.28); transform: rotate(-3deg); display: flex; align-items: center; gap: 10px">
+<div style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#5B2A86" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+<div style="font-size: 13px; font-weight: 800; color: #FFFFFF">Prisustvo zabeleženo, Karate juniori</div>
+</div>
+</div>
+<div style="font-size: 13px; font-weight: 600; color: #6F5390">Konceptualni prikaz aplikacije u razvoju. Imena i brojevi su primeri.</div>
+</div>
+</div>
+
+<div style="position: relative; max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) clamp(48px, 6vw, 88px)">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390; margin-right: 6px">Pravimo ga za</span>
+<span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Škole jezika</span>
+<span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Plesne škole</span>
+<span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Borilačke veštine</span>
+<span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Edukativne centre</span>
+<span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Akademije</span>
+</div>
+</div>
+</section>
+
+<section id="problem" style="background: #F7F3FB">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: clamp(36px, 5vw, 72px)">
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Zvuči poznato?</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Nisi otvorio školu da bi ceo dan odgovarao na poruke<span style="color: #FF6B5E">.</span></h2>
+<p style="margin: 0; max-width: 460px; font-size: 18px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Škola raste, a organizacija ostaje razbacana po tabelama, grupama za poruke i sveskama. Svaki novi učenik je još malo posla koji pamtiš ti.</p>
+</div>
+<div style="flex: 1.2 1 440px; min-width: 0; padding: clamp(22px, 3vw, 32px); border-radius: 28px; background: #FFFFFF; box-shadow: 0 12px 30px rgba(91,42,134,0.08); display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390; padding-bottom: 12px">Jedan običan dan</div>
+<div style="display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid #EFE7F6"><div style="flex: 0 0 56px; font-size: 16px; font-weight: 800; color: #5B2A86; font-variant-numeric: tabular-nums">08:12</div><div><div style="font-size: 17px; font-weight: 800; color: #2E1A42">„Da li je danas čas?”</div><div style="font-size: 15px; font-weight: 500; color: #6F5390; margin-top: 2px">Treća ista poruka roditelja ove nedelje.</div></div></div>
+<div style="display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid #EFE7F6"><div style="flex: 0 0 56px; font-size: 16px; font-weight: 800; color: #5B2A86; font-variant-numeric: tabular-nums">11:40</div><div><div style="font-size: 17px; font-weight: 800; color: #2E1A42">Predavač je bolestan</div><div style="font-size: 15px; font-weight: 500; color: #6F5390; margin-top: 2px">Treba naći zamenu i obavestiti celu grupu.</div></div></div>
+<div style="display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid #EFE7F6"><div style="flex: 0 0 56px; font-size: 16px; font-weight: 800; color: #5B2A86; font-variant-numeric: tabular-nums">16:05</div><div><div style="font-size: 17px; font-weight: 800; color: #2E1A42">Gde je onaj spisak?</div><div style="font-size: 15px; font-weight: 500; color: #6F5390; margin-top: 2px">Tri tabele, nijedna nije poslednja verzija.</div></div></div>
+<div style="display: flex; gap: 16px; padding: 14px 0 4px"><div style="flex: 0 0 56px; font-size: 16px; font-weight: 800; color: #B23A2F; font-variant-numeric: tabular-nums">22:30</div><div><div style="font-size: 17px; font-weight: 800; color: #2E1A42">Ko još nije platio?</div><div style="font-size: 15px; font-weight: 500; color: #6F5390; margin-top: 2px">Dan se završava proverom uplata, kao i juče.</div></div></div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="kalk" style="background: #FFFFFF">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px)">
+<div style="padding: clamp(28px, 5vw, 64px); border-radius: clamp(28px, 3vw, 40px); background: #5B2A86; position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; gap: clamp(28px, 5vw, 64px)">
+<div aria-hidden="true" style="position: absolute; right: -100px; bottom: -100px; width: 300px; height: 300px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.12)"></div>
+<div style="position: relative; flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Izračunaj sam</div>
+<h2 id="kalk" style="margin: 0; font-size: clamp(30px, 3.6vw, 46px); line-height: 1.06; font-weight: 800; letter-spacing: -0.04em; color: #FFFFFF; text-wrap: balance">Koliko sati nedeljno ti odlazi na administraciju<span style="color: #FF6B5E">?</span></h2>
+<label for="sati" style="font-size: 16px; font-weight: 700; color: #E6DAF2">Pomeri klizač: <span id="sati-out" style="color: #FFFFFF; font-weight: 800">6 h nedeljno</span></label>
+<input id="sati" type="range" min="1" max="25" step="1" value="6" style="width: 100%; height: 32px">
+</div>
+<div style="position: relative; flex: 1 1 320px; min-width: 0; padding: clamp(24px, 3vw, 36px); border-radius: 28px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 15px; font-weight: 700; color: #6F5390">Tokom školske godine od oko 40 nedelja to je</div>
+<div style="font-size: clamp(52px, 6vw, 72px); line-height: 1; font-weight: 800; letter-spacing: -0.05em; color: #5B2A86; font-variant-numeric: tabular-nums"><span id="god">240</span> h</div>
+<div style="font-size: 18px; font-weight: 700; color: #2E1A42">ili oko <span style="color: #B23A2F"><span id="dani">30</span> punih radnih dana</span> provedenih u tabelama i porukama.</div>
+<div style="font-size: 14px; font-weight: 600; color: #6F5390">Procena na osnovu tvog unosa. Klasiko pravimo da taj broj bude što manji.</div>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="pre-posle" style="background: #FFFFFF">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) clamp(56px, 8vw, 104px); display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Ideja je jednostavna</div>
+<h2 id="pre-posle" style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Pet alata zamenjuje jedno mesto<span style="color: #FF6B5E">.</span></h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px">
+<div style="padding: clamp(24px, 3vw, 34px); border-radius: 28px; border: 1.5px solid #EFE7F6; display: flex; flex-direction: column; gap: 16px">
+<div style="font-size: 20px; font-weight: 800; color: #2E1A42">Danas</div>
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<span style="padding: 10px 14px; border-radius: 12px; background: #F7F3FB; font-size: 15px; font-weight: 700; color: #4A3A5C; transform: rotate(-2deg)">Tabele za učenike</span>
+<span style="padding: 10px 14px; border-radius: 12px; background: #F7F3FB; font-size: 15px; font-weight: 700; color: #4A3A5C; transform: rotate(2deg)">Grupe za poruke</span>
+<span style="padding: 10px 14px; border-radius: 12px; background: #FFE8E5; font-size: 15px; font-weight: 700; color: #8C3A31; transform: rotate(-1deg)">Sveska za uplate</span>
+<span style="padding: 10px 14px; border-radius: 12px; background: #F7F3FB; font-size: 15px; font-weight: 700; color: #4A3A5C; transform: rotate(3deg)">Kalendar na telefonu</span>
+<span style="padding: 10px 14px; border-radius: 12px; background: #F7F3FB; font-size: 15px; font-weight: 700; color: #4A3A5C; transform: rotate(-2deg)">Sve ostalo u glavi</span>
+</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Informacije su tu negde, ali ih uvek tražiš ponovo.</p>
+</div>
+<div style="padding: clamp(24px, 3vw, 34px); border-radius: 28px; background: #F7F3FB; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><div style="font-size: 20px; font-weight: 800; color: #5B2A86">Sa Klasikom</div><span style="padding: 5px 11px; border-radius: 999px; background: #FFFFFF; font-size: 12px; font-weight: 800; color: #6F5390">Naš cilj</span></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<span style="padding: 12px 14px; border-radius: 12px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #2E1A42">Učenici i grupe</span>
+<span style="padding: 12px 14px; border-radius: 12px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #2E1A42">Rasporedi</span>
+<span style="padding: 12px 14px; border-radius: 12px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #2E1A42">Članarine</span>
+<span style="padding: 12px 14px; border-radius: 12px; background: #FFFFFF; font-size: 15px; font-weight: 700; color: #2E1A42">Obaveštenja</span>
+</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #4A3A5C">Jedan pregled koji važi za tebe, predavače i administraciju.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section id="kako-radi" style="background: #F7F3FB">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; gap: clamp(36px, 5vw, 72px)">
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Kako zamišljamo Klasiko</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Tri koraka do uredne škole<span style="color: #FF6B5E">.</span></h2>
+</div>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 20px">
+<li style="display: flex; gap: 16px; align-items: flex-start"><span style="flex: 0 0 44px; height: 44px; border-radius: 50%; background: #5B2A86; color: #FFFFFF; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center">1</span><div><div style="font-size: 20px; font-weight: 800; color: #2E1A42">Dodaš školu, grupe i predavače</div><div style="margin-top: 4px; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Jednom podesiš kako tvoja škola funkcioniše.</div></div></li>
+<li style="display: flex; gap: 16px; align-items: flex-start"><span style="flex: 0 0 44px; height: 44px; border-radius: 50%; background: #5B2A86; color: #FFFFFF; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center">2</span><div><div style="font-size: 20px; font-weight: 800; color: #2E1A42">Upišeš učenike i rasporede</div><div style="margin-top: 4px; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Svaki učenik ima svoju grupu, termin i salu.</div></div></li>
+<li style="display: flex; gap: 16px; align-items: flex-start"><span style="flex: 0 0 44px; height: 44px; border-radius: 50%; background: #FF6B5E; color: #3A0F0A; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center">3</span><div><div style="font-size: 20px; font-weight: 800; color: #2E1A42">Pratiš prisustvo i članarine</div><div style="margin-top: 4px; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Na jednom pregledu vidiš šta je urađeno, a šta čeka.</div></div></li>
+</ol>
+</div>
+<div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 14px">
+<div style="position: relative; width: min(100%, 330px)">
+<div aria-hidden="true" style="position: absolute; left: 50%; top: 50%; width: 120%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: #EFE6F7"></div>
+<div style="position: relative; padding: 12px; border-radius: 44px; background: #2E1A42; box-shadow: 0 40px 90px rgba(46,26,66,0.30)">
+<div style="border-radius: 34px; background: #FFFFFF; overflow: hidden; display: flex; flex-direction: column">
+<div style="padding: 22px 20px 18px; background: #5B2A86; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E6DAF2">Karton učenika</div><div style="width: 30px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.3)"></div></div>
+<div style="display: flex; align-items: center; gap: 12px"><div style="width: 52px; height: 52px; border-radius: 50%; background: #FFFFFF; color: #5B2A86; font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center">AP</div><div><div style="font-size: 20px; font-weight: 800; color: #FFFFFF">Ana Petrović</div><div style="font-size: 13px; font-weight: 600; color: #E6DAF2">Engleski B1, grupa utorak</div></div></div>
+</div>
+<div style="padding: 18px 18px 22px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="padding: 12px; border-radius: 14px; background: #F7F3FB"><div style="font-size: 11px; font-weight: 700; color: #6F5390">Termini</div><div style="font-size: 14px; font-weight: 800; color: #2E1A42">Uto i Čet, 18:00</div></div>
+<div style="padding: 12px; border-radius: 14px; background: #F7F3FB"><div style="font-size: 11px; font-weight: 700; color: #6F5390">Predavač</div><div style="font-size: 14px; font-weight: 800; color: #2E1A42">Jelena M.</div></div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-radius: 14px; border: 1.5px solid #EFE7F6"><div><div style="font-size: 11px; font-weight: 700; color: #6F5390">Članarina, novembar</div><div style="font-size: 14px; font-weight: 800; color: #2E1A42">Plaćeno 4. novembra</div></div><span style="padding: 4px 10px; border-radius: 999px; background: #F3ECF9; font-size: 11px; font-weight: 800; color: #5B2A86">Plaćeno</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><div style="font-size: 11px; font-weight: 700; color: #6F5390">Prisustvo, poslednjih 8 časova</div><div style="display: flex; gap: 6px"><span style="flex: 1; height: 22px; border-radius: 6px; background: #5B2A86"></span><span style="flex: 1; height: 22px; border-radius: 6px; background: #5B2A86"></span><span style="flex: 1; height: 22px; border-radius: 6px; background: #5B2A86"></span><span style="flex: 1; height: 22px; border-radius: 6px; background: #FF6B5E"></span><span style="flex: 1; height: 22px; border-radius: 6px; background: #5B2A86"></span><span style="flex: 1; height: 22px; border-radius: 6px; background: #5B2A86"></span><span style="flex: 1; height: 22px; border-radius: 6px; background: #5B2A86"></span><span style="flex: 1; height: 22px; border-radius: 6px; background: #5B2A86"></span></div></div>
+</div>
+</div>
+</div>
+</div>
+<span style="padding: 7px 13px; border-radius: 999px; background: #FFFFFF; font-size: 13px; font-weight: 700; color: #6F5390">Konceptualni prikaz, primer podataka</span>
+</div>
+</div>
+</section>
+
+<section id="mogucnosti" style="background: #FFFFFF">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Planirane mogućnosti</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Sve što škola svakodnevno vodi, na jednom mestu<span style="color: #FF6B5E">.</span></h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px">
+<div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3.5" stroke="#5B2A86" stroke-width="1.6"></circle><path d="M3.5 17c1-3.2 3.5-5 6.5-5s5.5 1.8 6.5 5" stroke="#5B2A86" stroke-width="1.6" stroke-linecap="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Učenici i grupe</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Kartoni učenika, nivoi i grupe umesto razbacanih spiskova.</p></div></div>
+<div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="5" width="22" height="20" rx="4" stroke="#5B2A86" stroke-width="2.2"></rect><path d="M3 11h22M9 2v6M19 2v6" stroke="#5B2A86" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Rasporedi i sale</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Termini i promene pregledni svima koji ih prate.</p></div></div>
+<div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #FFE8E5; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="6" width="22" height="16" rx="4" stroke="#8C3A31" stroke-width="2.2"></rect><path d="M3 11h22M8 17h5" stroke="#8C3A31" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Evidencija članarina</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Ko je platio, a ko nije, bez ručnog upoređivanja tabela.</p></div></div>
+<div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5.6" stroke="#5B2A86" stroke-width="1.1"></circle><path d="M4.5 7.2l1.7 1.7L9.6 5.4" stroke="#5B2A86" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Prisustvo</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Beleženje dolazaka na časove i treninge, po grupama.</p></div></div>
+<div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3l8 4-8 4-8-4 8-4z" stroke="#5B2A86" stroke-width="1.6" stroke-linejoin="round"></path><path d="M5 9v4c1.5 1.5 3.2 2 5 2s3.5-.5 5-2V9" stroke="#5B2A86" stroke-width="1.6" stroke-linecap="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Predavači i instruktori</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Ko predaje kojoj grupi i kada, bez dodatnih poziva.</p></div></div>
+<div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-8l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" stroke="#5B2A86" stroke-width="2" stroke-linejoin="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Obaveštenja</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Važne informacije za učenike i roditelje na jednom mestu.</p></div></div>
+</div>
+<div style="font-size: 15px; font-weight: 600; color: #6F5390">Sve navedeno je u razvoju. Redosled oblikujemo prema razgovorima sa školama.</div>
+</div>
+</section>
+
+<section id="za-koga" style="background: #F7F3FB">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Za koga je Klasiko</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Za svaku školu koja radi sa grupama i terminima<span style="color: #FF6B5E">.</span></h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px">
+<div style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><div style="font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #5B2A86">A1 B2</div><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Škole jezika</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Nivoi, grupe i predavači.</div></div>
+<div style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><svg width="38" height="32" viewBox="0 0 240 160" fill="none" aria-hidden="true"><path d="M20 92h196" stroke="#FF6B5E" stroke-width="14" stroke-linecap="round"></path><path d="M44 92v52M196 92v52" stroke="#FF6B5E" stroke-width="12" stroke-linecap="round"></path><circle cx="150" cy="40" r="18" fill="#5B2A86"></circle><path d="M168 40V0l26 10" stroke="#5B2A86" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path></svg><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Plesne škole</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Grupe, instruktori i članstva.</div></div>
+<div style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><svg width="38" height="32" viewBox="0 0 40 34" fill="none" aria-hidden="true"><circle cx="9" cy="10" r="6" fill="#5B2A86"></circle><circle cx="23" cy="10" r="6" fill="#5B2A86"></circle><circle cx="34" cy="10" r="5" fill="#FF6B5E"></circle><path d="M2 32c0-7 3-11 7-11s7 4 7 11M16 32c0-7 3-11 7-11s7 4 7 11" stroke="#5B2A86" stroke-width="3" stroke-linecap="round"></path></svg><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Borilačke veštine</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Treninzi i evidencija prisustva.</div></div>
+<div style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><svg width="38" height="32" viewBox="0 0 40 34" fill="none" aria-hidden="true"><path d="M3 12c6-2 12-2 17 2v18c-5-4-11-4-17-2V12zM37 12c-6-2-12-2-17 2v18c5-4 11-4 17-2V12z" stroke="#5B2A86" stroke-width="2.6" stroke-linejoin="round"></path><circle cx="20" cy="5" r="4" fill="#FF6B5E"></circle></svg><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Edukativni centri</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Časovi, učionice i predavači.</div></div>
+<div style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><svg width="38" height="32" viewBox="0 0 40 34" fill="none" aria-hidden="true"><path d="M20 3l18 8-18 8-18-8 18-8z" fill="#5B2A86"></path><path d="M9 15v8c3 3 7 4 11 4s8-1 11-4v-8l-11 5-11-5z" fill="#7A4BA6"></path><circle cx="35" cy="25" r="3.5" fill="#FF6B5E"></circle></svg><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Akademije</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Programi, polaznici i rokovi.</div></div>
+</div>
+</div>
+</section>
+
+<section id="zasto" style="background: #FFFFFF">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-wrap: wrap; gap: clamp(28px, 5vw, 64px); align-items: flex-start">
+<div style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Gradimo ga sa školama</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Ne pravimo još jedan program koji niko ne koristi<span style="color: #FF6B5E">.</span></h2>
+</div>
+<figure style="flex: 1.2 1 420px; min-width: 0; margin: 0; padding: clamp(24px, 3vw, 36px); border-radius: 28px; background: #F7F3FB; display: flex; flex-direction: column; gap: 18px">
+<svg width="40" height="32" viewBox="0 0 48 40" fill="none" aria-hidden="true"><path d="M4 36V22C4 12 9 5 19 3l2 5c-6 2-8 6-8 11h7v17H4zM28 36V22c0-10 5-17 15-19l2 5c-6 2-8 6-8 11h7v17H28z" fill="#FF6B5E"></path></svg>
+<blockquote style="margin: 0; font-size: clamp(19px, 1.9vw, 23px); line-height: 1.5; font-weight: 600; color: #2E1A42">Pre nego što napišemo i jednu funkciju, razgovaramo sa vlasnicima škola. Klasiko treba da reši probleme koje imaš svaki dan, a ne da ti doda još jednu obavezu.</blockquote>
+<figcaption style="display: flex; align-items: center; gap: 12px"><div style="width: 44px; height: 44px; border-radius: 50%; background: #5B2A86; color: #FFFFFF; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center">NR</div><div><div style="font-size: 16px; font-weight: 800; color: #2E1A42">Nemanja Radovanović</div><div style="font-size: 14px; font-weight: 600; color: #6F5390">Osnivač, Klasiko</div></div></figcaption>
+</figure>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="padding: clamp(24px, 3vw, 36px); border-radius: 28px; border: 2px dashed #E4D9EF; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px">
+<div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: clamp(20px, 2vw, 24px); font-weight: 800; letter-spacing: -0.02em; color: #2E1A42">Ovde će stajati iskustva prvih škola.</div>
+<div style="font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Želiš da tvoja škola bude među njima? Javi nam se, ispričaj kako danas vodiš školu i oblikuj Klasiko sa nama.</div>
+</div>
+<a href="https://www.instagram.com/klasiko.rs/" style="flex: 0 0 auto; display: inline-flex; align-items: center; height: 52px; padding: 0 24px; border-radius: 999px; background: #F3ECF9; color: #5B2A86; font-size: 16px; font-weight: 800; text-decoration: none">Piši nam na Instagramu</a>
+</div>
+</div>
+</div>
+</section>
+
+<section id="cene" style="background: #F7F3FB">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; gap: clamp(36px, 5vw, 72px)">
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Cene i popust</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Rani korisnici plaćaju manje<span style="color: #FF6B5E">.</span></h2>
+<p style="margin: 0; max-width: 500px; font-size: 18px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Cenu određujemo zajedno sa prvim školama, pre lansiranja. Ko se prijavi na listu čekanja, dobija popust za rane korisnike i prvi saznaje sve detalje.</p>
+</div>
+<div style="flex: 1 1 400px; min-width: 0; padding: clamp(26px, 3vw, 40px); border-radius: 32px; background: #FFFFFF; box-shadow: 0 30px 70px rgba(91,42,134,0.14); display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px"><div style="font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: #2E1A42">Rani pristup</div><span style="padding: 6px 12px; border-radius: 999px; background: #FF6B5E; font-size: 13px; font-weight: 800; color: #3A0F0A">Popust za prve škole</span></div>
+<div><div style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; font-weight: 800; letter-spacing: -0.04em; color: #5B2A86">Cena uskoro</div><div style="margin-top: 6px; font-size: 15px; font-weight: 600; color: #6F5390">Iznos popusta objavljujemo pre lansiranja.</div></div>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 16px; font-weight: 600; color: #2E1A42">
+<li style="display: flex; gap: 12px; align-items: center"><span style="flex: 0 0 24px; height: 24px; border-radius: 50%; background: #5B2A86; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Popust za rane korisnike</li>
+<li style="display: flex; gap: 12px; align-items: center"><span style="flex: 0 0 24px; height: 24px; border-radius: 50%; background: #5B2A86; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Poziv da među prvima probaš Klasiko</li>
+<li style="display: flex; gap: 12px; align-items: center"><span style="flex: 0 0 24px; height: 24px; border-radius: 50%; background: #5B2A86; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Direktan uticaj na to šta razvijamo</li>
+<li style="display: flex; gap: 12px; align-items: center"><span style="flex: 0 0 24px; height: 24px; border-radius: 50%; background: #5B2A86; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Bez obaveze kupovine</li>
+</ul>
+<a href="#prijava" style="display: inline-flex; justify-content: center; align-items: center; height: 56px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 17px; font-weight: 800; text-decoration: none; box-shadow: 0 12px 28px rgba(91,42,134,0.30)">Obezbedi popust</a>
+</div>
+</div>
+</section>
+
+<section id="faq" style="background: #FFFFFF">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; gap: clamp(28px, 5vw, 72px)">
+<div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">FAQ</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86">Česta pitanja<span style="color: #FF6B5E">.</span></h2>
+<p style="margin: 0; font-size: 17px; line-height: 1.6; font-weight: 500; color: #6F5390">Nema tvog pitanja? Piši nam na Instagramu, <a href="https://www.instagram.com/klasiko.rs/" style="font-weight: 800">@klasiko.rs</a>.</p>
+</div>
+<div style="flex: 2 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+<details open style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Kada Klasiko izlazi?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Klasiko je trenutno u razvoju. Tačan datum još ne objavljujemo, a prvi ga saznaju oni koji su na listi čekanja.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Koliko će koštati?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Cenu još određujemo, zajedno sa prvim školama. Objavićemo je pre lansiranja, a škole sa liste čekanja dobijaju popust za rane korisnike.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Kako da dobijem popust za rane korisnike?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Dovoljno je da ostaviš email na listi čekanja. Kada otvorimo rani pristup, javljamo ti se sa detaljima popusta.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Za koje škole je Klasiko?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Za škole jezika, plesne škole, škole borilačkih veština, edukativne centre, akademije i sve koji rade sa grupama, terminima i instruktorima.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Sve vodim u Excelu. Da li je Klasiko za mene?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Upravo takve škole najbolje razumemo. Jednostavan prelazak sa tabela je jedna od stvari koje želimo da olakšamo.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Šta dobijam prijavom na listu čekanja?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Popust za rane korisnike, povremene vesti o razvoju i poziv da među prvima probaš Klasiko. Bez spama, a odjava je jedan klik.</p></details>
+</div>
+</div>
+</section>
+
+<section style="background: #FFFFFF">
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) clamp(56px, 8vw, 104px)">
+<div style="position: relative; overflow: hidden; padding: clamp(32px, 6vw, 80px) clamp(22px, 5vw, 72px); border-radius: clamp(28px, 3.4vw, 40px); background: #5B2A86; display: flex; flex-wrap: wrap; align-items: center; gap: clamp(28px, 4vw, 48px)">
+<div aria-hidden="true" style="position: absolute; right: -120px; top: -120px; width: 420px; height: 420px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.12)"></div>
+<div aria-hidden="true" class="hide-m" style="position: absolute; right: 80px; bottom: -70px; width: 160px; height: 160px; border-radius: 50%; background: #FF6B5E"></div>
+<div style="position: relative; flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<span style="align-self: flex-start; padding: 7px 13px; border-radius: 999px; background: rgba(255,255,255,0.14); font-size: 13px; font-weight: 800; color: #FFFFFF">Lista čekanja je otvorena</span>
+<h2 style="margin: 0; font-size: clamp(32px, 4.4vw, 58px); line-height: 1.02; font-weight: 800; letter-spacing: -0.05em; color: #FFFFFF; text-wrap: balance">Budi među prvim školama koje probaju Klasiko<span style="color: #FF6B5E">.</span></h2>
+<p style="margin: 0; max-width: 500px; font-size: 18px; line-height: 1.55; font-weight: 500; color: #E6DAF2">Ostavi email, zadrži popust za rane korisnike i pomozi nam da napravimo alat kakav ti zaista treba.</p>
+</div>
+<form data-waitlist="cta" novalidate style="position: relative; flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+<label for="cta-email" style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Email adresa</label>
+<input id="cta-email" name="email" type="email" required autocomplete="email" placeholder="Tvoj email" style="height: 58px; box-sizing: border-box; padding: 0 22px; border: 0; border-radius: 999px; font-family: inherit; font-size: 17px; font-weight: 500; color: #2E1A42; background: #FFFFFF">
+<button type="submit" style="height: 58px; border: 0; border-radius: 999px; background: #FF6B5E; color: #3A0F0A; font-family: inherit; font-size: 17px; font-weight: 800; cursor: pointer">Želim rani pristup i popust</button>
+<div style="font-size: 14px; font-weight: 600; color: #E6DAF2">Bez obaveze i bez spama.</div>
+<input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true"><div class="form-note on-dark">Prijavom prihvataš <a href="/privatnost">Politiku privatnosti</a>. Odjava je moguća u svakom trenutku.</div><div class="form-status on-dark" role="status" aria-live="polite"></div>
+</form>
+</div>
+</div>
+</section>
+
+<footer style="background: #45206A">
+<div style="max-width: 1200px; margin: 0 auto; padding: 44px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 32px">
+<div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 14px">
+<div style="align-self: flex-start; padding: 8px 12px; border-radius: 16px; background: #FFFFFF"><div style="width: 44px; height: 48px; position: relative; overflow: hidden"><img src="/logo.png" alt="Klasiko logo" style="position: absolute; left: -10px; top: -7px; width: 64px; height: 64px; max-width: none"></div></div>
+<p style="margin: 0; max-width: 340px; font-size: 15px; line-height: 1.6; font-weight: 500; color: #E6DAF2">Klasiko je platforma u razvoju za jednostavnije vođenje škola i edukativnih centara.</p>
+</div>
+<nav aria-label="Podnožje" style="display: flex; flex-wrap: wrap; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; font-weight: 600"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Stranica</div><a href="#problem" style="color: #FFFFFF; text-decoration: none">Problem</a><a href="#kako-radi" style="color: #FFFFFF; text-decoration: none">Kako radi</a><a href="#cene" style="color: #FFFFFF; text-decoration: none">Cene</a><a href="#faq" style="color: #FFFFFF; text-decoration: none">FAQ</a></div>
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; font-weight: 600"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Prati nas</div><a href="https://www.instagram.com/klasiko.rs/" style="color: #FFFFFF; text-decoration: none">Instagram @klasiko.rs</a><a href="#prijava" style="color: #FFFFFF; text-decoration: none">Lista čekanja</a></div>
+</nav>
+</div>
+<div style="max-width: 1200px; margin: 0 auto; padding: 18px clamp(16px, 4vw, 48px) 28px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(255,255,255,0.14); font-size: 14px; font-weight: 600; color: #E6DAF2">
+<span>© 2026 Klasiko</span>
+<span style="display: flex; flex-wrap: wrap; gap: 18px"><a href="/privatnost" style="color: #E6DAF2">Politika privatnosti</a><a href="mailto:[KONTAKT EMAIL]" style="color: #E6DAF2">[KONTAKT EMAIL]</a></span>
+</div>
+</footer>
+
+<div class="m-sticky" style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; padding: 12px max(16px, env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)); background: rgba(255,255,255,0.96); border-top: 1px solid #EFE7F6; box-shadow: 0 -10px 30px rgba(91,42,134,0.10); align-items: center; gap: 12px">
+<div style="flex: 1 1 auto; min-width: 0"><div style="font-size: 14px; font-weight: 800; color: #2E1A42">Popust za rane korisnike</div><div style="font-size: 12px; font-weight: 600; color: #6F5390">Lista čekanja je otvorena</div></div>
+<a href="#prijava" style="flex: 0 0 auto; display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 15px; font-weight: 800; text-decoration: none">Prijavi se</a>
+</div>
+
+</div>
+</div>
+<script>
+(function(){
+  var r=document.getElementById('sati');
+  if(r){var o=document.getElementById('sati-out'),g=document.getElementById('god'),d=document.getElementById('dani');
+    var up=function(){var h=+r.value;o.textContent=h+' h nedeljno';g.textContent=h*40;d.textContent=Math.round(h*40/8);};
+    r.addEventListener('input',up);up();}
+
+  // Animacije pri skrolovanju i lepljiva traka na telefonu
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hero=document.querySelector('#vrh > div:nth-of-type(3) > div:first-child');
+  if(hero){Array.prototype.forEach.call(hero.children,function(el,i){el.classList.add('hero-in');el.style.setProperty('--d',(i*90)+'ms');});}
+  var items=[];
+  document.querySelectorAll('section:not(#vrh) > div > *').forEach(function(el){items.push(el);});
+  document.querySelectorAll('section:not(#vrh) [style*="display: grid"] > *, section:not(#vrh) ol > li, #problem [style*="border-bottom"]').forEach(function(el,i){
+    if(items.indexOf(el)<0){el.style.setProperty('--d',((i%6)*70)+'ms');items.push(el);}
+    if(el.parentElement&&el.parentElement.style.display==='grid'&&!el.closest('#kako-radi'))el.classList.add('card-hover');
+  });
+  if(!reduce&&'IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
+    items.forEach(function(el){el.classList.add('reveal');io.observe(el);});
+  }
+  var bar=document.querySelector('.m-sticky'),form=document.getElementById('prijava');
+  if(bar&&form&&'IntersectionObserver' in window){
+    new IntersectionObserver(function(es){es.forEach(function(e){bar.classList.toggle('show',!e.isIntersecting&&e.boundingClientRect.top<0);});}).observe(form);
+  } else if(bar){bar.classList.add('show');}
+  var re=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  document.querySelectorAll('form[data-waitlist]').forEach(function(f){
+    f.addEventListener('submit',function(e){
+      e.preventDefault();
+      var inp=f.querySelector('input[name=email]'),btn=f.querySelector('button[type=submit]'),st=f.querySelector('.form-status');
+      var email=(inp.value||'').trim();
+      st.className=st.className.replace(/\b(ok|err)\b/g,'').trim();
+      if(!re.test(email)){st.textContent='Unesi ispravnu email adresu.';st.classList.add('err');inp.focus();return;}
+      var label=btn.textContent;btn.disabled=true;btn.textContent='Šaljem...';st.textContent='';
+      fetch('/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email:email,company:(f.querySelector('input[name=company]')||{}).value||'',source:f.getAttribute('data-waitlist')})})
+      .then(function(res){return res.json().catch(function(){return{};}).then(function(j){return{ok:res.ok,j:j};});})
+      .then(function(x){
+        if(x.ok){st.textContent='Hvala! Prijava je primljena. Proveri inbox i potvrdi email.';st.classList.add('ok');f.reset();
+          if(window.plausible)window.plausible('Waitlist');}
+        else{st.textContent=(x.j&&x.j.error)||'Nešto nije u redu. Pokušaj ponovo za minut.';st.classList.add('err');}
+      })
+      .catch(function(){st.textContent='Nema veze sa serverom. Pokušaj ponovo.';st.classList.add('err');})
+      .finally(function(){btn.disabled=false;btn.textContent=label;});
+    });
+  });
+})();
+</script>
+</body>
+</html>
