@@ -3,6 +3,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 import build_common as C
 from niches import NICHE_PAGES
 from posts import POSTS
+from posts_more import MORE_POSTS
+POSTS = POSTS + MORE_POSTS
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
 C.POSTS[:] = POSTS
@@ -211,6 +213,55 @@ for p in POSTS:
 ''' + C.footer()
     open(os.path.join(OUT, 'blog', p['slug'] + '.html'), 'w', encoding='utf-8').write(page)
     print('ok', path, words, 'reči')
+
+
+# ---------- Hvala ----------
+share_text = 'Pogledaj Klasiko, program za vođenje škola i klubova koji je u razvoju. Ima listu čekanja sa popustom za rane korisnike: https://www.klasiko.rs/'
+from urllib.parse import quote
+st = quote(share_text)
+page = C.head('Hvala na prijavi | Klasiko', 'Prijava na listu čekanja za Klasiko je primljena.', '/hvala', robots='noindex, follow') + C.header() + f"""<main id="sadrzaj">
+<section class="hero thanks">
+<div class="wrap hero-in" style="align-items:center;text-align:center">
+<div class="tk-check" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-15"/></svg></div>
+<span class="badge" style="align-self:center"><i></i>Prijava je primljena</span>
+<h1 style="max-width:none">Hvala, na listi si<span class="dot">!</span></h1>
+<p class="lead" style="margin:0 auto">Popust za rane korisnike je rezervisan za tebe. Još samo jedan korak, da bismo znali da je email tvoj.</p>
+</div>
+</section>
+<section class="sec alt" style="padding-top:clamp(40px,6vw,72px)">
+<div class="wrap">
+<ol class="tk-steps">
+<li class="card"><div class="ic c">{C.ICONS['msg']}</div><div><h3>Potvrdi email</h3><p>Poslali smo ti mejl sa linkom za potvrdu. Ako ga ne vidiš za par minuta, proveri folder Promocije ili Spam.</p></div></li>
+<li class="card"><div class="ic">{C.ICONS['star']}</div><div><h3>Popust je tvoj</h3><p>Kao rani korisnik dobijaš popust čim objavimo cenu. Ne treba ništa više da radiš.</p></div></li>
+<li class="card"><div class="ic">{C.ICONS['cal']}</div><div><h3>Javljamo se prvi</h3><p>Kada otvorimo rani pristup, ti saznaješ pre svih i dobijaš poziv da među prvima probaš Klasiko.</p></div></li>
+</ol>
+</div>
+</section>
+<section class="sec">
+<div class="wrap">
+<div class="share-box">
+<div><span class="eyebrow">Podeli</span><h2>Znaš nekoga ko vodi školu ili klub<span class="dot">?</span></h2><p>Pošalji mu link. I on dobija popust za rane korisnike, a nama pomaže da napravimo Klasiko za što više škola.</p></div>
+<div class="share">
+<a class="btn" href="https://wa.me/?text={st}" target="_blank" rel="noopener">WhatsApp</a>
+<a class="btn" href="viber://forward?text={st}">Viber</a>
+<a class="btn soft" href="mailto:?subject={quote('Klasiko, program za vođenje škole')}&amp;body={st}">Email</a>
+<button class="btn soft" type="button" data-copy="https://www.klasiko.rs/">Kopiraj link</button>
+</div>
+</div>
+</div>
+</section>
+<section class="sec alt">
+<div class="wrap">
+<div class="sec-head"><span class="eyebrow">Dok čekaš</span><h2>Saveti za lakše vođenje škole<span class="dot">.</span></h2></div>
+<div class="posts">{''.join(post_card(q) for q in POSTS[:3])}</div>
+<p class="small" style="margin-top:32px">Želiš da oblikuješ Klasiko sa nama? Piši nam na <a href="https://www.instagram.com/klasiko.rs/" target="_blank" rel="noopener">Instagramu</a> ili na <a href="mailto:{C.EMAIL}">{C.EMAIL}</a> i ispričaj kako danas vodiš školu.</p>
+</div>
+</section>
+</main>
+""" + C.footer().replace('<div class="m-sticky">', '<div class="m-sticky" hidden>')
+page = page.replace('<a class="btn sm" href="#prijava">Rani pristup</a>', '<a class="btn sm soft" href="/">Početna</a>').replace('href="#prijava"', 'href="/#prijava"')
+open(os.path.join(OUT, 'hvala.html'), 'w', encoding='utf-8').write(page)
+print('ok /hvala')
 
 # ---------- Sitemap ----------
 urls = [('/', '1.0', 'weekly')] + [(n['path'], '0.9', 'monthly') for n in NICHE_PAGES] + [('/blog', '0.8', 'weekly')] + [('/blog/' + p['slug'], '0.7', 'monthly') for p in POSTS]

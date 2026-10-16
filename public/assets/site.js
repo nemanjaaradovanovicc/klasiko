@@ -65,6 +65,18 @@
     }
   }
 
+  // Stranica hvala: konfete i kopiranje linka
+  if(document.querySelector('.thanks')){var ck=document.querySelector('.tk-check');if(ck)setTimeout(function(){confetti(ck);},1100);}
+  document.querySelectorAll('[data-copy]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var u=b.getAttribute('data-copy'),l=b.textContent;
+      var done=function(){b.textContent='Link je kopiran';setTimeout(function(){b.textContent=l;},2000);};
+      if(navigator.share&&window.matchMedia('(pointer:coarse)').matches){navigator.share({title:'Klasiko',url:u}).catch(function(){});return;}
+      if(navigator.clipboard){navigator.clipboard.writeText(u).then(done,function(){window.prompt('Kopiraj link:',u);});}
+      else{window.prompt('Kopiraj link:',u);}
+    });
+  });
+
   // Forme za listu čekanja
   var re=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   document.querySelectorAll('form[data-waitlist]').forEach(function(f){
@@ -79,7 +91,7 @@
         body:JSON.stringify({email:email,company:(f.querySelector('input[name=company]')||{}).value||'',source:f.getAttribute('data-waitlist')})})
       .then(function(res){return res.json().catch(function(){return{};}).then(function(j){return{ok:res.ok,j:j};});})
       .then(function(x){
-        if(x.ok){st.textContent='Hvala! Prijava je primljena. Proveri inbox i potvrdi email.';st.classList.add('ok');f.reset();confetti(btn);}
+        if(x.ok){st.textContent='Hvala! Prijava je primljena. Proveri inbox i potvrdi email.';st.classList.add('ok');f.reset();confetti(btn);setTimeout(function(){window.location.href='/hvala';},700);return;}
         else{st.textContent=(x.j&&x.j.error)||'Nešto nije u redu. Pokušaj ponovo za minut.';st.classList.add('err');}
       })
       .catch(function(){st.textContent='Nema veze sa serverom. Pokušaj ponovo.';st.classList.add('err');})

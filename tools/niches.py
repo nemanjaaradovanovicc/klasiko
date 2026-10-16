@@ -36,7 +36,7 @@ NICHE_PAGES = [
   ('Sve imam u Excelu. Mogu li da prebacim podatke?', 'Lak prelazak sa tabela je jedan od naših prioriteta, da ne bi morao ručno da prepisuješ polaznike i grupe.'),
   ('Kada Klasiko izlazi i koliko košta?', 'Klasiko je u razvoju. Datum i cenu prvo saznaju škole sa liste čekanja, koje dobijaju i popust za rane korisnike.'),
  ],
- 'blog': ['raspored-casova', 'evidencija-clanarina'],
+ 'blog': ['grupe-po-nivou', 'raspored-casova', 'cena-casa-i-clanarine'],
 },
 {
  'path': '/plesne-skole', 'file': 'plesne-skole.html', 'src': 'ples',
@@ -75,7 +75,7 @@ NICHE_PAGES = [
   ('Kako Klasiko pomaže oko nastupa i revija?', 'Obaveštenja za probe i nastupe šalješ celoj grupi odjednom, umesto da ih prosleđuješ kroz više grupa za poruke.'),
   ('Kada Klasiko izlazi i koliko košta?', 'Klasiko je u razvoju. Plesne škole sa liste čekanja prve saznaju datum i cenu i dobijaju popust za rane korisnike.'),
  ],
- 'blog': ['kako-privuci-nove-ucenike', 'evidencija-clanarina'],
+ 'blog': ['kako-privuci-nove-ucenike', 'komunikacija-sa-roditeljima', 'evidencija-clanarina'],
 },
 {
  'path': '/borilacke-vestine', 'file': 'borilacke-vestine.html', 'src': 'borilacke',
@@ -114,7 +114,7 @@ NICHE_PAGES = [
   ('Kako se vodi članarina za braću i sestre?', 'Popusti za više članova iz iste porodice česti su u klubovima, pa ih uzimamo u obzir pri planiranju evidencije članarina.'),
   ('Kada Klasiko izlazi i koliko košta?', 'Klasiko je u razvoju. Klubovi sa liste čekanja prvi saznaju datum i cenu i dobijaju popust za rane korisnike.'),
  ],
- 'blog': ['evidencija-clanarina', 'raspored-casova'],
+ 'blog': ['vodjenje-sportskog-kluba-za-decu', 'evidencija-prisustva', 'evidencija-clanarina'],
 },
 {
  'path': '/edukativni-centri', 'file': 'edukativni-centri.html', 'src': 'centri',
@@ -153,6 +153,6 @@ NICHE_PAGES = [
   ('Radi li za kurseve koji traju nekoliko nedelja?', 'Da, Klasiko je zamišljen i za kratke kurseve i za programe koji traju celu školsku godinu.'),
   ('Kada Klasiko izlazi i koliko košta?', 'Klasiko je u razvoju. Centri sa liste čekanja prvi saznaju datum i cenu i dobijaju popust za rane korisnike.'),
  ],
- 'blog': ['kako-privuci-nove-ucenike', 'raspored-casova'],
+ 'blog': ['excel-ili-program-za-skolu', 'kako-zadrzati-polaznike', 'raspored-casova'],
 },
 ]

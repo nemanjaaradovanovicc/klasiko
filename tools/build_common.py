@@ -29,7 +29,7 @@ POSTS = []  # popunjava build.py
 def e(s):
     return html.escape(s, quote=True)
 
-def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=None, extra=''):
+def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=None, extra='', robots='index, follow, max-image-preview:large, max-snippet:-1'):
     url = SITE + path
     ld_html = ''
     if ld:
@@ -42,7 +42,7 @@ def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=N
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{e(title)}</title>
 <meta name="description" content="{e(desc)}">
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="robots" content="{robots}">
 <link rel="canonical" href="{url}">
 <meta name="theme-color" content="#5B2A86">
 <meta name="format-detection" content="telephone=no">
@@ -140,7 +140,7 @@ def cta(source, title='Budi među prvim školama koje probaju Klasiko', text='Os
 
 def footer():
     niche = ''.join(f'<a href="{p}">{l}</a>' for p, l in NICHES)
-    blog = ''.join(f'<a href="/blog/{p["slug"]}">{p["short"]}</a>' for p in POSTS)
+    blog = ''.join(f'<a href="/blog/{p["slug"]}">{p["short"]}</a>' for p in POSTS[:4])
     return f'''<footer class="ftr">
 <div class="wrap top">
 <div class="brand">
