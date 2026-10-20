@@ -1,4 +1,5 @@
 {
   "framework": "nextjs",
+  "regions": ["dub1"],
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ."
 }

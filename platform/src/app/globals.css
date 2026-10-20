@@ -37,3 +37,7 @@ body { background: var(--color-soft); color: var(--color-ink); -webkit-font-smoo
   .td { @apply px-4 py-3 border-t border-line text-[15px]; }
   .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-extrabold; }
 }
+
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page-in { animation: page-in .22s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .page-in { animation: none; } }

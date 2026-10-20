@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -10,6 +10,11 @@ import {
 const ICONS = { LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield } as const;
 export type IconName = keyof typeof ICONS;
 export interface NavItem { href: string; label: string; icon: IconName; mobile?: boolean }
+
+function Pending({ dark = false }: { dark?: boolean }) {
+  const { pending } = useLinkStatus();
+  return <span aria-hidden className={`ml-auto h-4 w-4 rounded-full border-2 border-t-transparent ${dark ? 'border-white/80' : 'border-brand'} ${pending ? 'animate-spin opacity-100' : 'opacity-0'}`} />;
+}
 
 function isActive(path: string, href: string) {
   return href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
@@ -30,12 +35,18 @@ export function SideNav({ items, footer }: { items: NavItem[]; footer: React.Rea
           >
             <Icon size={19} strokeWidth={2.2} />
             {it.label}
+            <Pending dark={!active} />
           </Link>
         );
       })}
       <div className="mt-auto pt-4">{footer}</div>
     </nav>
   );
+}
+
+function MobilePending() {
+  const { pending } = useLinkStatus();
+  return <span aria-hidden className={`absolute inset-x-3 top-0 h-0.5 rounded-full bg-brand transition-opacity ${pending ? 'animate-pulse opacity-100' : 'opacity-0'}`} />;
 }
 
 export function MobileNav({ items, footer }: { items: NavItem[]; footer: React.ReactNode }) {
@@ -49,9 +60,10 @@ export function MobileNav({ items, footer }: { items: NavItem[]; footer: React.R
           const Icon = ICONS[it.icon];
           const active = isActive(path, it.href);
           return (
-            <Link key={it.href} href={it.href} className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-extrabold ${active ? 'text-brand' : 'text-mut'}`}>
+            <Link key={it.href} href={it.href} className={`relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-extrabold ${active ? 'text-brand' : 'text-mut'}`}>
               <Icon size={22} strokeWidth={active ? 2.5 : 2} />
               {it.label}
+              <MobilePending />
             </Link>
           );
         })}

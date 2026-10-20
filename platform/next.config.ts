@@ -2,6 +2,10 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // Već posećene stranice se 30 s prikazuju odmah iz memorije; izmene ih osvežavaju.
+    staleTimes: { dynamic: 30, static: 180 },
+  },
   async headers() {
     return [
       {

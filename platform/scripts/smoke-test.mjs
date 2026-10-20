@@ -129,7 +129,10 @@ try {
       }
     }
     const tUpl = await fetch(APP + '/uplate', { headers: { cookie: cookieFor(T.s) }, redirect: 'manual' });
-    ok(tUpl.status === 307 || tUpl.status === 303 || tUpl.status === 302, 'predavač je preusmeren sa /uplate (' + tUpl.status + ')');
+    const tBody = tUpl.status === 200 ? await tUpl.text() : '';
+    // Sa streaming-om (loading.tsx) preusmerenje stiže u telu odgovora umesto kao 307.
+    const redirected = [302, 303, 307].includes(tUpl.status) || /NEXT_REDIRECT|http-equiv="refresh"/.test(tBody);
+    ok(redirected && !tBody.includes('Očekivano') && !tBody.includes('4.000 RSD'), 'predavač je preusmeren sa /uplate i ne vidi iznose (' + tUpl.status + ')');
     const S = await session(`${tag}-super@klasiko.test`);
     for (const pth of ['/admin', `/admin/skole/${orgA.id}`, '/admin/zahtevi']) {
       const r = await fetch(APP + pth, { headers: { cookie: cookieFor(S.s) }, redirect: 'manual' });

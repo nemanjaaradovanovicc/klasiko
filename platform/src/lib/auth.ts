@@ -20,27 +20,29 @@ export interface Ctx {
 // Jednom po zahtevu: korisnik, profil i trenutna škola.
 export const getCtx = cache(async (): Promise<Ctx> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  if (!claims?.sub) redirect('/login');
+  const userId = claims.sub;
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single<Profile>();
-  if (!profile || !profile.active) redirect('/login?greska=nalog');
+  // Profil i škola u jednom upitu.
+  const { data: row } = await supabase.from('profiles').select('*, organizations(*)').eq('id', userId).single();
+  if (!row || !row.active) redirect('/login?greska=nalog');
+  const { organizations: ownOrg, ...profile } = row as Profile & { organizations: Organization | null };
 
   const isSuper = profile.role === 'superadmin';
-  let orgId = profile.org_id;
+  let org: Organization | null = ownOrg ?? null;
   if (isSuper) {
-    orgId = (await cookies()).get(ORG_COOKIE)?.value ?? null;
-  }
-  let org: Organization | null = null;
-  if (orgId) {
-    const { data } = await supabase.from('organizations').select('*').eq('id', orgId).single<Organization>();
-    org = data ?? null;
+    org = null;
+    const orgId = (await cookies()).get(ORG_COOKIE)?.value;
+    if (orgId) {
+      const { data } = await supabase.from('organizations').select('*').eq('id', orgId).single<Organization>();
+      org = data ?? null;
+    }
   }
   return {
-    userId: user.id,
-    email: user.email ?? '',
+    userId,
+    email: (claims.email as string | undefined) ?? '',
     profile,
     org,
     isSuper,
