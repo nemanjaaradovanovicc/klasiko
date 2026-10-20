@@ -16,7 +16,7 @@ function clean(s: string, max: number): string {
   return s.replace(/[|\r\n]/g, ' ').trim().slice(0, max);
 }
 
-export function ipsPayload(opts: { account: string; payee: string; amount: number; purpose: string; payer?: string }): string | null {
+export function ipsPayload(opts: { account: string; payee: string; amount: number; purpose: string; payer?: string; reference?: string }): string | null {
   const acc = normalizeAccount(opts.account);
   if (!acc || !opts.payee || !(opts.amount > 0)) return null;
   const amount = opts.amount.toFixed(2).replace('.', ',');
@@ -30,5 +30,11 @@ export function ipsPayload(opts: { account: string; payee: string; amount: numbe
   ];
   if (opts.payer) parts.push(`P:${clean(opts.payer, 70)}`);
   parts.push('SF:289', `S:${clean(opts.purpose, 35)}`);
+  if (opts.reference) parts.push(`RO:00${opts.reference.replace(/[^0-9-]/g, '').slice(0, 22)}`);
   return parts.join('|');
+}
+
+// Poziv na broj za članarinu: broj učenika i mesec, npr. 1042-202611. Po njemu se uplata uparuje sa izvoda.
+export function studentReference(refNo: number, period: string): string {
+  return `${refNo}-${period.replace('-', '')}`;
 }

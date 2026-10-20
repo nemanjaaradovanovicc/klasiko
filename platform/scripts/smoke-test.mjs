@@ -160,6 +160,42 @@ try {
     const { data: tInvApi } = await T.c.from('invoices').select('id');
     const { data: bInvApi } = await B.c.from('invoices').select('id');
     ok((tInvApi ?? []).length === 0 && (bInvApi ?? []).length === 0, 'baza: predavač i druga škola ne čitaju instrukcije');
+    console.log('Nove funkcije');
+    const tok = 'T' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + 'xyz';
+    await admin.from('parent_links').insert({ token: tok, student_id: sts[0].id, org_id: orgA.id });
+    const pr = await fetch(APP + `/r/${tok}`, { redirect: 'manual' });
+    const prBody = await pr.text();
+    ok(pr.status === 200 && prBody.includes('Ana') && prBody.includes('Raspored'), 'roditelj otvara link bez prijave (' + pr.status + ')');
+    const fake = await fetch(APP + `/r/izmisljen${Date.now()}abcdefghijkl`, { redirect: 'manual' });
+    ok(fake.status === 404, 'izmišljen link ne radi (' + fake.status + ')');
+    await admin.from('parent_links').update({ revoked: true }).eq('token', tok);
+    const rev = await fetch(APP + `/r/${tok}`, { redirect: 'manual' });
+    ok(rev.status === 404, 'poništen link ne radi (' + rev.status + ')');
+    const { data: plB } = await B.c.from('parent_links').select('token');
+    ok((plB ?? []).length === 0, 'baza: druga škola ne čita linkove za roditelje');
+    const { data: plT } = await T.c.from('parent_links').select('token');
+    ok((plT ?? []).length === 0, 'baza: predavač ne čita linkove za roditelje');
+    await A.c.from('sessions').insert({ org_id: orgA.id, group_id: g1.id, date: today, start_time: '12:00', status: 'cancelled' });
+    const { data: canc } = await A.c.from('sessions').select('id').eq('group_id', g1.id).eq('start_time', '12:00:00').single();
+    const { error: mkErr } = await A.c.from('sessions').insert({ org_id: orgA.id, group_id: g1.id, date: today, start_time: '13:30', status: 'planned', makeup_for: canc.id });
+    ok(!mkErr, 'nadoknada se zakazuje');
+    await admin.from('students').update({ checkin_code: 'testkod' + Date.now() }).eq('id', sts[0].id);
+    const { error: ckT } = await T.c.from('checkins').insert({ org_id: orgA.id, student_id: sts[0].id, kind: 'in' });
+    ok(!ckT, 'predavač beleži dolazak svog učenika');
+    const { error: ckB } = await B.c.from('checkins').insert({ org_id: orgA.id, student_id: sts[0].id, kind: 'in' });
+    ok(!!ckB, 'druga škola ne može da beleži dolazak');
+    for (const pth of ['/roditelji', '/uplate/izvod', '/dolasci', '/dolasci/kartice', `/ucenici/${sts[0].id}/diploma`, `/grupe/${g1.id}/diplome`, `/prisustvo?datum=${today}`, `/prisustvo/${g1.id}?datum=${today}&vreme=12:00`]) {
+      const r = await fetch(APP + pth, { headers: { cookie: cookieFor(A.s) }, redirect: 'manual' });
+      const body = r.status === 200 ? await r.text() : '';
+      ok(r.status === 200 && !/Application error/i.test(body), `owner ${pth} → ${r.status}`);
+    }
+    const dash = await (await fetch(APP + '/', { headers: { cookie: cookieFor(A.s) } })).text();
+    ok(dash.includes('Nadoknade'), 'početna prikazuje nadoknade');
+    const tDol = await fetch(APP + '/dolasci', { headers: { cookie: cookieFor(T.s) }, redirect: 'manual' });
+    ok(tDol.status === 200, 'predavač otvara Dolasci');
+    const tRod = await fetch(APP + '/roditelji', { headers: { cookie: cookieFor(T.s) }, redirect: 'manual' });
+    const tRodBody = tRod.status === 200 ? await tRod.text() : '';
+    ok(tRod.status !== 200 || /NEXT_REDIRECT|http-equiv="refresh"/.test(tRodBody), 'predavač nema pristup stranici Roditelji');
     const anon = await fetch(APP + '/ucenici', { redirect: 'manual' });
     ok(anon.status === 307 && (anon.headers.get('location') || '').includes('/login'), 'bez prijave → /login');
   }

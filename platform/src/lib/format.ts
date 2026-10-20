@@ -87,3 +87,10 @@ export function absenceStreaks<T extends { student_id: string; status: string; d
   }
   return out.sort((a, b) => b.streak - a.streak);
 }
+
+// Ponoć po beogradskom vremenu kao UTC trenutak (leti +02:00, zimi +01:00).
+export function belgradeDayStart(iso: string): string {
+  const utcMidnight = new Date(iso + 'T00:00:00Z');
+  const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Belgrade', hour: '2-digit', hourCycle: 'h23' }).format(utcMidnight));
+  return new Date(utcMidnight.getTime() - h * 3600000).toISOString();
+}

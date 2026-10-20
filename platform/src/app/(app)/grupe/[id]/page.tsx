@@ -44,7 +44,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
         title={g.name}
         subtitle={<span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />{mem.length} učenika{g.capacity ? ` od ${g.capacity}` : ''}{!g.active ? ' · u arhivi' : ''}</span>}
         back={{ href: '/grupe', label: ctx.isOwner ? 'Grupe' : 'Moje grupe' }}
-        actions={todaySlot && <Link href={`/prisustvo/${g.id}?datum=${today}&vreme=${time(todaySlot.start_time)}`} className="btn">Prisustvo danas</Link>}
+        actions={<>{todaySlot && <Link href={`/prisustvo/${g.id}?datum=${today}&vreme=${time(todaySlot.start_time)}`} className="btn">Prisustvo danas</Link>}{ctx.isOwner && <Link href={`/grupe/${g.id}/diplome`} className="btn btn-soft">Diplome</Link>}</>}
       />
       <Flash ok={sp.ok ? OK[sp.ok] : undefined} err={sp.err} />
 

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
@@ -43,4 +44,37 @@ export async function saveAttendance(input: {
   revalidatePath('/prisustvo');
   revalidatePath('/');
   return { ok: true };
+}
+
+function safeBack(v: FormDataEntryValue | null): string {
+  const b = String(v || '');
+  return b.startsWith('/') && !b.startsWith('//') ? b : '/prisustvo';
+}
+
+// Zakazuje nadoknadu za otkazani čas (nova sesija sa statusom „planned”).
+export async function scheduleMakeup(fd: FormData) {
+  const ctx = await requireOrg();
+  const from = String(fd.get('session_id'));
+  const date = String(fd.get('date') || '');
+  const start = String(fd.get('start_time') || '');
+  const end = String(fd.get('end_time') || '') || null;
+  const back = safeBack(fd.get('back'));
+  const supabase = await createClient();
+  const { data: orig } = await supabase.from('sessions').select('id, group_id, status').eq('id', from).eq('org_id', ctx.org.id).maybeSingle();
+  if (!orig || orig.status !== 'cancelled' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(start)) {
+    redirect(`${back}${back.includes('?') ? '&' : '?'}err=` + encodeURIComponent('Proveri datum i vreme nadoknade.'));
+  }
+  const { error } = await supabase.from('sessions').insert({ org_id: ctx.org.id, group_id: orig.group_id, date, start_time: start, end_time: end, status: 'planned', makeup_for: orig.id, teacher_id: ctx.userId, note: 'Nadoknada' });
+  revalidatePath('/prisustvo');
+  revalidatePath('/');
+  redirect(`${back}${back.includes('?') ? '&' : '?'}` + (error ? 'err=' + encodeURIComponent(error.message.includes('duplicate') ? 'U tom terminu već postoji čas ove grupe.' : error.message) : 'ok=nadoknada'));
+}
+
+export async function cancelMakeup(fd: FormData) {
+  const ctx = await requireOrg();
+  const supabase = await createClient();
+  await supabase.from('sessions').delete().eq('id', String(fd.get('id'))).eq('org_id', ctx.org.id).eq('status', 'planned');
+  revalidatePath('/prisustvo');
+  revalidatePath('/');
+  redirect(safeBack(fd.get('back')));
 }

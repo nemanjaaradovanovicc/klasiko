@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { newToken } from '@/lib/parent';
 
 function s(fd: FormData, k: string): string | null {
   const v = String(fd.get(k) ?? '').trim();
@@ -151,4 +152,41 @@ export async function importStudents(rows: ImportRow[]): Promise<{ ok?: number; 
   if (members.length) await supabase.from('group_members').insert(members);
   revalidatePath('/ucenici');
   return { ok: inserted.length, groups: newGroups };
+}
+
+// Link za roditelje: novi token (stari se poništava).
+export async function createParentLink(fd: FormData) {
+  const ctx = await requireOwner();
+  const studentId = String(fd.get('student_id'));
+  const supabase = await createClient();
+  const { data: st } = await supabase.from('students').select('id').eq('id', studentId).eq('org_id', ctx.org.id).single();
+  if (!st) redirect('/ucenici');
+  await supabase.from('parent_links').update({ revoked: true }).eq('student_id', studentId).eq('org_id', ctx.org.id);
+  await supabase.from('parent_links').insert({ token: newToken(), student_id: studentId, org_id: ctx.org.id });
+  revalidatePath(`/ucenici/${studentId}`);
+  redirect(`/ucenici/${studentId}?ok=link#roditelj`);
+}
+
+export async function revokeParentLink(fd: FormData) {
+  const ctx = await requireOwner();
+  const studentId = String(fd.get('student_id'));
+  const supabase = await createClient();
+  await supabase.from('parent_links').update({ revoked: true }).eq('student_id', studentId).eq('org_id', ctx.org.id);
+  revalidatePath(`/ucenici/${studentId}`);
+  redirect(`/ucenici/${studentId}?ok=ugasen#roditelj`);
+}
+
+// Napravi linkove za sve aktivne učenike koji ih nemaju (za slanje izveštaja i podsetnika).
+export async function createAllParentLinks() {
+  const ctx = await requireOwner();
+  const supabase = await createClient();
+  const [{ data: sts }, { data: links }] = await Promise.all([
+    supabase.from('students').select('id').eq('org_id', ctx.org.id).eq('active', true),
+    supabase.from('parent_links').select('student_id').eq('org_id', ctx.org.id).eq('revoked', false),
+  ]);
+  const have = new Set((links ?? []).map((l) => l.student_id));
+  const rows = (sts ?? []).filter((s) => !have.has(s.id)).map((s) => ({ token: newToken(), student_id: s.id, org_id: ctx.org.id }));
+  if (rows.length) await supabase.from('parent_links').insert(rows);
+  revalidatePath('/roditelji');
+  redirect('/roditelji?ok=' + encodeURIComponent(rows.length ? `Napravljeno ${rows.length} linkova.` : 'Svi učenici već imaju link.'));
 }

@@ -12,7 +12,7 @@ export interface QuickAction { href: string; label: string; hint: string; icon: 
 export function QuickActions({ actions }: { actions: QuickAction[] }) {
   const [open, setOpen] = useState(false);
   const path = usePathname();
-  if (actions.length === 0 || path.startsWith('/prisustvo/')) return null;
+  if (actions.length === 0 || /^\/prisustvo\/|\/diplom|^\/dolasci|^\/uplate\/izvod|^\/admin\/naplata\//.test(path)) return null;
   return (
     <div className="print:hidden lg:hidden">
       <button

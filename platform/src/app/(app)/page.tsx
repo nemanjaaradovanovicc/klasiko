@@ -35,10 +35,17 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   type AR = { student_id: string; status: string; students: { first_name: string; last_name: string; parent_phone: string | null; phone: string | null; active: boolean } | null; sessions: { date: string; group_id: string; groups: { name: string } | null } };
   const attRows = ((recentAtt ?? []) as unknown as AR[]).filter((r) => r.students?.active).map((r) => ({ ...r, date: r.sessions.date }));
   const streaks = absenceStreaks(attRows).slice(0, 8);
+  const { data: mk } = await supabase.from('sessions').select('id, date, start_time, status, makeup_for, group_id, groups(name)').eq('org_id', ctx.org.id).or(`and(status.eq.cancelled,date.gte.${addDays(today, -60)}),and(status.eq.planned,date.gte.${today})`).order('date');
+  type MK = { id: string; date: string; start_time: string; status: string; makeup_for: string | null; group_id: string; groups: { name: string } | null };
+  const mkList = (mk ?? []) as unknown as MK[];
+  const { data: mkFor } = await supabase.from('sessions').select('makeup_for').eq('org_id', ctx.org.id).not('makeup_for', 'is', null);
+  const covered = new Set((mkFor ?? []).map((m) => m.makeup_for));
+  const needMakeup = mkList.filter((m) => m.status === 'cancelled' && !covered.has(m.id));
+  const plannedMakeups = mkList.filter((m) => m.status === 'planned');
 
   type S = { start_time: string; end_time: string; rooms: { name: string } | null; groups: { id: string; name: string; color: string; group_members: { student_id: string }[] } };
   const todays = (slots ?? []) as unknown as S[];
-  const done = new Set((sessions ?? []).map((s) => `${s.group_id}:${s.start_time.slice(0, 5)}`));
+  const done = new Set((sessions ?? []).filter((s) => s.status !== 'planned').map((s) => `${s.group_id}:${s.start_time.slice(0, 5)}`));
   type C = { id: string; amount: number; due_date: string | null; student_id: string; students: { first_name: string; last_name: string } | null; payments: { amount: number }[] };
   const charges = ((chargesRes as { data: unknown }).data ?? []) as C[];
   const expected = charges.reduce((a, c) => a + Number(c.amount), 0);
@@ -86,6 +93,25 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             ))}
           </ol>
           <p className="mt-3 text-[13px] font-semibold text-mut">Treba ti pomoć oko prenosa podataka? Pošalji tabelu na <a className="font-extrabold text-brand" href="https://wa.me/381638219713" target="_blank" rel="noopener">WhatsApp</a> i uvešćemo je besplatno.</p>
+        </Card>
+      )}
+
+      {(needMakeup.length > 0 || plannedMakeups.length > 0) && (
+        <Card title="Nadoknade" className="mb-6">
+          <ul className="flex flex-col divide-y divide-line">
+            {needMakeup.slice(0, 6).map((m) => (
+              <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                <div className="min-w-0"><div className="truncate font-bold text-ink">{m.groups?.name}</div><div className="text-[12px] font-semibold text-coral-dark">Otkazan {dateLong(m.date).split(',')[1]?.trim()} u {time(m.start_time)}, nema nadoknadu</div></div>
+                <Link href={`/prisustvo/${m.group_id}?datum=${m.date}&vreme=${time(m.start_time)}`} className="btn btn-sm btn-soft">Zakaži</Link>
+              </li>
+            ))}
+            {plannedMakeups.slice(0, 6).map((m) => (
+              <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                <div className="min-w-0"><div className="truncate font-bold text-ink">{m.groups?.name}</div><div className="text-[12px] font-semibold text-mut">Nadoknada {dateLong(m.date)} u {time(m.start_time)}</div></div>
+                <Badge>zakazano</Badge>
+              </li>
+            ))}
+          </ul>
         </Card>
       )}
 

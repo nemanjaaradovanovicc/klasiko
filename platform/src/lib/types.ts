@@ -56,6 +56,8 @@ export interface Student {
   active: boolean;
   joined_at: string;
   left_at: string | null;
+  ref_no: number;
+  checkin_code: string | null;
 }
 
 export interface Group {

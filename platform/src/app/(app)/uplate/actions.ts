@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { todayISO } from '@/lib/format';
+import { matchRows, type StatementRow, type MatchResult } from '@/lib/match';
 
 function back(period: string, q: string) {
   return `/uplate?mesec=${period}${q ? '&' + q : ''}`;
@@ -107,4 +108,46 @@ export async function updateCharge(fd: FormData) {
   }
   revalidatePath('/uplate');
   redirect(back(period, 'ok=' + encodeURIComponent(fd.get('delete') ? 'Zaduženje je obrisano.' : 'Iznos je izmenjen.')));
+}
+
+// ---------- Uparivanje uplata sa izvoda ----------
+
+export type OpenCharge = { id: string; studentId: string; student: string; period: string; remaining: number };
+export type { StatementRow, MatchResult } from '@/lib/match';
+
+export async function matchStatement(rows: StatementRow[]): Promise<{ results: MatchResult[]; open: OpenCharge[]; error?: string }> {
+  const ctx = await requireOwner();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('charges')
+    .select('id, period, amount, student_id, students(first_name, last_name, parent_name, ref_no), payments(amount)')
+    .eq('org_id', ctx.org.id)
+    .order('period');
+  type C = { id: string; period: string; amount: number; student_id: string; students: { first_name: string; last_name: string; parent_name: string | null; ref_no: number } | null; payments: { amount: number }[] };
+  const charges = ((data ?? []) as unknown as C[])
+    .filter((c) => c.students)
+    .map((c) => ({ ...c, remaining: Math.max(0, Number(c.amount) - c.payments.reduce((a, p) => a + Number(p.amount), 0)) }))
+    .filter((c) => c.remaining > 0);
+  const open: OpenCharge[] = charges.map((c) => ({ id: c.id, studentId: c.student_id, student: `${c.students!.first_name} ${c.students!.last_name}`.trim(), period: c.period, remaining: c.remaining }));
+  const results = matchRows(rows, charges.map((c) => ({ id: c.id, period: c.period, remaining: c.remaining, first_name: c.students!.first_name, last_name: c.students!.last_name, parent_name: c.students!.parent_name, ref_no: c.students!.ref_no })));
+  return { results, open };
+}
+
+export async function applyMatches(items: { chargeId: string; amount: number; date: string | null; note: string }[]): Promise<{ ok?: number; error?: string }> {
+  const ctx = await requireOwner();
+  const supabase = await createClient();
+  const ids = [...new Set(items.map((i) => i.chargeId))];
+  const { data: chs } = await supabase.from('charges').select('id, student_id').eq('org_id', ctx.org.id).in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
+  const byId = new Map((chs ?? []).map((c) => [c.id, c.student_id]));
+  const rows = items
+    .filter((i) => byId.has(i.chargeId) && i.amount > 0)
+    .map((i) => ({
+      org_id: ctx.org.id, student_id: byId.get(i.chargeId)!, charge_id: i.chargeId, amount: Math.round(i.amount * 100) / 100,
+      method: 'bank', paid_at: i.date && /^\d{4}-\d{2}-\d{2}$/.test(i.date) ? i.date : todayISO(), note: ('Izvod: ' + i.note).slice(0, 200), created_by: ctx.userId,
+    }));
+  if (rows.length === 0) return { error: 'Nijedna uplata nije izabrana.' };
+  const { error } = await supabase.from('payments').insert(rows);
+  if (error) return { error: 'Uplate nisu sačuvane: ' + error.message };
+  revalidatePath('/uplate');
+  return { ok: rows.length };
 }

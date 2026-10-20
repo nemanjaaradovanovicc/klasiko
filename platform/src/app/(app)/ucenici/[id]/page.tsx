@@ -6,22 +6,25 @@ import { PageHeader, Card, Flash, Badge, Stat } from '@/components/ui';
 import { StudentFields } from '@/components/student-form';
 import { fullName, dateSr, rsd, periodLabel } from '@/lib/format';
 import type { Student } from '@/lib/types';
-import { updateStudent, setStudentActive, deleteStudent, addToGroup, removeFromGroup } from '../actions';
+import { updateStudent, setStudentActive, deleteStudent, addToGroup, removeFromGroup, createParentLink, revokeParentLink } from '../actions';
+import { CopyButton } from '@/components/copy-button';
+import { parentUrl, intlPhone } from '@/lib/parent';
 
-const OK: Record<string, string> = { '1': 'Sačuvano.', novi: 'Učenik je dodat.', ispisan: 'Učenik je ispisan i uklonjen iz grupa.', aktivan: 'Učenik je ponovo aktivan.' };
+const OK: Record<string, string> = { '1': 'Sačuvano.', novi: 'Učenik je dodat.', ispisan: 'Učenik je ispisan i uklonjen iz grupa.', aktivan: 'Učenik je ponovo aktivan.', link: 'Link za roditelje je napravljen. Pošalji ga roditelju.', ugasen: 'Link je poništen i više ne radi.' };
 
 export default async function StudentPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
   const ctx = await requireOwner();
   const { id } = await params;
   const sp = await searchParams;
   const supabase = await createClient();
-  const [{ data: s }, { data: members }, { data: groups }, { data: att }, { data: charges }, { data: payments }] = await Promise.all([
+  const [{ data: s }, { data: members }, { data: groups }, { data: att }, { data: charges }, { data: payments }, { data: plink }] = await Promise.all([
     supabase.from('students').select('*').eq('id', id).eq('org_id', ctx.org.id).single<Student>(),
     supabase.from('group_members').select('group_id, joined_at, groups(name, color, monthly_fee)').eq('student_id', id),
     supabase.from('groups').select('id,name').eq('org_id', ctx.org.id).eq('active', true).order('name'),
     supabase.from('attendance').select('status, sessions(date, group_id, groups(name))').eq('student_id', id).limit(500),
     supabase.from('charges').select('id, period, amount, description, groups(name)').eq('student_id', id).order('period', { ascending: false }).limit(36),
     supabase.from('payments').select('id, amount, paid_at, method, charge_id, note').eq('student_id', id).order('paid_at', { ascending: false }).limit(100),
+    supabase.from('parent_links').select('token, last_seen_at').eq('student_id', id).eq('revoked', false).order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
   if (!s) notFound();
 
@@ -47,10 +50,11 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
         title={fullName(s)}
         subtitle={<>{s.active ? 'Aktivan' : `Ispisan ${dateSr(s.left_at)}`} · upisan {dateSr(s.joined_at)}</>}
         back={{ href: '/ucenici', label: 'Učenici' }}
-        actions={(s.parent_phone || s.phone) && (
+        actions={(
           <>
-            <a className="btn btn-soft" href={`tel:${s.parent_phone || s.phone}`}>Pozovi</a>
-            <a className="btn btn-soft" href={`https://wa.me/${String(s.parent_phone || s.phone).replace(/\D/g, '').replace(/^0/, '381')}`} target="_blank" rel="noopener">WhatsApp</a>
+            <Link href={`/ucenici/${s.id}/diploma`} className="btn btn-soft">Diploma</Link>
+            {(s.parent_phone || s.phone) && <a className="btn btn-soft" href={`tel:${s.parent_phone || s.phone}`}>Pozovi</a>}
+            {(s.parent_phone || s.phone) && <a className="btn btn-soft" href={`https://wa.me/${String(s.parent_phone || s.phone).replace(/\D/g, '').replace(/^0/, '381')}`} target="_blank" rel="noopener">WhatsApp</a>}
           </>
         )}
       />
@@ -73,6 +77,26 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
         </Card>
 
         <div className="flex flex-col gap-6">
+          <Card title="Link za roditelje">
+            <div id="roditelj" className="scroll-mt-24" />
+            <p className="text-[14px] font-semibold text-ink-2">Roditelj bez lozinke vidi raspored, prisustvo, izveštaj za mesec, šta duguje i QR kod za uplatu.</p>
+            {plink ? (
+              <div className="mt-3 flex flex-col gap-2">
+                <div className="truncate rounded-xl bg-soft px-3 py-2 text-[13px] font-bold text-brand">{parentUrl(plink.token)}</div>
+                <div className="text-[12px] font-semibold text-mut">{plink.last_seen_at ? `Roditelj je poslednji put otvorio ${dateSr(plink.last_seen_at.slice(0, 10))}` : 'Roditelj još nije otvorio link'}</div>
+                <div className="flex flex-wrap gap-2">
+                  {(s.parent_phone || s.phone) && (
+                    <a className="btn btn-sm bg-[#1FA855] hover:bg-[#178a45]" target="_blank" rel="noopener" href={`https://wa.me/${intlPhone(s.parent_phone || s.phone)}?text=${encodeURIComponent(`Dobar dan! Ovo je lični link na kome vidite raspored, prisustvo i uplate za ${fullName(s)}: ${parentUrl(plink.token)}\n${ctx.org.name}`)}`}>Pošalji na WhatsApp</a>
+                  )}
+                  <CopyButton text={parentUrl(plink.token)} />
+                  <form action={revokeParentLink}><input type="hidden" name="student_id" value={s.id} /><button className="btn btn-sm btn-ghost text-coral-dark">Poništi link</button></form>
+                </div>
+              </div>
+            ) : (
+              <form action={createParentLink} className="mt-3"><input type="hidden" name="student_id" value={s.id} /><button className="btn btn-sm">Napravi link za roditelje</button></form>
+            )}
+          </Card>
+
           <Card title="Grupe">
             <ul className="mb-4 flex flex-col gap-2">
               {mem.length === 0 && <li className="text-[14px] font-semibold text-mut">Nije ni u jednoj grupi.</li>}

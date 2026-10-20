@@ -3,7 +3,8 @@ import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Flash, Stat, Badge, Empty } from '@/components/ui';
 import { currentPeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr, todayISO } from '@/lib/format';
-import { ipsPayload } from '@/lib/ips';
+import { ipsPayload, studentReference } from '@/lib/ips';
+import { parentUrl } from '@/lib/parent';
 import { QrButton } from './qr';
 import { generateCharges, recordPayment, deletePayment, addCharge, updateCharge } from './actions';
 
@@ -17,15 +18,17 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
   const period = sp.mesec && /^\d{4}-\d{2}$/.test(sp.mesec) ? sp.mesec : currentPeriod();
   const filter = sp.prikaz ?? 'sve';
   const supabase = await createClient();
-  const [{ data: charges }, { data: students }] = await Promise.all([
+  const [{ data: charges }, { data: students }, { data: plinks }] = await Promise.all([
     supabase
       .from('charges')
-      .select('id, amount, due_date, description, student_id, students(first_name, last_name, parent_name, parent_phone, phone), groups(name), payments(id, amount, paid_at, method)')
+      .select('id, amount, due_date, description, student_id, students(first_name, last_name, parent_name, parent_phone, phone, ref_no), groups(name), payments(id, amount, paid_at, method)')
       .eq('org_id', ctx.org.id)
       .eq('period', period),
     supabase.from('students').select('id, first_name, last_name').eq('org_id', ctx.org.id).eq('active', true).order('last_name'),
+    supabase.from('parent_links').select('student_id, token').eq('org_id', ctx.org.id).eq('revoked', false),
   ]);
-  type C = { id: string; amount: number; due_date: string | null; description: string | null; student_id: string; students: { first_name: string; last_name: string; parent_name: string | null; parent_phone: string | null; phone: string | null } | null; groups: { name: string } | null; payments: { id: string; amount: number; paid_at: string; method: string }[] };
+  const linkBy = new Map((plinks ?? []).map((l) => [l.student_id, l.token]));
+  type C = { id: string; amount: number; due_date: string | null; description: string | null; student_id: string; students: { first_name: string; last_name: string; parent_name: string | null; parent_phone: string | null; phone: string | null; ref_no: number } | null; groups: { name: string } | null; payments: { id: string; amount: number; paid_at: string; method: string }[] };
   const all = ((charges ?? []) as unknown as C[]).filter((c) => c.students).sort((a, b) => fullName(a.students!).localeCompare(fullName(b.students!), 'sr'));
   const rows = all.map((c) => {
     const paid = c.payments.reduce((a, p) => a + Number(p.amount), 0);
@@ -65,6 +68,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
           <input type="hidden" name="period" value={period} />
           <button className="btn">Napravi zaduženja za {label.toLowerCase()}</button>
         </form>
+        <Link href="/uplate/izvod" className="btn btn-soft">Uvezi izvod iz banke</Link>
         <div className="ml-auto flex gap-1 rounded-full bg-white p-1 ring-1 ring-line">
           {[['sve', 'Sve'], ['neplaceno', 'Neplaćeno'], ['placeno', 'Plaćeno']].map(([v, l]) => (
             <Link key={v} href={`/uplate?mesec=${period}&prikaz=${v}`} className={`rounded-full px-3 py-1.5 text-[13px] font-extrabold ${filter === v ? 'bg-brand text-white' : 'text-mut hover:text-brand'}`}>{l}</Link>
@@ -80,8 +84,15 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
             const s = r.students!;
             const phone = s.parent_phone || s.phone;
             const purpose = `Clanarina ${label} ${fullName(s)}`;
-            const payload = ctx.org.bank_account && ctx.org.payee_name && r.remaining > 0 ? ipsPayload({ account: ctx.org.bank_account, payee: ctx.org.payee_name, amount: r.remaining, purpose, payer: s.parent_name ?? fullName(s) }) : null;
-            const reminder = `Dobar dan! Podsećamo da članarina za ${label.toLowerCase()} za ${fullName(s)} iznosi ${rsd(r.remaining)}. Ako ste već uplatili, zanemarite poruku. Hvala! ${ctx.org.name}`;
+            const ref = studentReference(s.ref_no, period);
+            const payload = ctx.org.bank_account && ctx.org.payee_name && r.remaining > 0 ? ipsPayload({ account: ctx.org.bank_account, payee: ctx.org.payee_name, amount: r.remaining, purpose, payer: s.parent_name ?? fullName(s), reference: ref }) : null;
+            const plink = linkBy.get(r.student_id);
+            const reminder = [
+              `Dobar dan! Podsećamo da članarina za ${label.toLowerCase()} za ${fullName(s)} iznosi ${rsd(r.remaining)}.`,
+              ctx.org.bank_account ? `Račun: ${ctx.org.bank_account}, poziv na broj: ${ref}.` : '',
+              plink ? `QR kod za uplatu i detalji: ${parentUrl(plink)}` : '',
+              `Ako ste već uplatili, zanemarite poruku. Hvala! ${ctx.org.name}`,
+            ].filter(Boolean).join('\n');
             const isLate = !r.done && r.due_date && r.due_date < today;
             return (
               <div key={r.id} className="card p-4">

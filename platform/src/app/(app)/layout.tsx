@@ -21,6 +21,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/uplate', label: 'Uplate', icon: 'Wallet', mobile: true },
       { href: '/grupe', label: 'Grupe', icon: 'UsersRound' },
       { href: '/raspored', label: 'Raspored', icon: 'CalendarDays' },
+      { href: '/roditelji', label: 'Roditelji', icon: 'HeartHandshake' },
+      { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
       { href: '/izvestaji', label: 'Izveštaji', icon: 'BarChart3' },
       { href: '/podesavanja', label: 'Podešavanja', icon: 'Settings' },
     ];
@@ -30,6 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/prisustvo', label: 'Prisustvo', icon: 'CheckSquare', mobile: true },
       { href: '/raspored', label: 'Raspored', icon: 'CalendarDays', mobile: true },
       { href: '/grupe', label: 'Moje grupe', icon: 'UsersRound', mobile: true },
+      { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
     ];
   }
   if (ctx.isSuper) {
