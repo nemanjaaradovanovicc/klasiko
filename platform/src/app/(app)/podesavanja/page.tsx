@@ -1,0 +1,124 @@
+import { requireOwner, orgAccess } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { PageHeader, Card, Field, Flash, Badge, Select } from '@/components/ui';
+import { CredsForm, ResetButton } from '@/components/creds';
+import { PLANS, BILLING_LABEL, STATUS_LABEL, ROLE_LABEL, type Profile } from '@/lib/types';
+import { dateSr, rsd } from '@/lib/format';
+import { updateSchool, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember } from './actions';
+
+export const metadata = { title: 'Podešavanja' };
+
+const OK: Record<string, string> = { '1': 'Podaci škole su sačuvani.', sala: 'Sala je dodata.', tim: 'Tim je ažuriran.' };
+
+export default async function Settings({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
+  const ctx = await requireOwner();
+  const sp = await searchParams;
+  const org = ctx.org;
+  const supabase = await createClient();
+  const [{ data: rooms }, { data: team }] = await Promise.all([
+    supabase.from('rooms').select('id, name, capacity').eq('org_id', org.id).order('name'),
+    supabase.from('profiles').select('*').eq('org_id', org.id).order('created_at'),
+  ]);
+  const plan = PLANS[org.plan];
+  const acc = orgAccess(org);
+
+  return (
+    <>
+      <PageHeader title="Podešavanja" subtitle={org.name} />
+      <Flash ok={sp.ok ? OK[sp.ok] : undefined} err={sp.err} />
+      <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
+        <Card title="Podaci škole">
+          <form action={updateSchool} className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2"><Field label="Naziv škole" name="name" defaultValue={org.name} required /></div>
+            <Field label="Grad" name="city" defaultValue={org.city} />
+            <Field label="Adresa" name="address" defaultValue={org.address} />
+            <Field label="Telefon" name="phone" defaultValue={org.phone} />
+            <Field label="Email" name="email" type="email" defaultValue={org.email} />
+            <Field label="PIB" name="pib" defaultValue={org.pib} />
+            <Field label="Matični broj" name="mb" defaultValue={org.mb} />
+            <div className="sm:col-span-2 mt-2 text-[13px] font-extrabold uppercase tracking-wider text-mut">Uplate (za IPS QR kod)</div>
+            <Field label="Tekući račun" name="bank_account" defaultValue={org.bank_account} placeholder="160-5100000000-99" />
+            <Field label="Naziv primaoca na uplatnici" name="payee_name" defaultValue={org.payee_name ?? org.name} />
+            <Field label="Podrazumevana mesečna cena (RSD)" name="default_fee" type="number" min={0} defaultValue={org.default_fee} hint="Koristi se kad grupa nema svoju cenu" />
+            <Field label="Rok za uplatu (dan u mesecu)" name="fee_due_day" type="number" min={1} max={28} defaultValue={org.fee_due_day} />
+            <div className="sm:col-span-2"><button className="btn">Sačuvaj</button></div>
+          </form>
+        </Card>
+
+        <div className="flex flex-col gap-6">
+          <Card title="Pretplata">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[20px] font-extrabold text-brand">{plan.name}</span>
+              <Badge tone={acc.ok ? (org.status === 'active' ? 'ok' : 'soft') : 'coral'}>{STATUS_LABEL[org.status]}</Badge>
+            </div>
+            <ul className="mt-3 flex flex-col gap-1 text-[14px] font-semibold text-ink-2">
+              <li>Naplata: {BILLING_LABEL[org.billing]}{org.billing !== 'lifetime' ? ` · ${rsd(org.billing === 'yearly' ? plan.yearly : plan.monthly)}` : ''}</li>
+              <li>Učenika: {plan.students ? `do ${plan.students}` : 'bez ograničenja'} · Predavača: {plan.teachers ? `do ${plan.teachers}` : 'bez ograničenja'}</li>
+              {org.status === 'trial' && <li>Probni period do: {dateSr(org.trial_ends_at)}</li>}
+              {org.status === 'active' && org.billing !== 'lifetime' && <li>Plaćeno do: {dateSr(org.paid_until) || '—'}</li>}
+            </ul>
+            <a className="btn btn-soft mt-4" href="https://wa.me/381638219713?text=Zdravo%2C%20imam%20pitanje%20o%20pretplati%20za%20Klasiko" target="_blank" rel="noopener">Promena paketa ili faktura</a>
+          </Card>
+
+          <Card title="Sale i učionice">
+            <div id="sale" />
+            <ul className="mb-4 flex flex-col gap-2">
+              {(rooms ?? []).length === 0 && <li className="text-[14px] font-semibold text-mut">Još nema sala.</li>}
+              {(rooms ?? []).map((r) => (
+                <li key={r.id} className="flex items-center justify-between rounded-xl bg-soft px-3 py-2">
+                  <span className="font-bold text-ink">{r.name}{r.capacity ? <span className="font-semibold text-mut"> · {r.capacity} mesta</span> : null}</span>
+                  <form action={deleteRoom}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <button className="text-[13px] font-bold text-coral-dark hover:underline">Obriši</button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+            <form action={addRoom} className="flex gap-2">
+              <input name="name" className="input" placeholder="npr. Sala 1" required />
+              <input name="capacity" type="number" min={1} className="input w-24" placeholder="Mesta" />
+              <button className="btn btn-soft">Dodaj</button>
+            </form>
+          </Card>
+        </div>
+      </div>
+
+      <div id="tim" className="mt-6 grid gap-6 xl:grid-cols-[1fr_400px]">
+        <Card title="Tim">
+          <ul className="flex flex-col divide-y divide-line">
+            {((team ?? []) as Profile[]).map((u) => (
+              <li key={u.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
+                <div>
+                  <div className="font-extrabold text-ink">{u.full_name || u.email}{u.id === ctx.userId && <span className="font-semibold text-mut"> (ti)</span>}</div>
+                  <div className="text-[13px] font-semibold text-mut">{u.email} · {ROLE_LABEL[u.role]}</div>
+                  <div className="mt-1 flex gap-1.5">
+                    {!u.active && <Badge tone="coral">Deaktiviran</Badge>}
+                    {u.must_change_password && u.active && <Badge tone="gray">Čeka prvu prijavu</Badge>}
+                  </div>
+                </div>
+                {u.id !== ctx.userId && (
+                  <div className="flex flex-wrap items-start gap-2">
+                    <ResetButton action={resetTeamPassword} userId={u.id} />
+                    <form action={toggleTeamMember}>
+                      <input type="hidden" name="user_id" value={u.id} />
+                      <input type="hidden" name="active" value={u.active ? '0' : '1'} />
+                      <button className={`btn btn-sm ${u.active ? 'btn-danger' : 'btn-soft'}`}>{u.active ? 'Deaktiviraj' : 'Aktiviraj'}</button>
+                    </form>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Card>
+        <Card title="Dodaj člana tima">
+          <CredsForm action={addTeamMember} submit="Napravi nalog" className="grid gap-3">
+            <Field label="Ime i prezime" name="full_name" required />
+            <Field label="Email (za prijavu)" name="email" type="email" required />
+            <Field label="Telefon" name="phone" />
+            <Select label="Uloga" name="role" defaultValue="teacher" options={[{ value: 'teacher', label: 'Predavač: vidi svoje grupe i upisuje prisustvo' }, { value: 'owner', label: 'Vlasnik: pun pristup, uključujući uplate' }]} />
+          </CredsForm>
+        </Card>
+      </div>
+    </>
+  );
+}
