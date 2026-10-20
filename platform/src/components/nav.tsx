@@ -4,10 +4,10 @@ import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
-  LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield, Menu, X, LogOut,
+  LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield, Menu, X, LogOut, Receipt,
 } from 'lucide-react';
 
-const ICONS = { LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield } as const;
+const ICONS = { LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield, Receipt } as const;
 export type IconName = keyof typeof ICONS;
 export interface NavItem { href: string; label: string; icon: IconName; mobile?: boolean }
 
@@ -16,17 +16,23 @@ function Pending({ dark = false }: { dark?: boolean }) {
   return <span aria-hidden className={`ml-auto h-4 w-4 rounded-full border-2 border-t-transparent ${dark ? 'border-white/80' : 'border-brand'} ${pending ? 'animate-spin opacity-100' : 'opacity-0'}`} />;
 }
 
-function isActive(path: string, href: string) {
+function matches(path: string, href: string) {
   return href === '/' ? path === '/' : path === href || path.startsWith(href + '/');
+}
+
+// Aktivna je samo stavka sa najdužim poklapanjem (npr. /admin/naplata, a ne i /admin).
+function activeHref(path: string, items: NavItem[]) {
+  return items.filter((i) => matches(path, i.href)).sort((a, b) => b.href.length - a.href.length)[0]?.href;
 }
 
 export function SideNav({ items, footer }: { items: NavItem[]; footer: React.ReactNode }) {
   const path = usePathname();
+  const current = activeHref(path, items);
   return (
     <nav className="flex flex-1 flex-col gap-1">
       {items.map((it) => {
         const Icon = ICONS[it.icon];
-        const active = isActive(path, it.href);
+        const active = current === it.href;
         return (
           <Link
             key={it.href}
@@ -52,13 +58,14 @@ function MobilePending() {
 export function MobileNav({ items, footer }: { items: NavItem[]; footer: React.ReactNode }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const current = activeHref(path, items);
   const main = items.filter((i) => i.mobile).slice(0, 4);
   return (
     <>
       <nav className="fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" style={{ gridTemplateColumns: `repeat(${main.length + 1}, minmax(0, 1fr))` }}>
         {main.map((it) => {
           const Icon = ICONS[it.icon];
-          const active = isActive(path, it.href);
+          const active = current === it.href;
           return (
             <Link key={it.href} href={it.href} className={`relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-extrabold ${active ? 'text-brand' : 'text-mut'}`}>
               <Icon size={22} strokeWidth={active ? 2.5 : 2} />
@@ -85,7 +92,7 @@ export function MobileNav({ items, footer }: { items: NavItem[]; footer: React.R
               {items.map((it) => {
                 const Icon = ICONS[it.icon];
                 return (
-                  <Link key={it.href} href={it.href} onClick={() => setOpen(false)} className={`flex items-center gap-2.5 rounded-xl px-3 py-3 text-[15px] font-bold ${isActive(path, it.href) ? 'bg-soft-2 text-brand' : 'bg-soft text-ink'}`}>
+                  <Link key={it.href} href={it.href} onClick={() => setOpen(false)} className={`flex items-center gap-2.5 rounded-xl px-3 py-3 text-[15px] font-bold ${current === it.href ? 'bg-soft-2 text-brand' : 'bg-soft text-ink'}`}>
                     <Icon size={19} />
                     {it.label}
                   </Link>

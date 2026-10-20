@@ -23,6 +23,8 @@ export interface Organization {
   trial_ends_at: string | null;
   paid_until: string | null;
   admin_notes: string | null;
+  billing_name: string | null;
+  billing_address: string | null;
   created_at: string;
 }
 
@@ -121,3 +123,59 @@ export const ROLE_LABEL: Record<Role, string> = {
   owner: 'Vlasnik',
   teacher: 'Predavač',
 };
+
+export interface PlatformSettings {
+  issuer_name: string;
+  issuer_address: string | null;
+  issuer_city: string | null;
+  issuer_pib: string | null;
+  issuer_mb: string | null;
+  bank_name: string | null;
+  bank_account: string | null;
+  email: string | null;
+  phone: string | null;
+  invoice_note: string | null;
+  payment_days: number;
+  billing_day: number;
+}
+
+export interface InvoiceItem { description: string; qty: number; price: number }
+export interface InvoiceBuyer { name: string; address?: string | null; city?: string | null; pib?: string | null; mb?: string | null; email?: string | null; phone?: string | null }
+
+export interface Invoice {
+  id: string;
+  org_id: string;
+  number: string;
+  issue_date: string;
+  service_date: string;
+  due_date: string | null;
+  place: string;
+  buyer: InvoiceBuyer;
+  items: InvoiceItem[];
+  total: number;
+  status: 'issued' | 'paid' | 'cancelled';
+  paid_at: string | null;
+  note: string | null;
+  plan: Plan | null;
+  billing: Billing | null;
+  sent_at: string | null;
+  period_from: string | null;
+  period_to: string | null;
+  created_at: string;
+}
+
+export interface SubPayment {
+  id: string;
+  org_id: string;
+  invoice_id: string | null;
+  amount: number;
+  paid_at: string;
+  method: string;
+  plan: Plan | null;
+  billing: Billing | null;
+  paid_until_before: string | null;
+  paid_until_after: string | null;
+  note: string | null;
+}
+
+export const INVOICE_STATUS: Record<Invoice['status'], string> = { issued: 'Čeka uplatu', paid: 'Plaćeno', cancelled: 'Poništeno' };

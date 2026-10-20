@@ -80,6 +80,8 @@ export async function updateOrg(fd: FormData) {
       city: str(fd, 'city'),
       phone: str(fd, 'phone'),
       email: str(fd, 'email'),
+      billing_name: str(fd, 'billing_name'),
+      billing_address: str(fd, 'billing_address'),
       plan: str(fd, 'plan'),
       billing: str(fd, 'billing'),
       status: str(fd, 'status'),

@@ -5,6 +5,7 @@ import { getCtx, orgAccess } from '@/lib/auth';
 import { SideNav, MobileNav, LogoutButton, type NavItem } from '@/components/nav';
 import { ROLE_LABEL } from '@/lib/types';
 import { exitOrg } from './admin/actions';
+import { daysUntil } from '@/lib/billing';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getCtx();
@@ -30,7 +31,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/grupe', label: 'Moje grupe', icon: 'UsersRound', mobile: true },
     ];
   }
-  if (ctx.isSuper) items.push({ href: '/admin', label: 'Admin', icon: 'Shield', mobile: !ctx.org });
+  if (ctx.isSuper) {
+    items.push({ href: '/admin', label: 'Admin', icon: 'Shield', mobile: !ctx.org });
+    items.push({ href: '/admin/naplata', label: 'Naplata', icon: 'Receipt', mobile: !ctx.org });
+  }
 
   const access = ctx.org ? orgAccess(ctx.org) : null;
   const footer = (
@@ -53,7 +57,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-dvh lg:flex">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-5 bg-brand p-4 lg:flex">
+      <aside className="print:hidden sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-5 bg-brand p-4 lg:flex">
         <Link href="/" className="flex items-center gap-3 px-2 pt-1">
           <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-white">
             <Image src="/logo.png" alt="" width={40} height={40} />
@@ -67,7 +71,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </aside>
 
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+        <header className="print:hidden sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
           <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-lg bg-soft">
             <Image src="/logo.png" alt="" width={34} height={34} />
           </span>
@@ -75,22 +79,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </header>
 
         {ctx.isSuper && ctx.org && (
-          <form action={exitOrg} className="flex flex-wrap items-center justify-between gap-2 bg-ink px-4 py-2 text-[13px] font-bold text-white lg:px-8">
+          <form action={exitOrg} className="print:hidden flex flex-wrap items-center justify-between gap-2 bg-ink px-4 py-2 text-[13px] font-bold text-white lg:px-8">
             <span>Gledaš školu „{ctx.org.name}” kao admin Klasika</span>
             <button className="rounded-full bg-white/15 px-3 py-1 hover:bg-white/25">Nazad na admin</button>
           </form>
         )}
+        {!ctx.isSuper && ctx.isOwner && ctx.org && ctx.org.status === 'active' && ctx.org.billing !== 'lifetime' && ctx.org.paid_until && (daysUntil(ctx.org.paid_until) ?? 99) <= 7 && (
+          <div className="bg-coral-soft px-4 py-2 text-center text-[13px] font-bold text-coral-dark print:hidden lg:px-8">
+            Pretplata ističe {daysUntil(ctx.org.paid_until) === 0 ? 'danas' : `za ${daysUntil(ctx.org.paid_until)} ${daysUntil(ctx.org.paid_until) === 1 ? 'dan' : 'dana'}`}.{' '}
+            <Link className="underline" href="/podesavanja#pretplata">Podaci za uplatu</Link>
+          </div>
+        )}
         {!ctx.isSuper && access?.ok && access.daysLeft !== undefined && ctx.isOwner && (
-          <div className="bg-coral-soft px-4 py-2 text-center text-[13px] font-bold text-coral-dark lg:px-8">
+          <div className="bg-coral-soft px-4 py-2 text-center text-[13px] font-bold text-coral-dark print:hidden lg:px-8">
             Probni period: još {access.daysLeft} {access.daysLeft === 1 ? 'dan' : 'dana'}.{' '}
             <a className="underline" href="https://wa.me/381638219713?text=Zdravo%2C%20%C5%BEelim%20da%20aktiviram%20Klasiko" target="_blank" rel="noopener">Aktiviraj pretplatu</a>
           </div>
         )}
 
-        <main className="page-in mx-auto max-w-6xl px-4 pb-28 pt-6 lg:px-8 lg:pb-12 lg:pt-8">{children}</main>
+        <main className="page-in mx-auto max-w-6xl px-4 pb-28 pt-6 lg:px-8 lg:pb-12 lg:pt-8 print:max-w-none print:p-0">{children}</main>
       </div>
 
-      <MobileNav items={items} footer={mobileFooter} />
+      <div className="print:hidden"><MobileNav items={items} footer={mobileFooter} /></div>
     </div>
   );
 }

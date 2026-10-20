@@ -6,6 +6,7 @@ import { CredsForm } from '@/components/creds';
 import { KINDS, PLANS, STATUS_LABEL, BILLING_LABEL, type Organization } from '@/lib/types';
 import { dateSr, rsd } from '@/lib/format';
 import { createOrg, enterOrg } from './actions';
+import { accessEnds, daysUntil, needsBilling } from '@/lib/billing';
 
 export const metadata = { title: 'Admin' };
 
@@ -24,6 +25,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   for (const s of counts ?? []) perOrg.set(s.org_id, (perOrg.get(s.org_id) ?? 0) + 1);
   const active = list.filter((o) => o.status === 'active').length;
   const trial = list.filter((o) => o.status === 'trial' && orgAccess(o).ok).length;
+  const { data: openInv } = await db.from('invoices').select('org_id, sent_at').eq('status', 'issued');
+  const openSet = new Set((openInv ?? []).map((i) => i.org_id));
+  const billingTodo = list.filter((o) => needsBilling(o, 20) && !openSet.has(o.id)).length + (openInv ?? []).filter((i) => !i.sent_at).length;
+  const expiring = list
+    .map((o) => ({ o, end: accessEnds(o) }))
+    .filter((x) => x.end && (daysUntil(x.end) ?? 99) <= 7)
+    .sort((a, b) => (a.end! < b.end! ? -1 : 1));
   const mrr = list
     .filter((o) => o.status === 'active')
     .reduce((sum, o) => sum + (o.billing === 'monthly' ? PLANS[o.plan].monthly : o.billing === 'yearly' ? PLANS[o.plan].yearly / 12 : 0), 0);
@@ -33,7 +41,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <PageHeader
         title="Admin Klasika"
         subtitle="Škole, pretplate i korisnici"
-        actions={<Link href="/admin/zahtevi" className="btn btn-soft">Zahtevi za demo{newDemos ? <Badge tone="coral">{newDemos} novo</Badge> : null}</Link>}
+        actions={<><Link href="/admin/naplata" className="btn btn-soft">Naplata{billingTodo ? <Badge tone="coral">{billingTodo}</Badge> : null}</Link><Link href="/admin/zahtevi" className="btn btn-soft">Zahtevi za demo{newDemos ? <Badge tone="coral">{newDemos} novo</Badge> : null}</Link></>}
       />
       <Flash ok={sp.ok === 'obrisano' ? 'Škola je obrisana.' : undefined} />
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -42,6 +50,25 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <Stat label="Ukupno škola" value={list.length} />
         <Stat label="Mesečni prihod (procena)" value={rsd(Math.round(mrr))} hint="aktivne mesečne i godišnje" />
       </div>
+
+      {expiring.length > 0 && (
+        <Card title={`Ističe u narednih 7 dana ili je isteklo (${expiring.length})`} className="mb-6" actions={<Link href="/admin/naplata" className="text-[13px] font-bold text-brand">Naplata →</Link>}>
+          <ul className="flex flex-col divide-y divide-line">
+            {expiring.map(({ o, end }) => {
+              const d = daysUntil(end)!;
+              return (
+                <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                  <Link href={`/admin/skole/${o.id}`} className="font-extrabold text-ink hover:text-brand">{o.name}</Link>
+                  <span className="flex items-center gap-2 text-[13px] font-semibold text-mut">
+                    {STATUS_LABEL[o.status]} · {dateSr(end)}
+                    <Badge tone={d < 0 ? 'coral' : d <= 3 ? 'coral' : 'soft'}>{d < 0 ? `isteklo pre ${-d} d` : d === 0 ? 'ističe danas' : `za ${d} d`}</Badge>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         <div>

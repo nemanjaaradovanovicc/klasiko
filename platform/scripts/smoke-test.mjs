@@ -114,7 +114,10 @@ try {
 
   if (process.env.KEEP_FILE) {
     const fs = await import('fs');
-    fs.writeFileSync(process.env.KEEP_FILE, JSON.stringify({ owner: cookieFor(A.s), teacher: cookieFor(T.s), group: g1.id, student: sts[0].id, orgs: created.orgs, users: created.users }));
+    const Sk = await session(`${tag}-super@klasiko.test`);
+    await admin.from('organizations').update({ status: 'active', paid_until: new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10), phone: '0641234567' }).eq('id', orgA.id);
+    const { data: kInv } = await admin.from('invoices').insert({ org_id: orgA.id, number: '2026-001', buyer: { name: 'Škola A', address: 'Knez Mihailova 1', city: 'Beograd' }, items: [{ description: 'Klasiko pretplata, paket Start, mesečno, za period 23. 10. 2026. do 23. 11. 2026.', qty: 1, price: 2990 }], total: 2990, due_date: new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10), plan: 'start', billing: 'monthly' }).select().single();
+    fs.writeFileSync(process.env.KEEP_FILE, JSON.stringify({ super: cookieFor(Sk.s), inv: kInv?.id, owner: cookieFor(A.s), teacher: cookieFor(T.s), group: g1.id, student: sts[0].id, orgs: created.orgs, users: created.users }));
   }
   if (APP) {
     console.log('Stranice aplikacije (' + APP + ')');
@@ -138,6 +141,25 @@ try {
       const r = await fetch(APP + pth, { headers: { cookie: cookieFor(S.s) }, redirect: 'manual' });
       ok(r.status === 200, `superadmin ${pth} → ${r.status}`);
     }
+    console.log('Naplata');
+    const { data: inv } = await admin.from('invoices').insert({ org_id: orgA.id, number: `T${Date.now()}`, buyer: { name: 'Škola A' }, items: [{ description: 'Test', qty: 1, price: 2990 }], total: 2990 }).select().single();
+    for (const pth of ['/admin/naplata', `/admin/naplata/${inv.id}`, `/admin/naplata/nova?skola=${orgA.id}`, '/admin/naplata/podesavanja', `/uplata/${inv.id}`]) {
+      const r = await fetch(APP + pth, { headers: { cookie: cookieFor(S.s) }, redirect: 'manual' });
+      ok(r.status === 200, `superadmin ${pth} → ${r.status}`);
+    }
+    const ownInv = await fetch(APP + `/uplata/${inv.id}`, { headers: { cookie: cookieFor(A.s) }, redirect: 'manual' });
+    const ownBody = await ownInv.text();
+    ok(ownInv.status === 200 && ownBody.includes('2.990'), 'vlasnik A vidi svoju instrukciju za uplatu');
+    const otherInv = await fetch(APP + `/uplata/${inv.id}`, { headers: { cookie: cookieFor(B.s) }, redirect: 'manual' });
+    const otherBody = await otherInv.text();
+    ok(!otherBody.includes('2.990'), 'vlasnik B ne vidi instrukciju škole A (' + otherInv.status + ')');
+    const tInv = await fetch(APP + `/uplata/${inv.id}`, { headers: { cookie: cookieFor(T.s) }, redirect: 'manual' });
+    ok(!(await tInv.text()).includes('2.990'), 'predavač ne vidi instrukciju za uplatu');
+    const set = await fetch(APP + '/podesavanja', { headers: { cookie: cookieFor(A.s) }, redirect: 'manual' });
+    ok(set.status === 200 && (await set.text()).includes('Uplata br.'), 'vlasnik vidi otvorenu instrukciju u podešavanjima');
+    const { data: tInvApi } = await T.c.from('invoices').select('id');
+    const { data: bInvApi } = await B.c.from('invoices').select('id');
+    ok((tInvApi ?? []).length === 0 && (bInvApi ?? []).length === 0, 'baza: predavač i druga škola ne čitaju instrukcije');
     const anon = await fetch(APP + '/ucenici', { redirect: 'manual' });
     ok(anon.status === 307 && (anon.headers.get('location') || '').includes('/login'), 'bez prijave → /login');
   }

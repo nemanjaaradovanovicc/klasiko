@@ -6,17 +6,24 @@ import { CredsForm, ResetButton } from '@/components/creds';
 import { KINDS, PLANS, STATUS_LABEL, BILLING_LABEL, ROLE_LABEL, type Organization, type Profile } from '@/lib/types';
 import { dateSr } from '@/lib/format';
 import { updateOrg, deleteOrg, adminAddUser, resetPassword, setUserActive, enterOrg } from '../../actions';
+import { recordSubscriptionPayment, deleteSubscriptionPayment } from '../../billing-actions';
+import { planPrice } from '@/lib/billing';
+import { rsd, todayISO } from '@/lib/format';
+import Link from 'next/link';
+import type { Invoice, SubPayment } from '@/lib/types';
 
 export default async function OrgDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
   await requireSuper();
   const { id } = await params;
   const sp = await searchParams;
   const db = createAdminClient();
-  const [{ data: org }, { data: users }, { count: students }, { count: groups }] = await Promise.all([
+  const [{ data: org }, { data: users }, { count: students }, { count: groups }, { data: invs }, { data: subPays }] = await Promise.all([
     db.from('organizations').select('*').eq('id', id).single<Organization>(),
     db.from('profiles').select('*').eq('org_id', id).order('created_at'),
     db.from('students').select('id', { count: 'exact', head: true }).eq('org_id', id).eq('active', true),
     db.from('groups').select('id', { count: 'exact', head: true }).eq('org_id', id).eq('active', true),
+    db.from('invoices').select('*').eq('org_id', id).order('issue_date', { ascending: false }).limit(24),
+    db.from('subscription_payments').select('*').eq('org_id', id).order('paid_at', { ascending: false }).limit(24),
   ]);
   if (!org) notFound();
   const acc = orgAccess(org);
@@ -51,6 +58,8 @@ export default async function OrgDetail({ params, searchParams }: { params: Prom
             <Field label="Grad" name="city" defaultValue={org.city} />
             <Field label="Telefon" name="phone" defaultValue={org.phone} />
             <Field label="Email" name="email" type="email" defaultValue={org.email} />
+            <Field label="Ime ili naziv uplatioca" name="billing_name" defaultValue={org.billing_name} hint="Na instrukciji za uplatu; prazno = naziv škole" />
+            <Field label="Adresa uplatioca" name="billing_address" defaultValue={org.billing_address ?? org.address} />
             <Select label="Paket" name="plan" defaultValue={org.plan} options={Object.entries(PLANS).map(([value, p]) => ({ value, label: p.name }))} />
             <Select label="Naplata" name="billing" defaultValue={org.billing} options={Object.entries(BILLING_LABEL).map(([value, label]) => ({ value, label }))} />
             <Select label="Status" name="status" defaultValue={org.status} options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))} />
@@ -62,6 +71,45 @@ export default async function OrgDetail({ params, searchParams }: { params: Prom
         </Card>
 
         <div className="flex flex-col gap-6">
+          <Card title="Pretplata: uplate" actions={<Link href={`/admin/naplata/nova?skola=${org.id}`} className="text-[13px] font-bold text-brand">+ Instrukcija za uplatu</Link>}>
+            <form action={recordSubscriptionPayment} className="grid gap-3 sm:grid-cols-2">
+              <input type="hidden" name="org_id" value={org.id} />
+              <label><span className="label">Datum uplate</span><input type="date" name="paid_at" defaultValue={todayISO()} className="input" /></label>
+              <label><span className="label">Iznos (RSD)</span><input type="number" name="amount" min={1} defaultValue={planPrice(org.plan, org.billing)} className="input" /></label>
+              <Select label="Paket" name="plan" defaultValue={org.plan} options={Object.entries(PLANS).map(([value, p]) => ({ value, label: p.name }))} />
+              <Select label="Produži za" name="extend" defaultValue={org.billing === 'yearly' ? 'year' : org.billing === 'lifetime' ? 'lifetime' : 'month'} options={[{ value: 'month', label: '1 mesec' }, { value: 'year', label: '1 godinu' }, { value: 'lifetime', label: 'Lifetime (zauvek)' }, { value: 'none', label: 'Ne produžavaj' }]} />
+              <Select label="Način" name="method" defaultValue="bank" options={[{ value: 'bank', label: 'Uplata na račun' }, { value: 'cash', label: 'Gotovina' }, { value: 'other', label: 'Drugo' }]} />
+              <Select label="Za instrukciju" name="invoice_id" defaultValue="" placeholder="Bez instrukcije" options={((invs ?? []) as Invoice[]).filter((i) => i.status === 'issued').map((i) => ({ value: i.id, label: `${i.number} · ${rsd(i.total)}` }))} />
+              <div className="sm:col-span-2"><Field label="Napomena" name="note" /></div>
+              <div className="sm:col-span-2"><button className="btn">Evidentiraj uplatu</button></div>
+            </form>
+            <ul className="mt-5 flex flex-col divide-y divide-line border-t border-line pt-2">
+              {((subPays ?? []) as SubPayment[]).length === 0 && <li className="py-2 text-[14px] font-semibold text-mut">Još nema uplata.</li>}
+              {((subPays ?? []) as SubPayment[]).map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-2 py-2 text-[14px]">
+                  <span className="font-semibold text-ink-2">{dateSr(p.paid_at)} · {rsd(p.amount)}{p.paid_until_after ? ` · do ${dateSr(p.paid_until_after)}` : p.billing === 'lifetime' ? ' · lifetime' : ''}{p.note ? ` · ${p.note}` : ''}</span>
+                  <form action={deleteSubscriptionPayment}>
+                    <input type="hidden" name="id" value={p.id} />
+                    <input type="hidden" name="org_id" value={org.id} />
+                    <button className="text-[12px] font-bold text-coral-dark hover:underline">obriši</button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+            {((invs ?? []) as Invoice[]).length > 0 && (
+              <div className="mt-4 border-t border-line pt-3">
+                <div className="mb-2 text-[13px] font-extrabold uppercase tracking-wider text-mut">Instrukcije</div>
+                <ul className="flex flex-col gap-1.5">
+                  {((invs ?? []) as Invoice[]).map((i) => (
+                    <li key={i.id} className="flex items-center justify-between text-[14px]">
+                      <Link href={`/admin/naplata/${i.id}`} className="font-bold text-brand">{i.number} · {dateSr(i.issue_date)}</Link>
+                      <span className="flex items-center gap-2"><span className="font-bold tabular-nums">{rsd(i.total)}</span><Badge tone={i.status === 'paid' ? 'ok' : i.status === 'cancelled' ? 'gray' : 'coral'}>{i.status === 'paid' ? 'Plaćeno' : i.status === 'cancelled' ? 'Poništeno' : 'Čeka'}</Badge></span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Card>
           <Card title="Korisnici škole">
             <ul className="flex flex-col divide-y divide-line">
               {((users ?? []) as Profile[]).map((u) => (

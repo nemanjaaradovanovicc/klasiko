@@ -5,6 +5,10 @@ import { CredsForm, ResetButton } from '@/components/creds';
 import { PLANS, BILLING_LABEL, STATUS_LABEL, ROLE_LABEL, type Profile } from '@/lib/types';
 import { dateSr, rsd } from '@/lib/format';
 import { updateSchool, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember } from './actions';
+import Link from 'next/link';
+import { QrImage } from '@/components/qr-image';
+import { daysUntil, planPrice, planQr } from '@/lib/billing';
+import type { Invoice, PlatformSettings } from '@/lib/types';
 
 export const metadata = { title: 'Podešavanja' };
 
@@ -15,10 +19,16 @@ export default async function Settings({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const org = ctx.org;
   const supabase = await createClient();
-  const [{ data: rooms }, { data: team }] = await Promise.all([
+  const [{ data: rooms }, { data: team }, { data: invs }, { data: st }] = await Promise.all([
     supabase.from('rooms').select('id, name, capacity').eq('org_id', org.id).order('name'),
     supabase.from('profiles').select('*').eq('org_id', org.id).order('created_at'),
+    supabase.from('invoices').select('*').eq('org_id', org.id).eq('status', 'issued').order('issue_date', { ascending: false }),
+    supabase.from('platform_settings').select('*').eq('id', 1).maybeSingle<PlatformSettings>(),
   ]);
+  const openInv = (invs ?? []) as Invoice[];
+  const left = org.status === 'active' && org.billing !== 'lifetime' ? daysUntil(org.paid_until) : null;
+  const payBilling = org.billing === 'lifetime' ? 'monthly' : org.billing;
+  const qr = st && org.billing !== 'lifetime' && openInv.length === 0 ? planQr(st, org, org.plan, payBilling) : null;
   const plan = PLANS[org.plan];
   const acc = orgAccess(org);
 
@@ -45,11 +55,13 @@ export default async function Settings({ searchParams }: { searchParams: Promise
           </form>
         </Card>
 
-        <div className="flex flex-col gap-6">
+        <div className="order-first flex flex-col gap-6 xl:order-none">
           <Card title="Pretplata">
+            <div id="pretplata" />
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[20px] font-extrabold text-brand">{plan.name}</span>
               <Badge tone={acc.ok ? (org.status === 'active' ? 'ok' : 'soft') : 'coral'}>{STATUS_LABEL[org.status]}</Badge>
+              {left !== null && left <= 7 && <Badge tone="coral">{left < 0 ? 'isteklo' : left === 0 ? 'ističe danas' : `ističe za ${left} d`}</Badge>}
             </div>
             <ul className="mt-3 flex flex-col gap-1 text-[14px] font-semibold text-ink-2">
               <li>Naplata: {BILLING_LABEL[org.billing]}{org.billing !== 'lifetime' ? ` · ${rsd(org.billing === 'yearly' ? plan.yearly : plan.monthly)}` : ''}</li>
@@ -57,7 +69,31 @@ export default async function Settings({ searchParams }: { searchParams: Promise
               {org.status === 'trial' && <li>Probni period do: {dateSr(org.trial_ends_at)}</li>}
               {org.status === 'active' && org.billing !== 'lifetime' && <li>Plaćeno do: {dateSr(org.paid_until) || '—'}</li>}
             </ul>
-            <a className="btn btn-soft mt-4" href="https://wa.me/381638219713?text=Zdravo%2C%20imam%20pitanje%20o%20pretplati%20za%20Klasiko" target="_blank" rel="noopener">Promena paketa ili faktura</a>
+            {openInv.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2">
+                {openInv.map((i) => (
+                  <Link key={i.id} href={`/uplata/${i.id}`} className="flex items-center justify-between rounded-xl bg-coral-soft px-3 py-2.5 text-[14px] font-bold text-coral-dark">
+                    <span>Uplata br. {i.number}{i.due_date ? `, rok ${dateSr(i.due_date)}` : ''}</span>
+                    <span>{rsd(i.total)} →</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {qr && st && (
+              <div className="mt-4 rounded-2xl bg-soft p-4">
+                <div className="text-[13px] font-extrabold uppercase tracking-wider text-mut">Podaci za uplatu</div>
+                <div className="mt-2 grid items-center gap-3 sm:grid-cols-[1fr_auto]">
+                  <div className="text-[14px] font-semibold text-ink-2">
+                    <div>Primalac: <b className="text-ink">{st.issuer_name}</b>{st.issuer_city ? `, ${st.issuer_city}` : ''}</div>
+                    <div>Račun: <b className="text-ink tabular-nums">{st.bank_account}</b></div>
+                    <div>Iznos: <b className="text-ink">{rsd(planPrice(org.plan, payBilling))}</b></div>
+                    <div>Svrha: <b className="text-ink">Klasiko {plan.name} {org.name}</b></div>
+                  </div>
+                  <QrImage payload={qr} size={120} />
+                </div>
+              </div>
+            )}
+            <a className="btn btn-soft mt-4" href="https://wa.me/381638219713?text=Zdravo%2C%20imam%20pitanje%20o%20pretplati%20za%20Klasiko" target="_blank" rel="noopener">Promena paketa ili pitanje</a>
           </Card>
 
           <Card title="Sale i učionice">

@@ -19,7 +19,7 @@ INCLUDED = [
 
 PRICE_FAQ = [
     ('Da li je probni period zaista besplatan?', 'Da. Prvih 14 dana koristiš Klasiko besplatno, bez kartice i bez obaveze. Ako ne nastaviš, nalog se pauzira, a podaci ostaju sačuvani.'),
-    ('Kako se plaća pretplata?', 'Na osnovu fakture, uplatom na račun. Bez kartica i bez automatskih naplata.'),
+    ('Kako se plaća pretplata?', 'Uplatom na račun, prema instrukcijama za uplatu koje dobiješ u aplikaciji i porukom, uz IPS QR kod. Bez kartica i bez automatskih naplata.'),
     ('Mogu li da otkažem u bilo kom trenutku?', 'Mogu. Mesečna pretplata nema ugovornu obavezu: kad prestaneš da plaćaš, nalog se pauzira, bez penala.'),
     ('Šta je lifetime licenca?', 'Jednokratna uplata za paket Rast ili Pro, posle koje Klasiko koristiš bez mesečne pretplate, uključujući nove verzije aplikacije. Nudimo je samo prvim 50 škola.'),
     ('Mogu li da promenim paket kasnije?', 'Mogu, u bilo kom trenutku. Podaci ostaju isti, menja se samo ograničenje broja učenika i predavača.'),
@@ -55,7 +55,7 @@ def pricing_block():
 <button type="button" class="on" data-bill="m">Mesečno</button><button type="button" data-bill="y">Godišnje <em>2 meseca gratis</em></button>
 </div>
 <div class="plans" data-bill="m">{''.join(card(p) for p in PLANS)}</div>
-<p class="small" style="text-align:center">Cene su u dinarima. Plaćanje na osnovu fakture, bez kartice. Lifetime licenca važi samo za prvih 50 škola.</p>'''
+<p class="small" style="text-align:center">Cene su u dinarima. Plaćanje uplatom na račun, uz IPS QR kod, bez kartice. Lifetime licenca važi samo za prvih 50 škola.</p>'''
 
 
 def faq_html(items):
