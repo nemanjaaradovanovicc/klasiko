@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <script>document.documentElement.className="js";</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Klasiko | Program za vođenje škole jezika, plesne škole i akademije</title>
-<meta name="description" content="Klasiko je softver za škole jezika, plesne škole, borilačke veštine i edukativne centre. Učenici, grupe, raspored časova, prisustvo i članarine na jednom mestu. Prijavi se na listu čekanja i obezbedi popust.">
+<title>Klasiko | Program za vođenje škole, kluba i vrtića, 14 dana besplatno</title>
+<meta name="description" content="Klasiko je program za škole jezika, plesne škole, klubove borilačkih veština, edukativne centre i privatne vrtiće: učenici, raspored, prisustvo i članarine sa IPS QR uplatama. Od 2.990 RSD, 14 dana besplatno.">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="author" content="Klasiko">
 <link rel="canonical" href="https://www.klasiko.rs/">
@@ -18,12 +18,13 @@
 <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
+<link rel="alternate" type="text/plain" href="/llms.txt" title="Klasiko za AI asistente">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Klasiko">
 <meta property="og:locale" content="sr_RS">
 <meta property="og:url" content="https://www.klasiko.rs/">
 <meta property="og:title" content="Klasiko | Vodi školu, ne tabele">
-<meta property="og:description" content="Učenici, grupe, rasporedi, članarine i poruke roditelja na jednom mestu. Lista čekanja je otvorena, rani korisnici dobijaju popust.">
+<meta property="og:description" content="Učenici, grupe, raspored, prisustvo i članarine sa IPS QR uplatama na jednom mestu. Za škole, klubove i vrtiće. 14 dana besplatno.">
 <meta property="og:image" content="https://www.klasiko.rs/og-image.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
@@ -31,7 +32,7 @@
 <meta property="og:image:alt" content="Klasiko: Vodi školu, ne tabele. Učenici, raspored časova i članarine na jednom mestu.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Klasiko | Vodi školu, ne tabele">
-<meta name="twitter:description" content="Softver za škole jezika, plesne škole i akademije. Učenici, rasporedi i članarine na jednom mestu.">
+<meta name="twitter:description" content="Program za škole, klubove i vrtiće: učenici, raspored, prisustvo i članarine na jednom mestu. 14 dana besplatno.">
 <meta name="twitter:image" content="https://www.klasiko.rs/og-image.png">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/manrope-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
@@ -45,10 +46,30 @@
       "@id": "https://www.klasiko.rs/#organization",
       "name": "Klasiko",
       "url": "https://www.klasiko.rs/",
-      "logo": {"@type": "ImageObject", "url": "https://www.klasiko.rs/logo.png", "width": 512, "height": 512},
-      "founder": {"@type": "Person", "name": "Nemanja Radovanović"},
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.klasiko.rs/logo.png",
+        "width": 512,
+        "height": 512
+      },
+      "founder": {
+        "@type": "Person",
+        "name": "Nemanja Radovanović"
+      },
       "areaServed": "RS",
-      "sameAs": ["https://www.instagram.com/klasiko.rs/"]
+      "sameAs": [
+        "https://www.instagram.com/klasiko.rs/"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+381638219713",
+        "contactType": "sales",
+        "areaServed": "RS",
+        "availableLanguage": [
+          "sr"
+        ]
+      },
+      "email": "nemanja.r@vgrubs.com"
     },
     {
       "@type": "WebSite",
@@ -56,15 +77,21 @@
       "url": "https://www.klasiko.rs/",
       "name": "Klasiko",
       "inLanguage": "sr-Latn",
-      "publisher": {"@id": "https://www.klasiko.rs/#organization"}
+      "publisher": {
+        "@id": "https://www.klasiko.rs/#organization"
+      }
     },
     {
       "@type": "WebPage",
       "@id": "https://www.klasiko.rs/#webpage",
       "url": "https://www.klasiko.rs/",
-      "name": "Klasiko | Program za vođenje škole jezika, plesne škole i akademije",
-      "isPartOf": {"@id": "https://www.klasiko.rs/#website"},
-      "about": {"@id": "https://www.klasiko.rs/#software"},
+      "name": "Klasiko | Program za vođenje škole, kluba i vrtića",
+      "isPartOf": {
+        "@id": "https://www.klasiko.rs/#website"
+      },
+      "about": {
+        "@id": "https://www.klasiko.rs/#software"
+      },
       "primaryImageOfPage": "https://www.klasiko.rs/og-image.png",
       "inLanguage": "sr-Latn"
     },
@@ -75,22 +102,143 @@
       "applicationCategory": "BusinessApplication",
       "applicationSubCategory": "Softver za upravljanje školom",
       "operatingSystem": "Web, iOS, Android",
-      "description": "Platforma za škole jezika, plesne škole, borilačke veštine, edukativne centre i akademije: učenici i grupe, raspored časova, prisustvo, evidencija članarina i obaveštenja za roditelje.",
+      "description": "Program za vođenje škola jezika, plesnih škola, klubova borilačkih veština, edukativnih centara i privatnih vrtića: učenici i grupe, raspored, prisustvo sa telefona, članarine sa IPS QR uplatama, izveštaji i Excel.",
       "inLanguage": "sr-Latn",
-      "publisher": {"@id": "https://www.klasiko.rs/#organization"},
-      "audience": {"@type": "BusinessAudience", "audienceType": "Škole jezika, plesne škole, škole borilačkih veština, edukativni centri, akademije"},
-      "featureList": ["Učenici i grupe", "Raspored časova i sala", "Evidencija članarina", "Prisustvo", "Predavači i instruktori", "Obaveštenja za učenike i roditelje"]
+      "publisher": {
+        "@id": "https://www.klasiko.rs/#organization"
+      },
+      "audience": {
+        "@type": "BusinessAudience",
+        "audienceType": "Škole jezika, plesne škole, klubovi borilačkih veština, edukativni centri, akademije, privatni vrtići"
+      },
+      "featureList": [
+        "Učenici, roditelji i kontakti",
+        "Grupe, sale i nedeljni raspored",
+        "Prisustvo sa telefona",
+        "Mesečne članarine i popusti",
+        "IPS QR kod za uplatu",
+        "Izveštaji",
+        "Uvoz i izvoz u Excel"
+      ],
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "RSD",
+        "lowPrice": 2990,
+        "highPrice": 249000,
+        "offerCount": 8,
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Start mesečno",
+            "price": 2990,
+            "priceCurrency": "RSD"
+          },
+          {
+            "@type": "Offer",
+            "name": "Start godišnje",
+            "price": 29900,
+            "priceCurrency": "RSD"
+          },
+          {
+            "@type": "Offer",
+            "name": "Rast mesečno",
+            "price": 5990,
+            "priceCurrency": "RSD"
+          },
+          {
+            "@type": "Offer",
+            "name": "Rast godišnje",
+            "price": 59900,
+            "priceCurrency": "RSD"
+          },
+          {
+            "@type": "Offer",
+            "name": "Rast lifetime",
+            "price": 149000,
+            "priceCurrency": "RSD"
+          },
+          {
+            "@type": "Offer",
+            "name": "Pro mesečno",
+            "price": 9990,
+            "priceCurrency": "RSD"
+          },
+          {
+            "@type": "Offer",
+            "name": "Pro godišnje",
+            "price": 99900,
+            "priceCurrency": "RSD"
+          },
+          {
+            "@type": "Offer",
+            "name": "Pro lifetime",
+            "price": 249000,
+            "priceCurrency": "RSD"
+          }
+        ],
+        "url": "https://www.klasiko.rs/cene"
+      }
     },
     {
       "@type": "FAQPage",
       "@id": "https://www.klasiko.rs/#faq",
       "mainEntity": [
-        {"@type": "Question", "name": "Kada Klasiko izlazi?", "acceptedAnswer": {"@type": "Answer", "text": "Klasiko je trenutno u razvoju. Tačan datum još ne objavljujemo, a prvi ga saznaju oni koji su na listi čekanja."}},
-        {"@type": "Question", "name": "Koliko će koštati?", "acceptedAnswer": {"@type": "Answer", "text": "Cenu još određujemo, zajedno sa prvim školama. Objavićemo je pre lansiranja, a škole sa liste čekanja dobijaju popust za rane korisnike."}},
-        {"@type": "Question", "name": "Kako da dobijem popust za rane korisnike?", "acceptedAnswer": {"@type": "Answer", "text": "Dovoljno je da ostaviš email na listi čekanja. Kada otvorimo rani pristup, javljamo ti se sa detaljima popusta."}},
-        {"@type": "Question", "name": "Za koje škole je Klasiko?", "acceptedAnswer": {"@type": "Answer", "text": "Za škole jezika, plesne škole, škole borilačkih veština, edukativne centre, akademije i sve koji rade sa grupama, terminima i instruktorima."}},
-        {"@type": "Question", "name": "Sve vodim u Excelu. Da li je Klasiko za mene?", "acceptedAnswer": {"@type": "Answer", "text": "Upravo takve škole najbolje razumemo. Jednostavan prelazak sa tabela je jedna od stvari koje želimo da olakšamo."}},
-        {"@type": "Question", "name": "Šta dobijam prijavom na listu čekanja?", "acceptedAnswer": {"@type": "Answer", "text": "Popust za rane korisnike, povremene vesti o razvoju i poziv da među prvima probaš Klasiko. Bez spama, a odjava je jedan klik."}}
+        {
+          "@type": "Question",
+          "name": "Kako da počnem sa Klasikom?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Zakaži besplatan demo preko forme, WhatsApp-a ili telefonom na +381 63 8219713. Pokazaćemo ti aplikaciju, otvoriti nalog za 14 dana besplatne probe i, ako želiš, besplatno preneti podatke iz Excel-a."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Koliko košta Klasiko?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Paketi su Start 2.990, Rast 5.990 i Pro 9.990 dinara mesečno. Godišnja pretplata donosi dva meseca gratis, a prvih 14 dana je besplatno, bez kartice."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Šta je lifetime licenca?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Jednokratna uplata za paket Rast (149.000 RSD) ili Pro (249.000 RSD), posle koje Klasiko koristiš bez mesečne pretplate. Nudimo je samo prvim 50 škola."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Za koje škole je Klasiko?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Za škole jezika, plesne škole, klubove borilačkih veština i sportske klubove, edukativne centre, akademije, muzičke škole i privatne vrtiće, i sve koji rade sa grupama, terminima i članarinama."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Sve vodim u Excelu. Da li je Klasiko za mene?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Jeste. Učenike uvoziš iz Excel-a za par minuta, a ako želiš, mi besplatno prenesemo podatke umesto tebe."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Mogu li da otkažem u bilo kom trenutku?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Mogu. Mesečna pretplata nema ugovornu obavezu. Kada prestaneš da plaćaš, nalog se pauzira, a podaci ostaju sačuvani."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Da li su podaci moje škole bezbedni?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Svaka škola vidi isključivo svoje podatke, predavač vidi samo svoje grupe i ne vidi uplate, a pristup je zaštićen lozinkom i šifrovanom vezom."
+          }
+        }
       ]
     }
   ]
@@ -202,6 +350,47 @@ img{max-width:100%}
 .cookie a{color:#FFFFFF;font-weight:800}
 .cookie button{height:44px;padding:0 18px;border-radius:999px;border:0;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .cookie .ok{background:#FF6B5E;color:#3A0F0A}.cookie .no{background:rgba(255,255,255,.14);color:#FFFFFF}
+.k .k-cmp{overflow-x:auto;border-radius:22px;background:#FFFFFF;-webkit-overflow-scrolling:touch}
+.k .k-cmp table{width:100%;min-width:620px;border-collapse:collapse;font-size:15px}
+.k .k-cmp th,.k .k-cmp td{padding:14px 16px;text-align:left;border-bottom:1px solid #EFE7F6;font-weight:600;color:#4A3A5C}
+.k .k-cmp th{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6F5390}
+.k .k-cmp tr:last-child td{border-bottom:0}
+.k .k-cmp td:first-child{color:#2E1A42;font-weight:700}
+.k .k-cmp .k-us{background:#F3ECF9;color:#5B2A86;font-weight:800}
+.k .k-y{display:inline-flex;width:26px;height:26px;border-radius:50%;background:#5B2A86;color:#fff;align-items:center;justify-content:center;font-size:14px;font-weight:800}
+.k .k-n{display:inline-flex;width:26px;height:26px;border-radius:50%;background:#FFE8E5;color:#8C3A31;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.k .k-cmp td:not(.k-us) .k-y{background:#E6DAF2;color:#5B2A86}
+.k .k-toggle{display:flex;gap:4px;padding:5px;border-radius:999px;background:#FFFFFF;box-shadow:0 0 0 1.5px #EFE7F6;width:max-content;max-width:100%}
+.k .k-toggle button{border:0;background:transparent;height:44px;padding:0 18px;border-radius:999px;font-family:inherit;font-size:15px;font-weight:800;color:#6F5390;cursor:pointer}
+.k .k-toggle button.on{background:#5B2A86;color:#FFFFFF}
+.k .k-toggle em{font-style:normal;font-size:12px;color:#FF6B5E;margin-left:4px}
+.k .k-toggle button.on em{color:#FFC4BD}
+.k .k-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:18px}
+.k .k-plans[data-bill=m] .y,.k .k-plans[data-bill=y] .m{display:none}
+.k .k-pl{position:relative;display:flex;flex-direction:column;gap:12px;padding:30px 26px;border-radius:28px;background:#FFFFFF;border:1.5px solid #EFE7F6}
+.k .k-pl.top{border:2px solid #5B2A86;box-shadow:0 30px 70px rgba(91,42,134,.18)}
+.k .k-tag{position:absolute;top:-14px;left:26px;padding:6px 12px;border-radius:999px;background:#FF6B5E;color:#3A0F0A;font-size:12px;font-weight:800}
+.k .k-pl h3{margin:0;font-size:24px;font-weight:800;color:#2E1A42}
+.k .k-for{margin:-6px 0 0;font-size:15px;font-weight:600;color:#6F5390}
+.k .k-price{font-size:46px;line-height:1;font-weight:800;letter-spacing:-.04em;color:#5B2A86;font-variant-numeric:tabular-nums}
+.k .k-price small{font-size:15px;font-weight:700;letter-spacing:0;color:#6F5390}
+.k .k-bill{margin-top:-4px;font-size:14px;font-weight:700;color:#6F5390}
+.k .k-pl ul{margin:6px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.k .k-pl li{display:flex;gap:10px;font-size:15px;font-weight:600;color:#2E1A42}
+.k .k-pl li::before{content:"✓";flex:0 0 20px;height:20px;border-radius:50%;background:#5B2A86;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.k .k-life{margin-top:auto;padding-top:8px;font-size:13px;font-weight:700;color:#6F5390}
+.k .k-life b{color:#2E1A42}
+.k .k-btn{display:inline-flex;align-items:center;justify-content:center;height:52px;border-radius:999px;background:#5B2A86;color:#FFFFFF;font-size:16px;font-weight:800;text-decoration:none}
+.k .k-btn.soft{background:#F3ECF9;color:#5B2A86}
+.k .k-demo{position:relative;flex:1.2 1 400px;min-width:0;display:flex;flex-direction:column;gap:12px;padding:clamp(18px,3vw,28px);border-radius:24px;background:rgba(255,255,255,.08)}
+.k .k-df{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.k .k-df label{display:flex;flex-direction:column;gap:6px;min-width:0}
+.k .k-df label.full{grid-column:1/-1}
+.k .k-df span{font-size:13px;font-weight:800;color:#E6DAF2}
+.k .k-df input,.k .k-df select{width:100%;height:50px;padding:0 16px;border:0;border-radius:14px;font-family:inherit;font-size:16px;font-weight:500;color:#2E1A42;background:#FFFFFF}
+.k .k-demo .hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
+.k .k-demo button[type=submit]{height:58px;border:0;border-radius:999px;background:#FF6B5E;color:#3A0F0A;font-family:inherit;font-size:17px;font-weight:800;cursor:pointer}
+@media (max-width:560px){.k .k-df{grid-template-columns:1fr}}
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -251,8 +440,9 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <a href="#cene" style="text-decoration: none; color: #2E1A42">Cene</a>
 <a href="#faq" style="text-decoration: none; color: #2E1A42">FAQ</a>
 <a href="/blog" style="text-decoration: none; color: #2E1A42">Blog</a>
+<a href="https://app.klasiko.rs" style="text-decoration: none; color: #5B2A86">Prijava</a>
 </nav>
-<a class="hdr-cta" href="#prijava" style="display: inline-flex; align-items: center; height: 46px; padding: 0 22px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap">Rani pristup</a>
+<a class="hdr-cta" href="#demo" style="display: inline-flex; align-items: center; height: 46px; padding: 0 22px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap">Zakaži demo</a>
 </div>
 </header>
 
@@ -262,22 +452,21 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div aria-hidden="true" class="orb orb-a"></div><div aria-hidden="true" class="orb orb-b"></div><div aria-hidden="true" class="hide-m dot-bounce" style="position: absolute; left: 46%; top: 96px; width: 20px; height: 20px; border-radius: 50%; background: #FF6B5E"></div>
 <div style="position: relative; max-width: 1200px; margin: 0 auto; padding: clamp(36px, 7vw, 100px) clamp(16px, 4vw, 48px) clamp(40px, 5vw, 72px); display: flex; flex-wrap: wrap; align-items: center; gap: clamp(32px, 5vw, 64px)">
 <div style="flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(18px, 2.2vw, 24px)">
-<span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: #FFE8E5; color: #8C3A31; font-size: 14px; font-weight: 800"><span class="ping" style="position: relative; width: 8px; height: 8px; border-radius: 50%; background: #FF6B5E"></span>U razvoju. Lista čekanja je otvorena.</span>
+<span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: #FFE8E5; color: #8C3A31; font-size: 14px; font-weight: 800"><span class="ping" style="position: relative; width: 8px; height: 8px; border-radius: 50%; background: #FF6B5E"></span>14 dana besplatno, bez kartice</span>
 <h1 class="split" style="margin: 0; font-size: clamp(46px, 6.4vw, 84px); line-height: 0.98; font-weight: 800; letter-spacing: -0.055em; color: #5B2A86; text-wrap: balance">Vodi školu, ne tabele<span style="color: #FF6B5E">.</span></h1>
-<p style="margin: 0; max-width: 540px; font-size: clamp(18px, 1.6vw, 21px); line-height: 1.5; font-weight: 500; color: #4A3A5C">Učenici, grupe, raspored časova, članarine i poruke roditelja, na jednom mestu. Klasiko je program za vođenje škole koji pravimo za vlasnike škola koji žele manje administracije i više vremena za nastavu.</p>
-<form id="prijava" data-waitlist="hero" novalidate style="width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 12px">
-<label for="hero-email" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Email adresa</label>
+<p style="margin: 0; max-width: 540px; font-size: clamp(18px, 1.6vw, 21px); line-height: 1.5; font-weight: 500; color: #4A3A5C">Učenici, grupe, raspored časova, prisustvo i članarine sa IPS QR uplatama, na jednom mestu. Klasiko je program za vođenje škola, klubova i privatnih vrtića: manje administracije, više vremena za nastavu.</p>
+<div id="prijava" style="width: 100%; max-width: 580px; display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; flex-wrap: wrap; gap: 10px">
-<input id="hero-email" name="email" type="email" required autocomplete="email" placeholder="Tvoj email" style="flex: 1 1 240px; min-width: 0; height: 58px; box-sizing: border-box; padding: 0 22px; border: 1.5px solid #E4D9EF; border-radius: 999px; font-family: inherit; font-size: 17px; font-weight: 500; color: #2E1A42; background: #FFFFFF">
-<button class="stack-btn" type="submit" style="flex: 0 0 auto; height: 58px; padding: 0 28px; border: 0; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 800; box-shadow: 0 12px 28px rgba(91,42,134,0.30); cursor: pointer">Želim rani pristup</button>
+<a class="stack-btn" href="#demo" style="flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; height: 58px; padding: 0 28px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 17px; font-weight: 800; text-decoration: none; box-shadow: 0 12px 28px rgba(91,42,134,0.30)">Zakaži besplatan demo</a>
+<a class="stack-btn" href="https://wa.me/381638219713?text=Zdravo%2C%20zanima%20me%20Klasiko.%20%C5%BDelim%20da%20zaka%C5%BEem%20demo." target="_blank" rel="noopener" style="flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; height: 58px; padding: 0 26px; border-radius: 999px; background: #E3F5EC; color: #14753D; font-size: 17px; font-weight: 800; text-decoration: none">Piši na WhatsApp</a>
 </div>
+<div style="font-size: 15px; font-weight: 700; color: #4A3A5C">ili pozovi <a href="tel:+381638219713" style="font-weight: 800">+381 63 8219713</a></div>
 <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; font-weight: 700; color: #6F5390">
-<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#FF6B5E"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#3A0F0A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>Popust za rane korisnike</li>
-<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#5B2A86"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>Bez obaveze</li>
-<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#5B2A86"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>Bez spama</li>
+<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#FF6B5E"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#3A0F0A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>14 dana besplatno</li>
+<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#5B2A86"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>Besplatan prenos iz Excel-a</li>
+<li style="display: flex; align-items: center; gap: 7px"><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="7" fill="#5B2A86"></circle><path d="M3.8 7.2l2 2 4.4-4.4" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>Bez ugovorne obaveze</li>
 </ul>
-<input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true"><div class="form-note">Prijavom prihvataš <a href="/privatnost">Politiku privatnosti</a>. Odjava je moguća u svakom trenutku.</div><div class="form-status" role="status" aria-live="polite"></div>
-</form>
+</div>
 </div>
 
 <div style="flex: 1 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
@@ -319,18 +508,19 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div style="font-size: 13px; font-weight: 800; color: #FFFFFF">Prisustvo zabeleženo, Karate juniori</div>
 </div>
 </div>
-<div style="font-size: 13px; font-weight: 600; color: #6F5390">Konceptualni prikaz aplikacije u razvoju. Imena i brojevi su primeri.</div>
+<div style="font-size: 13px; font-weight: 600; color: #6F5390">Prikaz aplikacije. Imena i brojevi su primeri.</div>
 </div>
 </div>
 
 <div style="position: relative; max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) clamp(48px, 6vw, 88px)">
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
-<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390; margin-right: 6px">Pravimo ga za</span>
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390; margin-right: 6px">Za koga je</span>
 <span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Škole jezika</span>
 <span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Plesne škole</span>
 <span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Borilačke veštine</span>
 <span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Edukativne centre</span>
 <span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Akademije</span>
+<span style="padding: 9px 15px; border-radius: 999px; background: #F3ECF9; font-size: 15px; font-weight: 700; color: #5B2A86">Privatne vrtiće</span>
 </div>
 </div>
 </section>
@@ -408,7 +598,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; gap: clamp(36px, 5vw, 72px)">
 <div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
 <div style="display: flex; flex-direction: column; gap: 14px">
-<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Kako zamišljamo Klasiko</div>
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Kako radi Klasiko</div>
 <h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Tri koraka do uredne škole<span style="color: #FF6B5E">.</span></h2>
 </div>
 <ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 20px">
@@ -437,7 +627,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 </div>
 </div>
 </div>
-<span style="padding: 7px 13px; border-radius: 999px; background: #FFFFFF; font-size: 13px; font-weight: 700; color: #6F5390">Konceptualni prikaz, primer podataka</span>
+<span style="padding: 7px 13px; border-radius: 999px; background: #FFFFFF; font-size: 13px; font-weight: 700; color: #6F5390">Primer podataka</span>
 </div>
 </div>
 </section>
@@ -445,7 +635,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <section id="mogucnosti" style="background: #FFFFFF">
 <div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 40px">
 <div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
-<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Planirane mogućnosti</div>
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Mogućnosti</div>
 <h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Sve što škola svakodnevno vodi, na jednom mestu<span style="color: #FF6B5E">.</span></h2>
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px">
@@ -454,9 +644,9 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #FFE8E5; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="3" y="6" width="22" height="16" rx="4" stroke="#8C3A31" stroke-width="2.2"></rect><path d="M3 11h22M8 17h5" stroke="#8C3A31" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Evidencija članarina</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Ko je platio, a ko nije, bez ručnog upoređivanja tabela.</p></div></div>
 <div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5.6" stroke="#5B2A86" stroke-width="1.1"></circle><path d="M4.5 7.2l1.7 1.7L9.6 5.4" stroke="#5B2A86" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Prisustvo</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Beleženje dolazaka na časove i treninge, po grupama.</p></div></div>
 <div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3l8 4-8 4-8-4 8-4z" stroke="#5B2A86" stroke-width="1.6" stroke-linejoin="round"></path><path d="M5 9v4c1.5 1.5 3.2 2 5 2s3.5-.5 5-2V9" stroke="#5B2A86" stroke-width="1.6" stroke-linecap="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Predavači i instruktori</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Ko predaje kojoj grupi i kada, bez dodatnih poziva.</p></div></div>
-<div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-8l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" stroke="#5B2A86" stroke-width="2" stroke-linejoin="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Obaveštenja</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Važne informacije za učenike i roditelje na jednom mestu.</p></div></div>
+<div style="padding: 26px; border-radius: 24px; border: 1.5px solid #EFE7F6; display: flex; gap: 18px; align-items: flex-start"><div style="flex: 0 0 52px; height: 52px; border-radius: 16px; background: #F3ECF9; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-8l-5 4v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" stroke="#5B2A86" stroke-width="2" stroke-linejoin="round"></path></svg></div><div><h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #2E1A42">Uplate i podsetnici</h3><p style="margin: 6px 0 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">IPS QR kod za svaku članarinu i podsetnik roditelju preko WhatsApp-a jednim dodirom.</p></div></div>
 </div>
-<div style="font-size: 15px; font-weight: 600; color: #6F5390">Sve navedeno je u razvoju. Redosled oblikujemo prema razgovorima sa školama.</div>
+<div style="font-size: 15px; font-weight: 600; color: #6F5390">Sve mogućnosti su uključene u svaki paket, uz uvoz i izvoz u Excel. Grupna obaveštenja roditeljima stižu uskoro.</div>
 </div>
 </section>
 
@@ -464,7 +654,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 40px">
 <div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
 <div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Za koga je Klasiko</div>
-<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Za svaku školu koja radi sa grupama i terminima<span style="color: #FF6B5E">.</span></h2>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Za svaku školu, klub i vrtić koji rade sa grupama<span style="color: #FF6B5E">.</span></h2>
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px">
 <a href="/skole-jezika" style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px; text-decoration: none"><div style="font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #5B2A86">A1 B2</div><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Škole jezika</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Nivoi, grupe i predavači.</div><span style="margin-top: auto; padding-top: 6px; font-size: 14px; font-weight: 800; color: #5B2A86">Saznaj više →</span></a>
@@ -472,6 +662,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <a href="/borilacke-vestine" style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px; text-decoration: none"><svg width="38" height="32" viewBox="0 0 40 34" fill="none" aria-hidden="true"><circle cx="9" cy="10" r="6" fill="#5B2A86"></circle><circle cx="23" cy="10" r="6" fill="#5B2A86"></circle><circle cx="34" cy="10" r="5" fill="#FF6B5E"></circle><path d="M2 32c0-7 3-11 7-11s7 4 7 11M16 32c0-7 3-11 7-11s7 4 7 11" stroke="#5B2A86" stroke-width="3" stroke-linecap="round"></path></svg><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Borilačke veštine</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Treninzi i evidencija prisustva.</div><span style="margin-top: auto; padding-top: 6px; font-size: 14px; font-weight: 800; color: #5B2A86">Saznaj više →</span></a>
 <a href="/edukativni-centri" style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px; text-decoration: none"><svg width="38" height="32" viewBox="0 0 40 34" fill="none" aria-hidden="true"><path d="M3 12c6-2 12-2 17 2v18c-5-4-11-4-17-2V12zM37 12c-6-2-12-2-17 2v18c5-4 11-4 17-2V12z" stroke="#5B2A86" stroke-width="2.6" stroke-linejoin="round"></path><circle cx="20" cy="5" r="4" fill="#FF6B5E"></circle></svg><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Edukativni centri</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Časovi, učionice i predavači.</div><span style="margin-top: auto; padding-top: 6px; font-size: 14px; font-weight: 800; color: #5B2A86">Saznaj više →</span></a>
 <a href="/edukativni-centri" style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px; text-decoration: none"><svg width="38" height="32" viewBox="0 0 40 34" fill="none" aria-hidden="true"><path d="M20 3l18 8-18 8-18-8 18-8z" fill="#5B2A86"></path><path d="M9 15v8c3 3 7 4 11 4s8-1 11-4v-8l-11 5-11-5z" fill="#7A4BA6"></path><circle cx="35" cy="25" r="3.5" fill="#FF6B5E"></circle></svg><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Akademije</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Programi, polaznici i rokovi.</div><span style="margin-top: auto; padding-top: 6px; font-size: 14px; font-weight: 800; color: #5B2A86">Saznaj više →</span></a>
+<a href="/vrtici" style="padding: 24px; border-radius: 22px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px; text-decoration: none"><svg width="38" height="32" viewBox="0 0 40 34" fill="none" aria-hidden="true"><path d="M4 16L20 4l16 12v15H4V16z" stroke="#5B2A86" stroke-width="2.6" stroke-linejoin="round"></path><circle cx="20" cy="20" r="4.5" fill="#FF6B5E"></circle></svg><div style="font-size: 19px; font-weight: 800; color: #2E1A42">Privatni vrtići</div><div style="font-size: 15px; line-height: 1.5; font-weight: 500; color: #6F5390">Deca, dolasci i mesečne uplate.</div><span style="margin-top: auto; padding-top: 6px; font-size: 14px; font-weight: 800; color: #5B2A86">Saznaj više →</span></a>
 </div>
 </div>
 </section>
@@ -501,23 +692,36 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 </div>
 </section>
 
-<section id="cene" style="background: #F7F3FB">
-<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; gap: clamp(36px, 5vw, 72px)">
-<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
-<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Cene i popust</div>
-<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Rani korisnici plaćaju manje<span style="color: #FF6B5E">.</span></h2>
-<p style="margin: 0; max-width: 500px; font-size: 18px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Cenu određujemo zajedno sa prvim školama, pre lansiranja. Ko se prijavi na listu čekanja, dobija popust za rane korisnike i prvi saznaje sve detalje.</p>
+<section id="zasto-klasiko" style="background: #F7F3FB">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Zašto Klasiko</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Napravljen za škole u Srbiji, a ne preveden za njih<span style="color: #FF6B5E">.</span></h2>
+<p style="margin: 0; font-size: 18px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Strani programi su pravljeni za druge navike i druge banke. Excel je besplatan, ali ti uzima večeri. Klasiko je između: jednostavan, na srpskom i sa podrškom kad ti zatreba.</p>
 </div>
-<div style="flex: 1 1 400px; min-width: 0; padding: clamp(26px, 3vw, 40px); border-radius: 32px; background: #FFFFFF; box-shadow: 0 30px 70px rgba(91,42,134,0.14); display: flex; flex-direction: column; gap: 20px">
-<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px"><div style="font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: #2E1A42">Rani pristup</div><span style="padding: 6px 12px; border-radius: 999px; background: #FF6B5E; font-size: 13px; font-weight: 800; color: #3A0F0A">Popust za prve škole</span></div>
-<div><div style="font-size: clamp(30px, 3.4vw, 40px); line-height: 1.1; font-weight: 800; letter-spacing: -0.04em; color: #5B2A86">Cena uskoro</div><div style="margin-top: 6px; font-size: 15px; font-weight: 600; color: #6F5390">Iznos popusta objavljujemo pre lansiranja.</div></div>
-<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 16px; font-weight: 600; color: #2E1A42">
-<li style="display: flex; gap: 12px; align-items: center"><span style="flex: 0 0 24px; height: 24px; border-radius: 50%; background: #5B2A86; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Popust za rane korisnike</li>
-<li style="display: flex; gap: 12px; align-items: center"><span style="flex: 0 0 24px; height: 24px; border-radius: 50%; background: #5B2A86; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Poziv da među prvima probaš Klasiko</li>
-<li style="display: flex; gap: 12px; align-items: center"><span style="flex: 0 0 24px; height: 24px; border-radius: 50%; background: #5B2A86; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Direktan uticaj na to šta razvijamo</li>
-<li style="display: flex; gap: 12px; align-items: center"><span style="flex: 0 0 24px; height: 24px; border-radius: 50%; background: #5B2A86; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.5l2.5 2.5L11 4" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>Bez obaveze kupovine</li>
-</ul>
-<a href="#prijava" style="display: inline-flex; justify-content: center; align-items: center; height: 56px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 17px; font-weight: 800; text-decoration: none; box-shadow: 0 12px 28px rgba(91,42,134,0.30)">Obezbedi popust</a>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px"><div style="padding: 26px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><div style="width: 40px; height: 40px; border-radius: 12px; background: #F3ECF9; color: #5B2A86; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800">1</div><h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 800; color: #2E1A42">Napravljen za naše škole</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Na srpskom, cene u dinarima, uplatnice i IPS QR kod, gotovina i uplate na račun. Bez prevoda i stranih navika.</p></div><div style="padding: 26px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><div style="width: 40px; height: 40px; border-radius: 12px; background: #FFE8E5; color: #8C3A31; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800">2</div><h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 800; color: #2E1A42">Lična podrška</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Pitanje? Pozoveš ili pišeš na WhatsApp i dobiješ odgovor od čoveka, na srpskom, direktno od osnivača.</p></div><div style="padding: 26px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><div style="width: 40px; height: 40px; border-radius: 12px; background: #F3ECF9; color: #5B2A86; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800">3</div><h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 800; color: #2E1A42">Besplatan prenos podataka</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Pošalji tabelu iz Excel-a ili fotografiju sveske, a mi prebacimo učenike i grupe umesto tebe.</p></div><div style="padding: 26px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><div style="width: 40px; height: 40px; border-radius: 12px; background: #F3ECF9; color: #5B2A86; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800">4</div><h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 800; color: #2E1A42">Bez ugovorne obaveze</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Mesečnu pretplatu otkazuješ kad hoćeš, bez penala. Ostaješ jer ti koristi, a ne zbog ugovora.</p></div><div style="padding: 26px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><div style="width: 40px; height: 40px; border-radius: 12px; background: #FFE8E5; color: #8C3A31; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800">5</div><h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 800; color: #2E1A42">Radi na telefonu</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Predavači i treneri beleže prisustvo jednim dodirom, u sali, bez računara i papira.</p></div><div style="padding: 26px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px"><div style="width: 40px; height: 40px; border-radius: 12px; background: #F3ECF9; color: #5B2A86; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800">6</div><h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 800; color: #2E1A42">Svako vidi samo svoje</h3><p style="margin: 0; font-size: 16px; line-height: 1.55; font-weight: 500; color: #6F5390">Svaka škola vidi samo svoje podatke, predavač samo svoje grupe, a uplate vidi samo vlasnik.</p></div></div>
+<div class="k-cmp">
+<table>
+<thead><tr><th></th><th class="k-us">Klasiko</th><th>Excel i sveska</th><th>Strani programi</th></tr></thead>
+<tbody><tr><td>Na srpskom, cene u dinarima</td><td class="k-us"><span class="k-y">✓</span></td><td><span class="k-y">✓</span></td><td>retko</td></tr><tr><td>IPS QR kod za uplatu članarine</td><td class="k-us"><span class="k-y">✓</span></td><td><span class="k-n">✕</span></td><td><span class="k-n">✕</span></td></tr><tr><td>Prisustvo sa telefona za predavače</td><td class="k-us"><span class="k-y">✓</span></td><td><span class="k-n">✕</span></td><td><span class="k-y">✓</span></td></tr><tr><td>Ko kasni sa uplatom, na jednom ekranu</td><td class="k-us"><span class="k-y">✓</span></td><td>ručno</td><td><span class="k-y">✓</span></td></tr><tr><td>Lična podrška na srpskom, telefonom</td><td class="k-us"><span class="k-y">✓</span></td><td><span class="k-n">✕</span></td><td>retko</td></tr><tr><td>Besplatan prenos podataka</td><td class="k-us"><span class="k-y">✓</span></td><td>—</td><td>retko</td></tr><tr><td>Bez ugovorne obaveze</td><td class="k-us"><span class="k-y">✓</span></td><td><span class="k-y">✓</span></td><td>zavisi</td></tr><tr><td>Cena</td><td class="k-us">od 2.990 RSD</td><td>besplatno, ali troši tvoje vreme</td><td>često u evrima</td></tr></tbody>
+</table>
+</div>
+<div style="font-size: 14px; font-weight: 600; color: #6F5390">Poređenje je opšte i ne odnosi se na konkretan program. Pre izbora proveri uslove svakog alata.</div>
+</div>
+</section>
+
+<section id="cene" style="background: #FFFFFF">
+<div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px); display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 14px; max-width: 760px">
+<div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">Cene</div>
+<h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86; text-wrap: balance">Jednostavne cene, sve mogućnosti u svakom paketu<span style="color: #FF6B5E">.</span></h2>
+<p style="margin: 0; font-size: 18px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Paketi se razlikuju samo po broju učenika i predavača. Prvih 14 dana je besplatno, bez kartice. Plaćanje na osnovu fakture.</p>
+</div>
+<div class="k-toggle" role="group" aria-label="Način naplate"><button type="button" class="on" data-bill="m">Mesečno</button><button type="button" data-bill="y">Godišnje <em>2 meseca gratis</em></button></div>
+<div class="k-plans" data-bill="m"><div class="k-pl"><h3>Start</h3><p class="k-for">Za male škole i nove klubove</p><div class="k-price"><span class="m">2.990</span><span class="y">2.492</span> <small>RSD mesečno</small></div><div class="k-bill"><span class="m">uz mesečnu naplatu</span><span class="y">29.900 RSD godišnje, 2 meseca gratis</span></div><ul><li>Do 50 aktivnih učenika</li><li>Vlasnik i do 2 predavača</li><li>Sve mogućnosti aplikacije</li></ul><div class="k-life">Bez lifetime opcije</div><a href="#demo" data-plan="start" class="k-btn soft">Probaj 14 dana besplatno</a></div><div class="k-pl top"><span class="k-tag">Najčešći izbor</span><h3>Rast</h3><p class="k-for">Za škole koje rastu</p><div class="k-price"><span class="m">5.990</span><span class="y">4.992</span> <small>RSD mesečno</small></div><div class="k-bill"><span class="m">uz mesečnu naplatu</span><span class="y">59.900 RSD godišnje, 2 meseca gratis</span></div><ul><li>Do 200 aktivnih učenika</li><li>Do 10 predavača</li><li>Sve mogućnosti aplikacije</li></ul><div class="k-life">ili <b>149.000 RSD</b> jednom, lifetime</div><a href="#demo" data-plan="rast" class="k-btn">Probaj 14 dana besplatno</a></div><div class="k-pl"><h3>Pro</h3><p class="k-for">Za velike škole i centre</p><div class="k-price"><span class="m">9.990</span><span class="y">8.325</span> <small>RSD mesečno</small></div><div class="k-bill"><span class="m">uz mesečnu naplatu</span><span class="y">99.900 RSD godišnje, 2 meseca gratis</span></div><ul><li>Neograničen broj učenika</li><li>Neograničen broj predavača</li><li>Sve mogućnosti aplikacije</li></ul><div class="k-life">ili <b>249.000 RSD</b> jednom, lifetime</div><a href="#demo" data-plan="pro" class="k-btn soft">Probaj 14 dana besplatno</a></div></div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: center; padding: 22px 26px; border-radius: 22px; border: 2px dashed #E4D9EF">
+<div style="font-size: 16px; line-height: 1.55; font-weight: 600; color: #4A3A5C"><b style="color: #2E1A42">Lifetime licenca samo za prvih 50 škola.</b> Bio si na listi čekanja? Dobijaš 30% popusta prve godine.</div>
+<a href="/cene" style="font-size: 16px; font-weight: 800; color: #5B2A86">Sve o cenama →</a>
 </div>
 </div>
 </section>
@@ -527,15 +731,16 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
 <div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #6F5390">FAQ</div>
 <h2 style="margin: 0; font-size: clamp(34px, 4.2vw, 54px); line-height: 1.04; font-weight: 800; letter-spacing: -0.045em; color: #5B2A86">Česta pitanja<span style="color: #FF6B5E">.</span></h2>
-<p style="margin: 0; font-size: 17px; line-height: 1.6; font-weight: 500; color: #6F5390">Nema tvog pitanja? Piši nam na Instagramu, <a href="https://www.instagram.com/klasiko.rs/" target="_blank" rel="noopener me" style="font-weight: 800">@klasiko.rs</a>.</p>
+<p style="margin: 0; font-size: 17px; line-height: 1.6; font-weight: 500; color: #6F5390">Nema tvog pitanja? Pozovi <a href="tel:+381638219713" style="font-weight: 800">+381 63 8219713</a> ili piši na <a href="https://wa.me/381638219713?text=Zdravo%2C%20zanima%20me%20Klasiko.%20%C5%BDelim%20da%20zaka%C5%BEem%20demo." target="_blank" rel="noopener" style="font-weight: 800">WhatsApp</a>.</p>
 </div>
 <div style="flex: 2 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
-<details open style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Kada Klasiko izlazi?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Klasiko je trenutno u razvoju. Tačan datum još ne objavljujemo, a prvi ga saznaju oni koji su na listi čekanja.</p></details>
-<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Koliko će koštati?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Cenu još određujemo, zajedno sa prvim školama. Objavićemo je pre lansiranja, a škole sa liste čekanja dobijaju popust za rane korisnike.</p></details>
-<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Kako da dobijem popust za rane korisnike?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Dovoljno je da ostaviš email na listi čekanja. Kada otvorimo rani pristup, javljamo ti se sa detaljima popusta.</p></details>
-<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Za koje škole je Klasiko?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Za škole jezika, plesne škole, škole borilačkih veština, edukativne centre, akademije i sve koji rade sa grupama, terminima i instruktorima.</p></details>
-<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Sve vodim u Excelu. Da li je Klasiko za mene?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Upravo takve škole najbolje razumemo. Jednostavan prelazak sa tabela je jedna od stvari koje želimo da olakšamo.</p></details>
-<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Šta dobijam prijavom na listu čekanja?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Popust za rane korisnike, povremene vesti o razvoju i poziv da među prvima probaš Klasiko. Bez spama, a odjava je jedan klik.</p></details>
+<details open style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Kako da počnem sa Klasikom?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Zakaži besplatan demo preko forme, WhatsApp-a ili telefonom na +381 63 8219713. Pokazaćemo ti aplikaciju, otvoriti nalog za 14 dana besplatne probe i, ako želiš, besplatno preneti podatke iz Excel-a.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Koliko košta Klasiko?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Paketi su Start 2.990, Rast 5.990 i Pro 9.990 dinara mesečno. Godišnja pretplata donosi dva meseca gratis, a prvih 14 dana je besplatno, bez kartice.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Šta je lifetime licenca?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Jednokratna uplata za paket Rast (149.000 RSD) ili Pro (249.000 RSD), posle koje Klasiko koristiš bez mesečne pretplate. Nudimo je samo prvim 50 škola.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Za koje škole je Klasiko?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Za škole jezika, plesne škole, klubove borilačkih veština i sportske klubove, edukativne centre, akademije, muzičke škole i privatne vrtiće, i sve koji rade sa grupama, terminima i članarinama.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Sve vodim u Excelu. Da li je Klasiko za mene?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Jeste. Učenike uvoziš iz Excel-a za par minuta, a ako želiš, mi besplatno prenesemo podatke umesto tebe.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Mogu li da otkažem u bilo kom trenutku?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Mogu. Mesečna pretplata nema ugovornu obavezu. Kada prestaneš da plaćaš, nalog se pauzira, a podaci ostaju sačuvani.</p></details>
+<details style="padding: 20px 24px; border-radius: 20px; background: #F7F3FB"><summary style="display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 28px; font-size: 18px; font-weight: 800; color: #2E1A42">Da li su podaci moje škole bezbedni?<span class="faq-plus" aria-hidden="true" style="flex: 0 0 auto; font-size: 26px; line-height: 1; color: #5B2A86">+</span></summary><p style="margin: 12px 0 0; font-size: 16px; line-height: 1.6; font-weight: 500; color: #4A3A5C">Svaka škola vidi isključivo svoje podatke, predavač vidi samo svoje grupe i ne vidi uplate, a pristup je zaštićen lozinkom i šifrovanom vezom.</p></details>
 </div>
 </div>
 </section>
@@ -553,22 +758,35 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 </div>
 </section>
 
-<section style="background: #FFFFFF">
+<section id="demo" style="background: #FFFFFF">
 <div style="max-width: 1200px; margin: 0 auto; padding: clamp(56px, 8vw, 104px) clamp(16px, 4vw, 48px)">
-<div style="position: relative; overflow: hidden; padding: clamp(32px, 6vw, 80px) clamp(22px, 5vw, 72px); border-radius: clamp(28px, 3.4vw, 40px); background: #5B2A86; display: flex; flex-wrap: wrap; align-items: center; gap: clamp(28px, 4vw, 48px)">
+<div style="position: relative; overflow: hidden; padding: clamp(28px, 5vw, 64px) clamp(20px, 4vw, 56px); border-radius: clamp(28px, 3.4vw, 40px); background: #5B2A86; display: flex; flex-wrap: wrap; align-items: flex-start; gap: clamp(28px, 4vw, 48px)">
 <div aria-hidden="true" class="ring-pulse" style="position: absolute; right: -120px; top: -120px; width: 420px; height: 420px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.12)"></div>
-<div aria-hidden="true" class="hide-m orbit" style="position: absolute; right: 80px; bottom: -70px; width: 160px; height: 160px; border-radius: 50%; background: #FF6B5E"></div>
-<div style="position: relative; flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
-<span style="align-self: flex-start; padding: 7px 13px; border-radius: 999px; background: rgba(255,255,255,0.14); font-size: 13px; font-weight: 800; color: #FFFFFF">Lista čekanja je otvorena</span>
-<h2 style="margin: 0; font-size: clamp(32px, 4.4vw, 58px); line-height: 1.02; font-weight: 800; letter-spacing: -0.05em; color: #FFFFFF; text-wrap: balance">Budi među prvim školama koje probaju Klasiko<span style="color: #FF6B5E">.</span></h2>
-<p style="margin: 0; max-width: 500px; font-size: 18px; line-height: 1.55; font-weight: 500; color: #E6DAF2">Ostavi email, zadrži popust za rane korisnike i pomozi nam da napravimo alat kakav ti zaista treba.</p>
+<div style="position: relative; flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<span style="align-self: flex-start; padding: 7px 13px; border-radius: 999px; background: rgba(255,255,255,0.14); font-size: 13px; font-weight: 800; color: #FFFFFF">14 dana besplatno, bez kartice</span>
+<h2 style="margin: 0; font-size: clamp(32px, 4.4vw, 54px); line-height: 1.02; font-weight: 800; letter-spacing: -0.05em; color: #FFFFFF; text-wrap: balance">Zakaži besplatan demo<span style="color: #FF6B5E">.</span></h2>
+<p style="margin: 0; max-width: 480px; font-size: 18px; line-height: 1.55; font-weight: 500; color: #E6DAF2">Za 20 minuta ti pokažemo Klasiko na primeru tvoje škole, otvorimo nalog za probu i besplatno prenesemo podatke iz Excel-a.</p>
+<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px">
+<a href="https://wa.me/381638219713?text=Zdravo%2C%20zanima%20me%20Klasiko.%20%C5%BDelim%20da%20zaka%C5%BEem%20demo." target="_blank" rel="noopener" style="display: inline-flex; align-items: center; justify-content: center; height: 56px; border-radius: 999px; background: #1FA855; color: #FFFFFF; font-size: 17px; font-weight: 800; text-decoration: none">Piši na WhatsApp</a>
+<a href="tel:+381638219713" style="display: inline-flex; align-items: center; justify-content: center; height: 56px; border-radius: 999px; background: rgba(255,255,255,0.14); color: #FFFFFF; font-size: 17px; font-weight: 800; text-decoration: none">Pozovi +381 63 8219713</a>
 </div>
-<form data-waitlist="cta" novalidate style="position: relative; flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
-<label for="cta-email" style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Email adresa</label>
-<input id="cta-email" name="email" type="email" required autocomplete="email" placeholder="Tvoj email" style="height: 58px; box-sizing: border-box; padding: 0 22px; border: 0; border-radius: 999px; font-family: inherit; font-size: 17px; font-weight: 500; color: #2E1A42; background: #FFFFFF">
-<button type="submit" style="height: 58px; border: 0; border-radius: 999px; background: #FF6B5E; color: #3A0F0A; font-family: inherit; font-size: 17px; font-weight: 800; cursor: pointer">Želim rani pristup i popust</button>
-<div style="font-size: 14px; font-weight: 600; color: #E6DAF2">Bez obaveze i bez spama.</div>
-<input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true"><div class="form-note on-dark">Prijavom prihvataš <a href="/privatnost">Politiku privatnosti</a>. Odjava je moguća u svakom trenutku.</div><div class="form-status on-dark" role="status" aria-live="polite"></div>
+<div style="font-size: 14px; font-weight: 600; color: #E6DAF2">Radnim danima od 9 do 19 časova. Bez ugovorne obaveze.</div>
+</div>
+<form class="k-demo" data-demo novalidate>
+<div class="k-df">
+<label><span>Ime i prezime *</span><input name="name" required autocomplete="name"></label>
+<label><span>Telefon *</span><input name="phone" type="tel" required autocomplete="tel" placeholder="06x xxx xxxx"></label>
+<label><span>Naziv škole</span><input name="school" autocomplete="organization"></label>
+<label><span>Email</span><input name="email" type="email" autocomplete="email"></label>
+<label><span>Vrsta</span><select name="kind"><option value="">Izaberi</option><option value="skola_jezika">Škola jezika</option><option value="plesna_skola">Plesna škola</option><option value="borilacke">Klub borilačkih veština</option><option value="sportski_klub">Sportski klub</option><option value="edukativni_centar">Edukativni centar ili akademija</option><option value="muzicka_skola">Muzička škola</option><option value="vrtic">Privatni vrtić</option><option value="ostalo">Nešto drugo</option></select></label>
+<label><span>Broj učenika</span><select name="students_count"><option value="">Izaberi</option><option>do 50</option><option>50 do 200</option><option>više od 200</option></select></label>
+<label class="full"><span>Kada da te pozovemo?</span><input name="preferred_time" placeholder="npr. radnim danima posle 14h"></label>
+</div>
+<input type="hidden" name="plan" value="">
+<input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+<button type="submit">Pošalji zahtev za demo</button>
+<div class="form-note on-dark">Slanjem prihvataš <a href="/privatnost">Politiku privatnosti</a>. Javljamo se u toku radnog dana.</div>
+<div class="form-status on-dark" role="status" aria-live="polite"></div>
 </form>
 </div>
 </div>
@@ -579,12 +797,12 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div style="max-width: 1200px; margin: 0 auto; padding: 44px clamp(16px, 4vw, 48px); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 32px">
 <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 14px">
 <div style="align-self: flex-start; padding: 8px 12px; border-radius: 16px; background: #FFFFFF"><div style="width: 44px; height: 48px; position: relative; overflow: hidden"><picture><source srcset="/logo-128.webp" type="image/webp"><img src="/logo-128.png" alt="Klasiko logo" width="64" height="64" loading="lazy" decoding="async" style="position: absolute; left: -10px; top: -7px; width: 64px; height: 64px; max-width: none"></picture></div></div>
-<p style="margin: 0; max-width: 340px; font-size: 15px; line-height: 1.6; font-weight: 500; color: #E6DAF2">Klasiko je platforma u razvoju za jednostavnije vođenje škola i edukativnih centara.</p>
+<p style="margin: 0; max-width: 340px; font-size: 15px; line-height: 1.6; font-weight: 500; color: #E6DAF2">Klasiko je program za vođenje škola, klubova, edukativnih centara i privatnih vrtića: učenici, raspored, prisustvo i uplate na jednom mestu.</p>
 </div>
 <nav aria-label="Podnožje" style="display: flex; flex-wrap: wrap; gap: 40px">
-<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; font-weight: 600"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Stranica</div><a href="#problem" style="color: #FFFFFF; text-decoration: none">Problem</a><a href="#kako-radi" style="color: #FFFFFF; text-decoration: none">Kako radi</a><a href="#cene" style="color: #FFFFFF; text-decoration: none">Cene</a><a href="#faq" style="color: #FFFFFF; text-decoration: none">FAQ</a><a href="/blog" style="color: #FFFFFF; text-decoration: none">Blog</a></div>
-<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; font-weight: 600"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Za koga</div><a href="/skole-jezika" style="color: #FFFFFF; text-decoration: none">Škole jezika</a><a href="/plesne-skole" style="color: #FFFFFF; text-decoration: none">Plesne škole</a><a href="/borilacke-vestine" style="color: #FFFFFF; text-decoration: none">Borilačke veštine</a><a href="/edukativni-centri" style="color: #FFFFFF; text-decoration: none">Edukativni centri</a></div>
-<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; font-weight: 600"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Prati nas</div><a href="https://www.instagram.com/klasiko.rs/" target="_blank" rel="noopener me" style="color: #FFFFFF; text-decoration: none">Instagram @klasiko.rs</a><a href="#prijava" style="color: #FFFFFF; text-decoration: none">Lista čekanja</a></div>
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; font-weight: 600"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Stranica</div><a href="#problem" style="color: #FFFFFF; text-decoration: none">Problem</a><a href="#kako-radi" style="color: #FFFFFF; text-decoration: none">Kako radi</a><a href="/cene" style="color: #FFFFFF; text-decoration: none">Cene</a><a href="#faq" style="color: #FFFFFF; text-decoration: none">FAQ</a><a href="/blog" style="color: #FFFFFF; text-decoration: none">Blog</a></div>
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; font-weight: 600"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Za koga</div><a href="/skole-jezika" style="color: #FFFFFF; text-decoration: none">Škole jezika</a><a href="/plesne-skole" style="color: #FFFFFF; text-decoration: none">Plesne škole</a><a href="/borilacke-vestine" style="color: #FFFFFF; text-decoration: none">Borilačke veštine</a><a href="/edukativni-centri" style="color: #FFFFFF; text-decoration: none">Edukativni centri</a><a href="/vrtici" style="color: #FFFFFF; text-decoration: none">Privatni vrtići</a></div>
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 15px; font-weight: 600"><div style="font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #E6DAF2">Prati nas</div><a href="https://www.instagram.com/klasiko.rs/" target="_blank" rel="noopener me" style="color: #FFFFFF; text-decoration: none">Instagram @klasiko.rs</a><a href="#demo" style="color: #FFFFFF; text-decoration: none">Zakaži demo</a><a href="https://app.klasiko.rs" style="color: #FFFFFF; text-decoration: none">Prijava u aplikaciju</a><a href="tel:+381638219713" style="color: #FFFFFF; text-decoration: none">+381 63 8219713</a></div>
 </nav>
 </div>
 <div style="max-width: 1200px; margin: 0 auto; padding: 18px clamp(16px, 4vw, 48px) 28px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(255,255,255,0.14); font-size: 14px; font-weight: 600; color: #E6DAF2">
@@ -594,8 +812,8 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 </footer>
 
 <div class="m-sticky" style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; padding: 12px max(16px, env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)); background: rgba(255,255,255,0.96); border-top: 1px solid #EFE7F6; box-shadow: 0 -10px 30px rgba(91,42,134,0.10); align-items: center; gap: 12px">
-<div style="flex: 1 1 auto; min-width: 0"><div style="font-size: 14px; font-weight: 800; color: #2E1A42">Popust za rane korisnike</div><div style="font-size: 12px; font-weight: 600; color: #6F5390">Lista čekanja je otvorena</div></div>
-<a href="#prijava" style="flex: 0 0 auto; display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 15px; font-weight: 800; text-decoration: none">Prijavi se</a>
+<div style="flex: 1 1 auto; min-width: 0"><div style="font-size: 14px; font-weight: 800; color: #2E1A42">14 dana besplatno</div><div style="font-size: 12px; font-weight: 600; color: #6F5390">Bez kartice i bez obaveze</div></div>
+<a href="#demo" style="flex: 0 0 auto; display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 15px; font-weight: 800; text-decoration: none">Zakaži demo</a>
 </div>
 
 </div>
@@ -779,6 +997,33 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
       .catch(function(){st.textContent='Nema veze sa serverom. Pokušaj ponovo.';st.classList.add('err');})
       .finally(function(){btn.disabled=false;btn.textContent=label;});
     });
+  });
+})();
+</script>
+<script>
+(function(){
+  // Cene: mesečno / godišnje
+  var tg=document.querySelector('.k-toggle'),pl=document.querySelector('.k-plans');
+  if(tg&&pl)tg.addEventListener('click',function(e){var b=e.target.closest('button[data-bill]');if(!b)return;tg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});pl.setAttribute('data-bill',b.getAttribute('data-bill'));});
+  var f=document.querySelector('form[data-demo]');if(!f)return;
+  document.querySelectorAll('[data-plan]').forEach(function(a){a.addEventListener('click',function(){f.elements.plan.value=a.getAttribute('data-plan');});});
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    var btn=f.querySelector('button[type=submit]'),st=f.querySelector('.form-status');
+    var d={};Array.prototype.forEach.call(f.elements,function(el){if(el.name)d[el.name]=(el.value||'').trim();});
+    st.className='form-status on-dark';
+    if(!d.name){st.textContent='Unesi ime.';st.classList.add('err');f.elements.name.focus();return;}
+    if((d.phone||'').replace(/\D/g,'').length<6){st.textContent='Unesi broj telefona da bismo te pozvali.';st.classList.add('err');f.elements.phone.focus();return;}
+    d.source='/';
+    var label=btn.textContent;btn.disabled=true;btn.textContent='Šaljem...';
+    fetch('/api/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
+    .then(function(r){return r.json().catch(function(){return{};}).then(function(j){return{ok:r.ok,j:j};});})
+    .then(function(x){
+      if(x.ok){if(window.klasikoTrackLead)window.klasikoTrackLead('demo');st.textContent='Hvala! Javljamo se uskoro.';st.classList.add('ok');if(window.kConfetti)window.kConfetti(btn);f.reset();setTimeout(function(){location.href='/hvala-demo';},700);}
+      else{st.textContent=(x.j&&x.j.error)||'Slanje nije uspelo. Pozovi nas ili piši na WhatsApp.';st.classList.add('err');}
+    })
+    .catch(function(){st.textContent='Nema veze sa serverom. Pozovi nas ili piši na WhatsApp.';st.classList.add('err');})
+    .finally(function(){btn.disabled=false;btn.textContent=label;});
   });
 })();
 </script>

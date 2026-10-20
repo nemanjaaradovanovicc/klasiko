@@ -48,7 +48,7 @@
   }
 
   // Lepljiva traka na telefonu
-  var bar=document.querySelector('.m-sticky'),first=document.getElementById('prijava');
+  var bar=document.querySelector('.m-sticky'),first=document.getElementById('prijava')||document.querySelector('.hero .demo-btns')||document.querySelector('.hero');
   if(bar&&first&&'IntersectionObserver' in window){
     new IntersectionObserver(function(es){es.forEach(function(e){bar.classList.toggle('show',!e.isIntersecting&&e.boundingClientRect.top<0);});}).observe(first);
   }else if(bar){bar.classList.add('show');}
@@ -92,6 +92,40 @@
       try{localStorage.setItem(KEY,v);}catch(err){}box.hidden=true;if(v==='yes')load();});
     window.klasikoTrackLead=function(src){if(window.fbq)fbq('track','Lead',{content_name:'Lista cekanja',source:src});};
   })();
+
+  // Cene: mesečno / godišnje
+  document.querySelectorAll('.bill-toggle').forEach(function(tg){
+    var plans=tg.parentElement.querySelector('.plans');
+    tg.addEventListener('click',function(e){
+      var b=e.target.closest('button[data-bill]');if(!b||!plans)return;
+      tg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});
+      plans.setAttribute('data-bill',b.getAttribute('data-bill'));
+    });
+  });
+
+  // Forma za demo
+  document.querySelectorAll('form[data-demo]').forEach(function(f){
+    var pk=(location.search.match(/[?&]paket=([a-z]+)/)||[])[1];
+    if(pk&&f.elements.plan)f.elements.plan.value=pk;
+    f.addEventListener('submit',function(e){
+      e.preventDefault();
+      var btn=f.querySelector('button[type=submit]'),st=f.querySelector('.status');
+      var data={};Array.prototype.forEach.call(f.elements,function(el){if(el.name)data[el.name]=(el.value||'').trim();});
+      st.className='status';
+      if(!data.name){st.textContent='Unesi ime.';st.classList.add('err');f.elements.name.focus();return;}
+      if((data.phone||'').replace(/\D/g,'').length<6){st.textContent='Unesi broj telefona da bismo te pozvali.';st.classList.add('err');f.elements.phone.focus();return;}
+      data.source=location.pathname;
+      var label=btn.textContent;btn.disabled=true;btn.textContent='Šaljem...';
+      fetch('/api/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+      .then(function(r){return r.json().catch(function(){return{};}).then(function(j){return{ok:r.ok,j:j};});})
+      .then(function(x){
+        if(x.ok){if(window.klasikoTrackLead)window.klasikoTrackLead('demo');st.textContent='Hvala! Javljamo se uskoro.';st.classList.add('ok');f.reset();setTimeout(function(){location.href='/hvala-demo';},500);}
+        else{st.textContent=(x.j&&x.j.error)||'Slanje nije uspelo. Pozovi nas ili piši na WhatsApp.';st.classList.add('err');}
+      })
+      .catch(function(){st.textContent='Nema veze sa serverom. Pozovi nas ili piši na WhatsApp.';st.classList.add('err');})
+      .finally(function(){btn.disabled=false;btn.textContent=label;});
+    });
+  });
 
   // Forme za listu čekanja
   var re=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

@@ -4,7 +4,9 @@ import build_common as C
 from niches import NICHE_PAGES
 from posts import POSTS
 from posts_more import MORE_POSTS
-POSTS = POSTS + MORE_POSTS
+from posts_batch2a import POSTS_2A
+from posts_batch2b import POSTS_2B
+POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
 C.POSTS[:] = POSTS
@@ -21,6 +23,7 @@ MOCK = {
  'jezici': ('Škola jezika Lingua', [('16:00','Engleski za decu, A1','Sala 1'),('17:30','Nemački A2, tinejdžeri','Sala 2'),('19:00','Engleski B2, odrasli','Sala 1')], ('Ana P.','Plaćeno'), ('Luka I.','Čeka uplatu'), ('Grupe',14), ('Polaznici',126)),
  'ples': ('Plesni studio Ritam', [('17:00','Balet, deca 5 do 7','Sala 1'),('18:30','Hip hop, juniori','Sala 2'),('20:00','Latino, odrasli','Sala 1')], ('Mina P.','Plaćeno'), ('Sara J.','Čeka uplatu'), ('Grupe',9), ('Plesači',87)),
  'borilacke': ('Karate klub Pobeda', [('17:00','Mlađi pioniri','Sala A'),('18:15','Juniori, žuti i narandžasti pojas','Sala A'),('19:30','Seniori','Sala B')], ('Luka I.','Plaćeno'), ('Nikola S.','Čeka uplatu'), ('Grupe',6), ('Članovi',112)),
+ 'vrtic': ('Vrtić Sunčica', [('07:30','Jaslice, dolasci','Soba 1'),('08:00','Srednja grupa, dolasci','Soba 2'),('08:00','Starija grupa, dolasci','Soba 3')], ('Lena M.','Plaćeno'), ('Vuk T.','Čeka uplatu'), ('Grupe',4), ('Dece',62)),
  'centri': ('Edukativni centar Korak', [('10:00','Programiranje za decu','Učionica 1'),('15:00','Priprema za prijemni, matematika','Učionica 2'),('18:00','Gitara, početni','Učionica 3')], ('Jovan M.','Plaćeno'), ('Teodora R.','Rata kasni'), ('Kursevi',11), ('Polaznici',154)),
 }
 
@@ -69,13 +72,13 @@ for n in NICHE_PAGES:
 <div class="wrap hero-grid">
 <div class="hero-in">
 {C.crumbs(bc)}
-<span class="badge"><i></i>{n['badge']}. Lista čekanja je otvorena.</span>
+<span class="badge"><i></i>{n['badge']}. 14 dana besplatno.</span>
 <h1>{n['h1']}<span class="dot">.</span></h1>
 <p class="lead">{n['lead']}</p>
-{C.form('prijava', n['src'] + '-hero')}
-<ul class="checks"><li>Popust za rane korisnike</li><li>Bez obaveze</li><li>Bez spama</li></ul>
+{C.demo_buttons()}
+<ul class="checks"><li>14 dana besplatno</li><li>Besplatan prenos iz Excel-a</li><li>Bez ugovorne obaveze</li></ul>
 </div>
-<div class="hero-vis">{mock_html(n['src'])}<p class="mk-note">Konceptualni prikaz aplikacije u razvoju. Imena i brojevi su primeri.</p></div>
+<div class="hero-vis">{mock_html(n['src'])}<p class="mk-note">Prikaz aplikacije. Imena i brojevi su primeri.</p></div>
 </div>
 </section>
 
@@ -88,15 +91,15 @@ for n in NICHE_PAGES:
 
 <section class="sec">
 <div class="wrap">
-<div class="sec-head"><span class="eyebrow">Planirane mogućnosti</span><h2>{n['feat_title']}<span class="dot">.</span></h2></div>
+<div class="sec-head"><span class="eyebrow">Mogućnosti</span><h2>{n['feat_title']}<span class="dot">.</span></h2></div>
 <div class="grid">{feats}</div>
-<p class="small">Klasiko je u razvoju. Redosled mogućnosti oblikujemo prema razgovorima sa školama i klubovima.</p>
+<p class="small">Sve mogućnosti su uključene u svaki paket. Novi alati stižu redovno, prema predlozima škola koje koriste Klasiko.</p>
 </div>
 </section>
 
 <section class="sec alt">
 <div class="wrap split">
-<div class="sec-head" style="margin:0"><span class="eyebrow">Kako zamišljamo Klasiko</span><h2>Tri koraka do uredne organizacije<span class="dot">.</span></h2><p>Bez komplikovanog podešavanja i bez obuke od nekoliko dana.</p><div><a class="btn" href="#prijava">Želim rani pristup</a></div></div>
+<div class="sec-head" style="margin:0"><span class="eyebrow">Kako počinješ</span><h2>Tri koraka do uredne organizacije<span class="dot">.</span></h2><p>Bez komplikovanog podešavanja i bez obuke od nekoliko dana. Ako želiš, podatke iz Excel-a prenosimo mi, besplatno.</p><div><a class="btn" href="/demo">Zakaži demo</a></div></div>
 <ol class="steps">{steps}</ol>
 </div>
 </section>
@@ -133,7 +136,7 @@ ld = {"@context": "https://schema.org", "@graph": [
      "blogPost": [{"@type": "BlogPosting", "headline": p['title'], "url": C.SITE + "/blog/" + p['slug'], "datePublished": C.DATE} for p in POSTS]},
     C.bc_ld(bc, '/blog'),
 ]}
-cards = ''.join(post_card(p) for p in POSTS)
+cards = ''.join(post_card(p) for p in reversed(POSTS))
 page = C.head('Blog za vlasnike škola i klubova: saveti za organizaciju | Klasiko',
               'Praktični saveti za vlasnike škola jezika, plesnih škola, klubova borilačkih veština i edukativnih centara: članarine, raspored časova i kako privući nove učenike.',
               '/blog', og_title='Klasiko blog: saveti za vođenje škole', ld=ld) + C.header('/blog') + f'''<main id="sadrzaj">
@@ -152,7 +155,7 @@ page = C.head('Blog za vlasnike škola i klubova: saveti za organizaciju | Klasi
 </section>
 <section class="sec" style="padding-bottom:0">
 <div class="wrap">
-<div class="sec-head"><span class="eyebrow">Lista čekanja</span><h2>Novi članci i vesti o Klasiku, u tvom inboxu<span class="dot">.</span></h2><p>Prijavi se na listu čekanja: šaljemo povremene savete i javljamo ti kada otvorimo rani pristup, uz popust za rane korisnike.</p></div>
+<div class="sec-head"><span class="eyebrow">Saveti na mejl</span><h2>Novi članci i vesti o Klasiku, u tvom inboxu<span class="dot">.</span></h2><p>Ostavi email: povremeno šaljemo praktične savete za vođenje škole. Bez spama, odjava jednim klikom.</p></div>
 {C.form('prijava', 'blog-hero')}
 </div>
 </section>
@@ -169,7 +172,7 @@ for p in POSTS:
     toc = '<nav class="toc" aria-label="Sadržaj članka"><b>U ovom članku</b><ol>' + ''.join(f'<li><a href="#{i}">{t}</a></li>' for i, t in heads) + '</ol></nav>'
     # forma u sredini članka
     mid = heads[len(heads) // 2][0]
-    inline = f'''<div class="inline-cta col"><p>Klasiko pravimo da članarine, raspored i obaveštenja budu na jednom mestu. Prijavi se na listu čekanja i obezbedi popust za rane korisnike.</p><div class="dark">{C.form('prijava', 'blog-' + p['slug'], 'Želim rani pristup', dark=True)}</div></div>\n'''
+    inline = f'''<div class="inline-cta col"><p>Klasiko drži učenike, raspored, prisustvo i članarine na jednom mestu, sa IPS QR uplatama i uvozom iz Excel-a. Probaj ga 14 dana besplatno.</p>{C.demo_buttons(dark=True)}</div>\n'''
     body = body.replace(f'<h2 id="{mid}">', inline + f'<h2 id="{mid}">', 1)
     words = len(re.sub(r'<[^>]+>', ' ', p['body']).split())
     bc = [('Početna', '/'), ('Blog', '/blog'), (p['short'], None)]
@@ -216,7 +219,7 @@ for p in POSTS:
 
 
 # ---------- Hvala ----------
-share_text = 'Pogledaj Klasiko, program za vođenje škola i klubova koji je u razvoju. Ima listu čekanja sa popustom za rane korisnike: https://www.klasiko.rs/'
+share_text = 'Pogledaj Klasiko, program za vođenje škola, klubova i vrtića: učenici, raspored, prisustvo i članarine na jednom mestu. Prvih 14 dana je besplatno: https://www.klasiko.rs/'
 from urllib.parse import quote
 st = quote(share_text)
 page = C.head('Hvala na prijavi | Klasiko', 'Prijava na listu čekanja za Klasiko je primljena.', '/hvala', robots='noindex, follow') + C.header() + f"""<main id="sadrzaj">
@@ -224,23 +227,23 @@ page = C.head('Hvala na prijavi | Klasiko', 'Prijava na listu čekanja za Klasik
 <div class="wrap hero-in" style="align-items:center;text-align:center">
 <div class="tk-check" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-15"/></svg></div>
 <span class="badge" style="align-self:center"><i></i>Prijava je primljena</span>
-<h1 style="max-width:none">Hvala, na listi si<span class="dot">!</span></h1>
-<p class="lead" style="margin:0 auto">Popust za rane korisnike je rezervisan za tebe. Još samo jedan korak, da bismo znali da je email tvoj.</p>
+<h1 style="max-width:none">Hvala na prijavi<span class="dot">!</span></h1>
+<p class="lead" style="margin:0 auto">Još samo jedan korak: potvrdi email, da bismo znali da je adresa tvoja.</p>
 </div>
 </section>
 <section class="sec alt" style="padding-top:clamp(40px,6vw,72px)">
 <div class="wrap">
 <ol class="tk-steps">
 <li class="card"><div class="ic c">{C.ICONS['msg']}</div><div><h3>Potvrdi email</h3><p>Poslali smo ti mejl sa linkom za potvrdu. Ako ga ne vidiš za par minuta, proveri folder Promocije ili Spam.</p></div></li>
-<li class="card"><div class="ic">{C.ICONS['star']}</div><div><h3>Popust je tvoj</h3><p>Kao rani korisnik dobijaš popust čim objavimo cenu. Ne treba ništa više da radiš.</p></div></li>
-<li class="card"><div class="ic">{C.ICONS['cal']}</div><div><h3>Javljamo se prvi</h3><p>Kada otvorimo rani pristup, ti saznaješ pre svih i dobijaš poziv da među prvima probaš Klasiko.</p></div></li>
+<li class="card"><div class="ic">{C.ICONS['book']}</div><div><h3>Saveti na mejl</h3><p>Povremeno šaljemo praktične vodiče za vođenje škole i vesti o Klasiku. Bez spama.</p></div></li>
+<li class="card"><div class="ic">{C.ICONS['cal']}</div><div><h3>Probaj Klasiko</h3><p>Zakaži kratak demo i otvaramo ti nalog za 14 dana besplatne probe, uz besplatan prenos podataka iz Excel-a. <a href="/demo">Zakaži demo</a></p></div></li>
 </ol>
 </div>
 </section>
 <section class="sec">
 <div class="wrap">
 <div class="share-box">
-<div><span class="eyebrow">Podeli</span><h2>Znaš nekoga ko vodi školu ili klub<span class="dot">?</span></h2><p>Pošalji mu link. I on dobija popust za rane korisnike, a nama pomaže da napravimo Klasiko za što više škola.</p></div>
+<div><span class="eyebrow">Podeli</span><h2>Znaš nekoga ko vodi školu ili klub<span class="dot">?</span></h2><p>Pošalji mu link. I on može da proba Klasiko 14 dana besplatno.</p></div>
 <div class="share">
 <a class="btn" href="https://wa.me/?text={st}" target="_blank" rel="noopener">WhatsApp</a>
 <a class="btn" href="viber://forward?text={st}">Viber</a>
@@ -259,12 +262,14 @@ page = C.head('Hvala na prijavi | Klasiko', 'Prijava na listu čekanja za Klasik
 </section>
 </main>
 """ + C.footer().replace('<div class="m-sticky">', '<div class="m-sticky" hidden>')
-page = page.replace('<a class="btn sm" href="#prijava">Rani pristup</a>', '<a class="btn sm soft" href="/">Početna</a>').replace('href="#prijava"', 'href="/#prijava"')
 open(os.path.join(OUT, 'hvala.html'), 'w', encoding='utf-8').write(page)
 print('ok /hvala')
 
+import pages_launch
+pages_launch.build(OUT, post_card, POSTS)
+
 # ---------- Sitemap ----------
-urls = [('/', '1.0', 'weekly')] + [(n['path'], '0.9', 'monthly') for n in NICHE_PAGES] + [('/blog', '0.8', 'weekly')] + [('/blog/' + p['slug'], '0.7', 'monthly') for p in POSTS]
+urls = [('/', '1.0', 'weekly'), ('/cene', '0.9', 'monthly'), ('/demo', '0.8', 'monthly')] + [(n['path'], '0.9', 'monthly') for n in NICHE_PAGES] + [('/blog', '0.8', 'weekly')] + [('/blog/' + p['slug'], '0.7', 'monthly') for p in POSTS]
 sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
 for u, pr, cf in urls:
     img = f'\n    <image:image><image:loc>{C.SITE}/og-image.png</image:loc></image:image>' if u == '/' else ''

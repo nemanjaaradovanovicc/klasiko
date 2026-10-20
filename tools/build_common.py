@@ -2,6 +2,9 @@ import json, html
 
 SITE = 'https://www.klasiko.rs'
 EMAIL = 'nemanja.r@vgrubs.com'
+PHONE = '+381 63 8219713'
+PHONE_TEL = '+381638219713'
+WA = 'https://wa.me/381638219713?text=' + 'Zdravo%2C%20zanima%20me%20Klasiko.%20%C5%BDelim%20da%20zaka%C5%BEem%20demo.'
 DATE = '2026-10-16'
 DATE_SR = '16. oktobra 2026.'
 
@@ -23,6 +26,7 @@ NICHES = [
  ('/plesne-skole', 'Plesne škole'),
  ('/borilacke-vestine', 'Borilačke veštine'),
  ('/edukativni-centri', 'Edukativni centri i akademije'),
+ ('/vrtici', 'Privatni vrtići'),
 ]
 POSTS = []  # popunjava build.py
 
@@ -50,6 +54,7 @@ def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=N
 <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
+<link rel="alternate" type="text/plain" href="/llms.txt" title="Klasiko za AI asistente">
 <meta property="og:type" content="{og_type}">
 <meta property="og:site_name" content="Klasiko">
 <meta property="og:locale" content="sr_RS">
@@ -67,7 +72,7 @@ def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=N
 <meta name="twitter:image" content="{SITE}/og-image.png">
 {extra}<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/manrope-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/site.css?v=2">
+<link rel="stylesheet" href="/assets/site.css?v=3">
 <script>
 window.va = window.va || function () {{ (window.vaq = window.vaq || []).push(arguments); }};
 </script>
@@ -88,10 +93,10 @@ def header(current=''):
 <nav class="nav" aria-label="Glavni meni">
 {a('/#kako-radi','Kako radi')}
 {a('/#za-koga','Za koga')}
-{a('/#cene','Cene')}
+{a('/cene','Cene')}
 {a('/blog','Blog')}
 </nav>
-<a class="btn sm" href="#prijava">Rani pristup</a>
+<a class="btn sm" href="/demo">Zakaži demo</a>
 </div>
 </header>
 '''
@@ -113,7 +118,7 @@ def bc_ld(items, current_path):
         out.append({"@type": "ListItem", "position": i + 1, "name": label, "item": SITE + (path if path else current_path)})
     return {"@type": "BreadcrumbList", "itemListElement": out}
 
-def form(fid, source, button='Želim rani pristup', dark=False):
+def form(fid, source, button='Prijavi se', dark=False):
     idattr = f' id="{fid}"' if fid == 'prijava' else ''
     inid = f'{source}-email'
     return f'''<form{idattr} class="wl" data-waitlist="{source}" novalidate>
@@ -127,16 +132,25 @@ def form(fid, source, button='Želim rani pristup', dark=False):
 <div class="status" role="status" aria-live="polite"></div>
 </form>'''
 
-def cta(source, title='Budi među prvim školama koje probaju Klasiko', text='Ostavi email, zadrži popust za rane korisnike i pomozi nam da napravimo alat kakav ti zaista treba.'):
-    return f'''<section class="sec" aria-label="Prijava na listu čekanja">
+def demo_buttons(dark=False):
+    soft = 'coral' if dark else 'soft'
+    return f'''<div class="demo-btns">
+<a class="btn{' coral' if dark else ''}" href="/demo">Zakaži besplatan demo</a>
+<a class="btn {'' if dark else 'soft'} wa" href="{WA}" target="_blank" rel="noopener">WhatsApp</a>
+<a class="btn {'' if dark else 'soft'} tel" href="tel:{PHONE_TEL}">Pozovi {PHONE}</a>
+</div>'''
+
+
+def cta(source, title='Probaj Klasiko 14 dana besplatno', text='Zakaži kratak demo: pokazaćemo ti aplikaciju na primeru tvoje škole, besplatno prenosimo podatke iz Excel-a i otvaramo ti nalog za probu.'):
+    return f'''<section class="sec" aria-label="Zakaži demo">
 <div class="wrap">
 <div class="cta dark">
 <div>
-<span class="eyebrow" style="color:#E6DAF2">Lista čekanja je otvorena</span>
+<span class="eyebrow" style="color:#E6DAF2">14 dana besplatno, bez kartice</span>
 <h2>{title}<span class="dot">.</span></h2>
 <p>{text}</p>
 </div>
-{form('cta', source + '-cta', 'Želim rani pristup i popust', dark=True)}
+<div class="cta-side">{demo_buttons(dark=True)}<p class="cta-note">Bez ugovorne obaveze. Lična podrška na srpskom.</p></div>
 </div>
 </div>
 </section>
@@ -149,12 +163,12 @@ def footer():
 <div class="wrap top">
 <div class="brand">
 <div class="lg"><div class="logo"><img src="/logo-128.png" alt="Klasiko logo" width="64" height="64" loading="lazy"></div></div>
-<p>Klasiko je platforma u razvoju za jednostavnije vođenje škola, klubova i edukativnih centara.</p>
+<p>Klasiko je program za vođenje škola, klubova, edukativnih centara i privatnih vrtića: učenici, raspored, prisustvo i uplate na jednom mestu.</p>
 </div>
 <nav aria-label="Podnožje">
 <div><b>Za koga</b>{niche}</div>
 <div><b>Blog</b>{blog}<a href="/blog">Svi članci</a></div>
-<div><b>Klasiko</b><a href="/">Početna</a><a href="/#prijava">Lista čekanja</a><a href="https://www.instagram.com/klasiko.rs/" target="_blank" rel="noopener me">Instagram @klasiko.rs</a></div>
+<div><b>Klasiko</b><a href="/">Početna</a><a href="/cene">Cene</a><a href="/demo">Zakaži demo</a><a href="https://app.klasiko.rs">Prijava u aplikaciju</a><a href="tel:+381638219713">+381 63 8219713</a><a href="https://www.instagram.com/klasiko.rs/" target="_blank" rel="noopener me">Instagram @klasiko.rs</a></div>
 </nav>
 </div>
 <div class="wrap bot">
@@ -162,12 +176,12 @@ def footer():
 <span><a href="/privatnost">Politika privatnosti</a><a href="mailto:{EMAIL}">{EMAIL}</a></span>
 </div>
 </footer>
-<div class="m-sticky"><div><strong>Popust za rane korisnike</strong><small>Lista čekanja je otvorena</small></div><a class="btn sm" href="#prijava">Prijavi se</a></div>
+<div class="m-sticky"><div><strong>14 dana besplatno</strong><small>Bez kartice i bez obaveze</small></div><a class="btn sm" href="/demo">Zakaži demo</a></div>
 <div class="cookie" id="cookie" hidden role="dialog" aria-label="Kolačići">
 <p>Koristimo kolačiće za merenje uspešnosti reklama (Meta Pixel). Više u <a href="/privatnost">Politici privatnosti</a>.</p>
 <button class="no" type="button" data-consent="no">Odbij</button><button class="ok" type="button" data-consent="yes">Prihvatam</button>
 </div>
-<script src="/assets/site.js?v=2" defer></script>
+<script src="/assets/site.js?v=3" defer></script>
 </body>
 </html>
 '''

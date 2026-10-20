@@ -1,0 +1,71 @@
+export const WEEKDAYS = ['', 'Ponedeljak', 'Utorak', 'Sreda', 'Četvrtak', 'Petak', 'Subota', 'Nedelja'];
+export const WEEKDAYS_SHORT = ['', 'Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
+export const MONTHS = ['januar', 'februar', 'mart', 'april', 'maj', 'jun', 'jul', 'avgust', 'septembar', 'oktobar', 'novembar', 'decembar'];
+
+export function rsd(n: number | string | null | undefined): string {
+  const v = Number(n ?? 0);
+  return new Intl.NumberFormat('sr-Latn-RS', { maximumFractionDigits: 0 }).format(v) + ' RSD';
+}
+
+export function num(n: number | string | null | undefined): string {
+  return new Intl.NumberFormat('sr-Latn-RS', { maximumFractionDigits: 0 }).format(Number(n ?? 0));
+}
+
+// Datum u Beogradu, bez obzira na vremensku zonu servera.
+export function todayISO(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Belgrade' }).format(new Date());
+}
+
+export function isoWeekday(iso: string): number {
+  const d = new Date(iso + 'T12:00:00Z');
+  const w = d.getUTCDay();
+  return w === 0 ? 7 : w;
+}
+
+export function addDays(iso: string, days: number): string {
+  const d = new Date(iso + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export function weekStart(iso: string): string {
+  return addDays(iso, 1 - isoWeekday(iso));
+}
+
+export function dateSr(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+  return `${d}. ${m}. ${y}.`;
+}
+
+export function dateLong(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${WEEKDAYS[isoWeekday(iso)]}, ${d}. ${MONTHS[m - 1]} ${y}.`;
+}
+
+export function currentPeriod(): string {
+  return todayISO().slice(0, 7);
+}
+
+export function periodLabel(p: string): string {
+  const [y, m] = p.split('-').map(Number);
+  return `${MONTHS[m - 1].charAt(0).toUpperCase() + MONTHS[m - 1].slice(1)} ${y}.`;
+}
+
+export function shiftPeriod(p: string, delta: number): string {
+  const [y, m] = p.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return d.toISOString().slice(0, 7);
+}
+
+export function time(t: string | null | undefined): string {
+  return t ? t.slice(0, 5) : '';
+}
+
+export function fullName(s: { first_name: string; last_name: string }): string {
+  return `${s.first_name} ${s.last_name}`.trim();
+}
+
+export function daysBetween(fromISO: string, toISO: string): number {
+  return Math.round((new Date(toISO + 'T12:00:00Z').getTime() - new Date(fromISO + 'T12:00:00Z').getTime()) / 86400000);
+}
