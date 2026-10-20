@@ -3,31 +3,31 @@ import type { ReactNode } from 'react';
 
 export function PageHeader({ title, subtitle, actions, back }: { title: string; subtitle?: ReactNode; actions?: ReactNode; back?: { href: string; label: string } }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-3 sm:gap-4">
+      <div className="min-w-0 max-w-full">
         {back && (
           <Link href={back.href} className="mb-2 inline-flex items-center gap-1 text-sm font-bold text-mut hover:text-brand">
             ← {back.label}
           </Link>
         )}
-        <h1 className="text-[28px] font-extrabold leading-tight tracking-tight text-brand sm:text-[34px]">{title}</h1>
+        <h1 className="text-[26px] font-extrabold leading-tight tracking-tight text-brand sm:text-[34px]">{title}</h1>
         {subtitle && <p className="mt-1 text-[15px] font-semibold text-mut">{subtitle}</p>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div className="flex max-w-full flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }
 
 export function Card({ children, className = '', title, actions }: { children: ReactNode; className?: string; title?: string; actions?: ReactNode }) {
   return (
-    <section className={`card ${className}`}>
+    <section className={`card min-w-0 ${className}`}>
       {(title || actions) && (
-        <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line px-4 py-3.5 sm:px-5 sm:py-4">
           {title && <h2 className="text-[17px] font-extrabold text-ink">{title}</h2>}
           {actions}
         </div>
       )}
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   );
 }
@@ -40,9 +40,9 @@ export function Stat({ label, value, tone = 'default', hint }: { label: string; 
     ok: 'bg-ok-soft',
   } as const;
   return (
-    <div className={`rounded-2xl p-4 ${tones[tone]}`}>
+    <div className={`min-w-0 rounded-2xl p-3.5 sm:p-4 ${tones[tone]}`}>
       <div className={`text-[13px] font-bold ${tone === 'brand' ? 'text-white/80' : tone === 'coral' ? 'text-coral-dark' : 'text-mut'}`}>{label}</div>
-      <div className={`mt-1 text-[26px] font-extrabold tabular-nums tracking-tight ${tone === 'coral' ? 'text-coral-dark' : ''}`}>{value}</div>
+      <div className={`mt-1 text-[clamp(19px,5.6vw,26px)] font-extrabold leading-tight tabular-nums tracking-tight ${tone === 'coral' ? 'text-coral-dark' : ''}`}>{value}</div>
       {hint && <div className={`mt-0.5 text-[12px] font-semibold ${tone === 'brand' ? 'text-white/70' : 'text-mut'}`}>{hint}</div>}
     </div>
   );
@@ -140,7 +140,7 @@ export function Flash({ ok, err }: { ok?: string; err?: string }) {
 
 export function Table({ head, children }: { head: ReactNode[]; children: ReactNode }) {
   return (
-    <div className="card overflow-x-auto">
+    <div className="card overflow-x-auto overscroll-x-contain">
       <table className="w-full min-w-[560px] border-collapse">
         <thead>
           <tr>

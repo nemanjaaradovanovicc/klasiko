@@ -69,3 +69,21 @@ export function fullName(s: { first_name: string; last_name: string }): string {
 export function daysBetween(fromISO: string, toISO: string): number {
   return Math.round((new Date(toISO + 'T12:00:00Z').getTime() - new Date(fromISO + 'T12:00:00Z').getTime()) / 86400000);
 }
+
+// Učenici koji su propustili poslednja 2 ili više časova zaredom (opravdani izostanci prekidaju niz samo ako je bio prisutan).
+export function absenceStreaks<T extends { student_id: string; status: string; date: string }>(rows: T[], min = 2): { student_id: string; streak: number; last: T }[] {
+  const by = new Map<string, T[]>();
+  for (const r of rows) by.set(r.student_id, [...(by.get(r.student_id) ?? []), r]);
+  const out: { student_id: string; streak: number; last: T }[] = [];
+  for (const [sid, list] of by) {
+    list.sort((a, b) => b.date.localeCompare(a.date));
+    let streak = 0;
+    for (const r of list) {
+      if (r.status === 'absent') streak++;
+      else if (r.status === 'excused') continue;
+      else break;
+    }
+    if (streak >= min) out.push({ student_id: sid, streak, last: list[0] });
+  }
+  return out.sort((a, b) => b.streak - a.streak);
+}

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { PageHeader, Card, Stat } from '@/components/ui';
+import { PageHeader, Card, Stat, Badge } from '@/components/ui';
 import { currentPeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr } from '@/lib/format';
 import { ExportButton } from './export';
 
@@ -17,12 +17,14 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   const end = `${shiftPeriod(period, 1)}-01`;
   const sixAgo = `${shiftPeriod(period, -5)}-01`;
   const supabase = await createClient();
-  const [{ data: payments }, { data: charges }, { data: sessions }, { data: students }, { data: groups }] = await Promise.all([
+  const [{ data: payments }, { data: charges }, { data: sessions }, { data: students }, { data: groups }, { data: profiles }, { data: slots }] = await Promise.all([
     supabase.from('payments').select('amount, paid_at, method, students(first_name, last_name), charges(period, description)').eq('org_id', ctx.org.id).gte('paid_at', sixAgo).lt('paid_at', end),
     supabase.from('charges').select('amount, payments(amount)').eq('org_id', ctx.org.id).eq('period', period),
-    supabase.from('sessions').select('id, group_id, status, attendance(status)').eq('org_id', ctx.org.id).gte('date', start).lt('date', end),
+    supabase.from('sessions').select('id, group_id, status, date, start_time, teacher_id, attendance(status)').eq('org_id', ctx.org.id).gte('date', start).lt('date', end),
     supabase.from('students').select('first_name, last_name, birth_date, phone, email, parent_name, parent_phone, parent_email, joined_at, left_at, active, custom_fee, discount_pct, group_members(groups(name))').eq('org_id', ctx.org.id).order('last_name'),
-    supabase.from('groups').select('id, name, color, capacity, group_members(student_id)').eq('org_id', ctx.org.id).eq('active', true).order('name'),
+    supabase.from('groups').select('id, name, color, capacity, teacher_id, active, group_members(student_id)').eq('org_id', ctx.org.id).order('name'),
+    supabase.from('profiles').select('id, full_name, role').eq('org_id', ctx.org.id),
+    supabase.from('schedule_slots').select('group_id, weekday, start_time, end_time').eq('org_id', ctx.org.id),
   ]);
 
   type P = { amount: number; paid_at: string; method: string; students: { first_name: string; last_name: string } | null; charges: { period: string; description: string | null } | null };
@@ -37,8 +39,9 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   const expected = chs.reduce((a, c) => a + Number(c.amount), 0);
   const collected = chs.reduce((a, c) => a + Math.min(Number(c.amount), c.payments.reduce((x, p) => x + Number(p.amount), 0)), 0);
 
-  type Se = { id: string; group_id: string; status: string; attendance: { status: string }[] };
-  const sess = ((sessions ?? []) as unknown as Se[]).filter((s) => s.status === 'held');
+  type Se = { id: string; group_id: string; status: string; date: string; start_time: string; teacher_id: string | null; attendance: { status: string }[] };
+  const allSess = (sessions ?? []) as unknown as Se[];
+  const sess = allSess.filter((s) => s.status === 'held');
   const att = sess.flatMap((s) => s.attendance);
   const rate = att.length ? Math.round((att.filter((a) => a.status === 'present').length / att.length) * 100) : null;
 
@@ -47,8 +50,31 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   const newCount = sts.filter((s) => s.joined_at >= start && s.joined_at < end).length;
   const leftCount = sts.filter((s) => s.left_at && s.left_at >= start && s.left_at < end).length;
 
-  type G = { id: string; name: string; color: string; capacity: number | null; group_members: { student_id: string }[] };
-  const grs = (groups ?? []) as unknown as G[];
+  type G = { id: string; name: string; color: string; capacity: number | null; teacher_id: string | null; group_members: { student_id: string }[] };
+  const allGroups = (groups ?? []) as unknown as G[];
+  const grs = allGroups.filter((g) => (g as unknown as { active?: boolean }).active !== false);
+  const groupById = new Map(allGroups.map((g) => [g.id, g]));
+
+  // Izveštaj po predavaču: održani i otkazani časovi i sati (trajanje iz termina u rasporedu, inače 60 min).
+  const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name || 'Bez imena']));
+  const slotEnd = new Map((slots ?? []).map((x) => [`${x.group_id}:${x.weekday}:${String(x.start_time).slice(0, 5)}`, x]));
+  const minutesOf = (se: Se) => {
+    const wd = ((new Date(se.date + 'T12:00:00Z').getUTCDay() + 6) % 7) + 1;
+    const sl = slotEnd.get(`${se.group_id}:${wd}:${se.start_time.slice(0, 5)}`);
+    if (!sl) return 60;
+    const [h1, m1] = String(sl.start_time).split(':').map(Number);
+    const [h2, m2] = String(sl.end_time).split(':').map(Number);
+    return Math.max(0, h2 * 60 + m2 - (h1 * 60 + m1));
+  };
+  const perTeacher = new Map<string, { name: string; held: number; cancelled: number; minutes: number }>();
+  for (const se of allSess) {
+    const tid = se.teacher_id ?? groupById.get(se.group_id)?.teacher_id ?? 'none';
+    const row = perTeacher.get(tid) ?? { name: tid === 'none' ? 'Bez predavača' : names.get(tid) ?? 'Bivši korisnik', held: 0, cancelled: 0, minutes: 0 };
+    if (se.status === 'held') { row.held++; row.minutes += minutesOf(se); } else row.cancelled++;
+    perTeacher.set(tid, row);
+  }
+  const teacherRows = [...perTeacher.values()].sort((a, b) => b.held - a.held);
+  const hours = (m: number) => (m / 60).toLocaleString('sr-Latn-RS', { maximumFractionDigits: 1 });
   const groupStats = grs.map((g) => {
     const gs = sess.filter((s) => s.group_id === g.id);
     const a = gs.flatMap((s) => s.attendance);
@@ -109,6 +135,33 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
           )}
         </Card>
       </div>
+
+      <Card title="Časovi po predavaču" className="mt-6" actions={teacherRows.length > 0 ? (
+        <ExportButton
+          label="Excel"
+          fileName={`klasiko-casovi-predavaci-${period}.xlsx`}
+          header={['Datum', 'Grupa', 'Početak', 'Predavač', 'Status', 'Trajanje (min)']}
+          rows={[...allSess].sort((a, b) => a.date.localeCompare(b.date) || a.start_time.localeCompare(b.start_time)).map((se) => [dateSr(se.date), groupById.get(se.group_id)?.name ?? '', se.start_time.slice(0, 5), names.get(se.teacher_id ?? groupById.get(se.group_id)?.teacher_id ?? '') ?? 'Bez predavača', se.status === 'held' ? 'održan' : 'otkazan', se.status === 'held' ? minutesOf(se) : 0])}
+        />
+      ) : undefined}>
+        {teacherRows.length === 0 ? (
+          <p className="text-[14px] font-semibold text-mut">Nema upisanih časova u ovom mesecu.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-line">
+            {teacherRows.map((t) => (
+              <li key={t.name} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <span className="min-w-0 font-extrabold text-ink">{t.name}</span>
+                <span className="flex flex-wrap gap-1.5">
+                  <Badge tone="ok">{t.held} održano</Badge>
+                  {t.cancelled > 0 && <Badge tone="gray">{t.cancelled} otkazano</Badge>}
+                  <Badge>{hours(t.minutes)} h</Badge>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 text-[12px] font-semibold text-mut">Računaju se časovi za koje je upisano prisustvo. Trajanje se uzima iz termina u rasporedu.</p>
+      </Card>
 
       <Card title="Izvoz u Excel" className="mt-6">
         <div className="flex flex-wrap gap-2">

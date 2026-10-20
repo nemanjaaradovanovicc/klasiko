@@ -6,6 +6,7 @@ import { SideNav, MobileNav, LogoutButton, type NavItem } from '@/components/nav
 import { ROLE_LABEL } from '@/lib/types';
 import { exitOrg } from './admin/actions';
 import { daysUntil } from '@/lib/billing';
+import { QuickActions, type QuickAction } from '@/components/quick-actions';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getCtx();
@@ -36,6 +37,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     items.push({ href: '/admin/naplata', label: 'Naplata', icon: 'Receipt', mobile: !ctx.org });
   }
 
+  let quick: QuickAction[] = [];
+  if (ctx.org && ctx.isOwner) {
+    quick = [
+      { href: '/prisustvo', label: 'Upiši prisustvo', hint: 'Današnji časovi', icon: 'CheckSquare' },
+      { href: '/ucenici/novi', label: 'Novi učenik', hint: 'Upis sa grupom i kontaktom roditelja', icon: 'UserPlus' },
+      { href: '/uplate?prikaz=neplaceno', label: 'Evidentiraj uplatu', hint: 'Ko još nije platio ovaj mesec', icon: 'Wallet' },
+      { href: '/grupe/nova', label: 'Nova grupa', hint: 'Naziv, predavač, cena i termin', icon: 'UsersRound' },
+    ];
+  } else if (ctx.org) {
+    quick = [{ href: '/prisustvo', label: 'Upiši prisustvo', hint: 'Današnji časovi', icon: 'CheckSquare' }];
+  } else if (ctx.isSuper) {
+    quick = [
+      { href: '/admin#nova-skola', label: 'Nova škola', hint: 'Škola i nalog vlasnika sa probom', icon: 'Building2' },
+      { href: '/admin/naplata', label: 'Naplata', hint: 'Instrukcije i ko je platio', icon: 'Receipt' },
+    ];
+  }
   const access = ctx.org ? orgAccess(ctx.org) : null;
   const footer = (
     <div className="flex flex-col gap-2">
@@ -70,8 +87,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <SideNav items={items} footer={footer} />
       </aside>
 
-      <div className="min-w-0 flex-1">
-        <header className="print:hidden sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+      <div className="min-w-0 flex-1 overflow-x-clip">
+        <header className="print:hidden sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-white/95 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur lg:hidden">
           <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-lg bg-soft">
             <Image src="/logo.png" alt="" width={34} height={34} />
           </span>
@@ -97,10 +114,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        <main className="page-in mx-auto max-w-6xl px-4 pb-28 pt-6 lg:px-8 lg:pb-12 lg:pt-8 print:max-w-none print:p-0">{children}</main>
+        <main className="page-in mx-auto w-full max-w-6xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5 lg:px-8 lg:pb-12 lg:pt-8 print:max-w-none print:p-0">{children}</main>
       </div>
 
       <div className="print:hidden"><MobileNav items={items} footer={mobileFooter} /></div>
+      <QuickActions actions={quick} />
     </div>
   );
 }

@@ -85,12 +85,12 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
             const isLate = !r.done && r.due_date && r.due_date < today;
             return (
               <div key={r.id} className="card p-4">
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                   <div className="min-w-0 flex-1">
                     <Link href={`/ucenici/${r.student_id}`} className="font-extrabold text-ink hover:text-brand">{fullName(s)}</Link>
-                    <div className="text-[13px] font-semibold text-mut">{r.groups?.name ?? r.description}</div>
+                    <div className="truncate text-[13px] font-semibold text-mut">{r.groups?.name ?? r.description}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="flex items-center justify-between gap-2 sm:block sm:text-right">
                     <div className="text-[16px] font-extrabold tabular-nums">{rsd(r.amount)}</div>
                     {r.done ? <Badge tone="ok">Plaćeno</Badge> : r.paid > 0 ? <Badge>Uplaćeno {rsd(r.paid)}</Badge> : <Badge tone={isLate ? 'coral' : 'gray'}>{isLate ? 'Kasni' : 'Čeka uplatu'}</Badge>}
                   </div>

@@ -8,22 +8,26 @@ import { WEEKDAYS, time, fullName, todayISO, isoWeekday } from '@/lib/format';
 import type { Group } from '@/lib/types';
 import { updateGroup, setGroupActive, deleteGroup, addSlot, deleteSlot, addMembers } from '../actions';
 import { removeFromGroup } from '../../ucenici/actions';
+import { AttendanceGrid, type GridSession } from '@/components/attendance-grid';
+import { currentPeriod, shiftPeriod } from '@/lib/format';
 
 const OK: Record<string, string> = { '1': 'Sačuvano.', nova: 'Grupa je napravljena. Dodaj učenike i termine.', termin: 'Termin je dodat u raspored.', clanovi: 'Učenici su dodati.' };
 
-export default async function GroupPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
+export default async function GroupPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string; mesec?: string }> }) {
   const ctx = await requireOrg();
   const { id } = await params;
   const sp = await searchParams;
   const supabase = await createClient();
   const { data: g } = await supabase.from('groups').select('*').eq('id', id).eq('org_id', ctx.org.id).single<Group>();
   if (!g) notFound();
-  const [{ data: members }, { data: slots }, { data: teachers }, { data: rooms }, { data: all }] = await Promise.all([
+  const period = sp.mesec && /^\d{4}-\d{2}$/.test(sp.mesec) ? sp.mesec : currentPeriod();
+  const [{ data: members }, { data: slots }, { data: teachers }, { data: rooms }, { data: all }, { data: monthSessions }] = await Promise.all([
     supabase.from('group_members').select('student_id, students(id, first_name, last_name, parent_phone, phone, active)').eq('group_id', id),
     supabase.from('schedule_slots').select('id, weekday, start_time, end_time, rooms(name)').eq('group_id', id).order('weekday').order('start_time'),
     supabase.from('profiles').select('id, full_name').eq('org_id', ctx.org.id).eq('active', true).order('full_name'),
     supabase.from('rooms').select('id, name').eq('org_id', ctx.org.id).order('name'),
     ctx.isOwner ? supabase.from('students').select('id, first_name, last_name').eq('org_id', ctx.org.id).eq('active', true).order('last_name') : Promise.resolve({ data: [] }),
+    supabase.from('sessions').select('id, date, status, attendance(student_id, status)').eq('group_id', id).gte('date', `${period}-01`).lt('date', `${shiftPeriod(period, 1)}-01`),
   ]);
   type M = { student_id: string; students: { id: string; first_name: string; last_name: string; parent_phone: string | null; phone: string | null; active: boolean } | null };
   const mem = ((members ?? []) as unknown as M[]).filter((m) => m.students).sort((a, b) => fullName(a.students!).localeCompare(fullName(b.students!), 'sr'));
@@ -54,11 +58,11 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 {mem.map((m) => (
                   <li key={m.student_id} className="flex items-center justify-between gap-3 py-2.5">
                     {ctx.isOwner ? (
-                      <Link href={`/ucenici/${m.student_id}`} className="font-bold text-ink hover:text-brand">{fullName(m.students!)}</Link>
+                      <Link href={`/ucenici/${m.student_id}`} className="min-w-0 truncate font-bold text-ink hover:text-brand">{fullName(m.students!)}</Link>
                     ) : (
-                      <span className="font-bold text-ink">{fullName(m.students!)}</span>
+                      <span className="min-w-0 truncate font-bold text-ink">{fullName(m.students!)}</span>
                     )}
-                    <div className="flex items-center gap-3">
+                    <div className="flex shrink-0 items-center gap-3 whitespace-nowrap">
                       {(m.students!.parent_phone || m.students!.phone) && (
                         <a href={`tel:${m.students!.parent_phone || m.students!.phone}`} className="text-[13px] font-bold text-brand">{m.students!.parent_phone || m.students!.phone}</a>
                       )}
@@ -78,7 +82,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             {ctx.isOwner && candidates.length > 0 && (
               <form action={addMembers} className="mt-4 border-t border-line pt-4">
                 <input type="hidden" name="group_id" value={g.id} />
-                <span className="label">Dodaj učenike (drži Ctrl ili Cmd za više)</span>
+                <span className="label">Dodaj učenike (možeš izabrati više)</span>
                 <select name="student_id" multiple className="input h-40 py-2">
                   {candidates.map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
                 </select>
@@ -88,6 +92,11 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 </div>
               </form>
             )}
+          </Card>
+
+          <Card title="Istorija prisustva">
+            <div id="prisustvo" className="scroll-mt-24" />
+            <AttendanceGrid students={mem.map((m) => ({ id: m.student_id, name: fullName(m.students!) }))} sessions={(monthSessions ?? []) as GridSession[]} period={period} baseHref={`/grupe/${g.id}`} />
           </Card>
 
           {ctx.isOwner && (

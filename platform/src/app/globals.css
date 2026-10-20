@@ -19,8 +19,15 @@
   --font-sans: var(--font-manrope), "Segoe UI", system-ui, sans-serif;
 }
 
-html { -webkit-text-size-adjust: 100%; }
-body { background: var(--color-soft); color: var(--color-ink); -webkit-font-smoothing: antialiased; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: clip; }
+body { background: var(--color-soft); color: var(--color-ink); -webkit-font-smoothing: antialiased; overflow-x: clip; overscroll-behavior-x: none; -webkit-tap-highlight-color: transparent; }
+/* Dugi nazivi i iznosi se lome umesto da izlaze iz okvira */
+h1, h2, h3, p, li, td, a, span, div { overflow-wrap: break-word; }
+h1, h2 { overflow-wrap: anywhere; }
+img, svg, video { max-width: 100%; }
+/* iOS ne zumira polje ako je tekst bar 16px */
+input, select, textarea { font-size: 16px; }
+button, a { touch-action: manipulation; }
 
 @layer components {
   .btn { @apply inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-brand text-white font-bold text-[15px] whitespace-nowrap transition hover:bg-brand-dark disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer; }
@@ -29,15 +36,25 @@ body { background: var(--color-soft); color: var(--color-ink); -webkit-font-smoo
   .btn-ghost { @apply bg-transparent text-brand hover:bg-soft-2; }
   .btn-coral { @apply bg-coral text-[#3A0F0A] hover:bg-[#ff5646]; }
   .btn-danger { @apply bg-coral-soft text-coral-dark hover:bg-[#ffd6d1]; }
-  .input { @apply h-11 w-full rounded-xl border border-line-2 bg-white px-3.5 text-[15px] text-ink placeholder:text-mut/60 focus:outline-none focus:ring-2 focus:ring-brand/25 focus:border-brand; }
+  .input { @apply h-11 w-full min-w-0 rounded-xl border border-line-2 bg-white px-3.5 text-base text-ink placeholder:text-mut/60 focus:outline-none focus:ring-2 focus:ring-brand/25 focus:border-brand; }
   textarea.input { @apply h-auto py-2.5 min-h-[88px]; }
   .label { @apply block text-[13px] font-bold text-mut mb-1.5; }
   .card { @apply rounded-2xl bg-white border border-line; }
   .th { @apply text-left text-[12px] font-extrabold uppercase tracking-wider text-mut px-4 py-3 bg-soft; }
   .td { @apply px-4 py-3 border-t border-line text-[15px]; }
-  .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-extrabold; }
+  .chip { @apply inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-extrabold; }
 }
 
 @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .page-in { animation: page-in .22s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .page-in { animation: none; } }
+
+/* Na telefonu sva polja imaju bar 16px (bez zumiranja), čak i ona označena kao manja */
+@media (max-width: 1023px) {
+  input.input, select.input, textarea.input, .input { font-size: 16px !important; }
+}
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Kolone u mreži nikad ne smeju da budu šire od ekrana (dugi nazivi se skraćuju) */
+.grid > * { min-width: 0; }

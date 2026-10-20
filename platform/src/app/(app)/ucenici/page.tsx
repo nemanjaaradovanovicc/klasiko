@@ -65,25 +65,47 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           action={!sp.q && !sp.grupa && ctx.isOwner ? <Link href="/ucenici/novi" className="btn">+ Novi učenik</Link> : undefined}
         />
       ) : (
-        <Table head={['Ime i prezime', 'Grupe', 'Roditelj / kontakt', 'Upisan']}>
+        <>
+        <ul className="flex flex-col gap-2 md:hidden">
           {list.map((s) => (
-            <tr key={s.id} className="hover:bg-soft/60">
-              <td className="td"><Link href={`/ucenici/${s.id}`} className="font-extrabold text-ink hover:text-brand">{fullName(s)}</Link></td>
-              <td className="td">
-                <div className="flex flex-wrap gap-1">
-                  {s.group_members.length === 0 ? <span className="text-[13px] font-semibold text-mut">bez grupe</span> : s.group_members.map((m) => m.groups && (
-                    <Badge key={m.group_id}><span className="h-2 w-2 rounded-full" style={{ background: m.groups.color }} />{m.groups.name}</Badge>
-                  ))}
-                </div>
-              </td>
-              <td className="td text-[14px]">
-                <div className="font-semibold text-ink-2">{s.parent_name ?? ''}</div>
-                {(s.parent_phone || s.phone) && <a href={`tel:${s.parent_phone || s.phone}`} className="font-bold text-brand">{s.parent_phone || s.phone}</a>}
-              </td>
-              <td className="td text-[14px] font-semibold text-mut">{dateSr(s.joined_at)}</td>
-            </tr>
+            <li key={s.id}>
+              <Link href={`/ucenici/${s.id}`} className="card flex items-center gap-3 p-3.5 active:bg-soft">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-soft-2 text-[14px] font-extrabold text-brand">{(s.first_name[0] ?? '') + (s.last_name[0] ?? '')}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-extrabold text-ink">{fullName(s)}</span>
+                  <span className="mt-0.5 flex flex-wrap gap-1">
+                    {s.group_members.length === 0 ? <span className="text-[12px] font-semibold text-mut">bez grupe</span> : s.group_members.slice(0, 3).map((m) => m.groups && (
+                      <span key={m.group_id} className="inline-flex max-w-[160px] items-center gap-1 truncate rounded-full bg-soft px-2 py-0.5 text-[11px] font-bold text-ink-2"><span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: m.groups.color }} />{m.groups.name}</span>
+                    ))}
+                  </span>
+                </span>
+                <span className="shrink-0 text-mut" aria-hidden>›</span>
+              </Link>
+            </li>
           ))}
-        </Table>
+        </ul>
+        <div className="hidden md:block">
+          <Table head={['Ime i prezime', 'Grupe', 'Roditelj / kontakt', 'Upisan']}>
+            {list.map((s) => (
+              <tr key={s.id} className="hover:bg-soft/60">
+                <td className="td"><Link href={`/ucenici/${s.id}`} className="font-extrabold text-ink hover:text-brand">{fullName(s)}</Link></td>
+                <td className="td">
+                    <div className="flex flex-wrap gap-1">
+                      {s.group_members.length === 0 ? <span className="text-[13px] font-semibold text-mut">bez grupe</span> : s.group_members.map((m) => m.groups && (
+                        <Badge key={m.group_id}><span className="h-2 w-2 rounded-full" style={{ background: m.groups.color }} />{m.groups.name}</Badge>
+                      ))}
+                    </div>
+                </td>
+                <td className="td text-[14px]">
+                    <div className="font-semibold text-ink-2">{s.parent_name ?? ''}</div>
+                    {(s.parent_phone || s.phone) && <a href={`tel:${s.parent_phone || s.phone}`} className="font-bold text-brand">{s.parent_phone || s.phone}</a>}
+                </td>
+                <td className="td text-[14px] font-semibold text-mut">{dateSr(s.joined_at)}</td>
+              </tr>
+            ))}
+          </Table>
+        </div>
+        </>
       )}
     </>
   );

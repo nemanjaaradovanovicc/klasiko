@@ -127,6 +127,27 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
             )}
           </Card>
 
+          <Card title="Prisustvo po mesecima">
+            {attList.length === 0 ? (
+              <p className="text-[14px] font-semibold text-mut">Još nema zabeleženog prisustva.</p>
+            ) : (
+              <ul className="flex flex-col gap-2.5">
+                {Array.from(new Set(attList.map((a) => a.sessions!.date.slice(0, 7)))).slice(0, 6).map((m) => {
+                  const inMonth = attList.filter((a) => a.sessions!.date.startsWith(m));
+                  const counted = inMonth.filter((a) => a.status !== 'excused');
+                  const pres = inMonth.filter((a) => a.status === 'present').length;
+                  const pct = counted.length ? Math.round((pres / counted.length) * 100) : 100;
+                  return (
+                    <li key={m}>
+                      <div className="mb-1 flex justify-between text-[13px] font-bold"><span className="text-ink-2">{periodLabel(m)}</span><span className={pct < 70 ? 'text-coral-dark' : 'text-ink'}>{pct}% · {pres}/{counted.length}</span></div>
+                      <div className="h-2 overflow-hidden rounded-full bg-soft"><div className={`h-full rounded-full ${pct < 70 ? 'bg-coral' : 'bg-ok'}`} style={{ width: `${pct}%` }} /></div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+
           <Card title="Poslednji časovi">
             {attList.length === 0 ? (
               <p className="text-[14px] font-semibold text-mut">Još nema zabeleženog prisustva.</p>

@@ -3,6 +3,7 @@ import { requireSuper, orgAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PageHeader, Card, Stat, Badge, Field, Select, Flash, Table } from '@/components/ui';
 import { CredsForm } from '@/components/creds';
+import { InstallCard } from '@/components/pwa';
 import { KINDS, PLANS, STATUS_LABEL, BILLING_LABEL, type Organization } from '@/lib/types';
 import { dateSr, rsd } from '@/lib/format';
 import { createOrg, enterOrg } from './actions';
@@ -44,6 +45,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         actions={<><Link href="/admin/naplata" className="btn btn-soft">Naplata{billingTodo ? <Badge tone="coral">{billingTodo}</Badge> : null}</Link><Link href="/admin/zahtevi" className="btn btn-soft">Zahtevi za demo{newDemos ? <Badge tone="coral">{newDemos} novo</Badge> : null}</Link></>}
       />
       <Flash ok={sp.ok === 'obrisano' ? 'Škola je obrisana.' : undefined} />
+      <InstallCard />
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Aktivne škole" value={active} tone="brand" />
         <Stat label="U probnom periodu" value={trial} />
@@ -75,6 +77,31 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           {list.length === 0 ? (
             <Card><p className="text-[15px] font-semibold text-mut">Još nema škola. Napravi prvu desno.</p></Card>
           ) : (
+            <>
+            <ul className="flex flex-col gap-2 md:hidden">
+              {list.map((o) => {
+                const acc = orgAccess(o);
+                return (
+                  <li key={o.id} className="card p-3.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link href={`/admin/skole/${o.id}`} className="min-w-0">
+                        <span className="block truncate font-extrabold text-ink">{o.name}</span>
+                        <span className="block text-[12px] font-semibold text-mut">{PLANS[o.plan].name} · {BILLING_LABEL[o.billing]} · {perOrg.get(o.id) ?? 0} uč.</span>
+                      </Link>
+                      <Badge tone={!acc.ok ? 'coral' : o.status === 'active' ? 'ok' : 'soft'}>{acc.ok ? STATUS_LABEL[o.status] : 'Isteklo'}</Badge>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="text-[12px] font-semibold text-mut">Važi do: {o.billing === 'lifetime' ? 'zauvek' : dateSr(o.status === 'trial' ? o.trial_ends_at : o.paid_until) || '—'}</span>
+                      <form action={enterOrg}>
+                        <input type="hidden" name="org_id" value={o.id} />
+                        <button className="btn btn-sm btn-soft">Uđi</button>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="hidden md:block">
             <Table head={['Škola', 'Paket', 'Status', 'Važi do', 'Učenika', '']}>
               {list.map((o) => {
                 const acc = orgAccess(o);
@@ -100,10 +127,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 );
               })}
             </Table>
+            </div>
+            </>
           )}
         </div>
 
-        <Card title="Nova škola">
+        <div id="nova-skola" className="scroll-mt-20"><Card title="Nova škola">
           {demo && <div className="mb-4 rounded-xl bg-soft px-3 py-2 text-[13px] font-bold text-mut">Iz zahteva za demo: {demo.name}</div>}
           <CredsForm action={createOrg} submit="Napravi školu i nalog" className="grid gap-3">
             {demo && <input type="hidden" name="demo_id" value={demo.id} />}
@@ -118,7 +147,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <Field label="Probni dani" name="trial_days" type="number" defaultValue={14} min={1} max={90} />
             </div>
           </CredsForm>
-        </Card>
+        </Card></div>
       </div>
     </>
   );

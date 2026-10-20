@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Stat, Badge, Flash } from '@/components/ui';
-import { currentPeriod, dateLong, isoWeekday, rsd, time, todayISO, fullName, periodLabel } from '@/lib/format';
+import { InstallCard } from '@/components/pwa';
+import { currentPeriod, dateLong, isoWeekday, rsd, time, todayISO, fullName, periodLabel, addDays, absenceStreaks } from '@/lib/format';
 
 export const metadata = { title: 'Pregled' };
 
@@ -13,7 +14,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const today = todayISO();
   const period = currentPeriod();
 
-  const [{ data: slots }, { data: sessions }, studentsRes, groupsRes, roomsRes, chargesRes] = await Promise.all([
+  const [{ data: slots }, { data: sessions }, studentsRes, groupsRes, roomsRes, chargesRes, myHeldRes, { data: recentAtt }] = await Promise.all([
     supabase
       .from('schedule_slots')
       .select('start_time, end_time, rooms(name), groups!inner(id, name, color, active, group_members(student_id))')
@@ -28,7 +29,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     ctx.isOwner
       ? supabase.from('charges').select('id, amount, due_date, student_id, students(first_name, last_name), payments(amount)').eq('org_id', ctx.org.id).eq('period', period)
       : Promise.resolve({ data: [] }),
+    !ctx.isOwner ? supabase.from('sessions').select('id', { count: 'exact', head: true }).eq('teacher_id', ctx.userId).eq('status', 'held').gte('date', `${period}-01`) : Promise.resolve({ count: 0 }),
+    supabase.from('attendance').select('student_id, status, students(first_name, last_name, parent_phone, phone, active), sessions!inner(date, group_id, groups(name))').eq('org_id', ctx.org.id).gte('sessions.date', addDays(today, -60)).limit(3000),
   ]);
+  type AR = { student_id: string; status: string; students: { first_name: string; last_name: string; parent_phone: string | null; phone: string | null; active: boolean } | null; sessions: { date: string; group_id: string; groups: { name: string } | null } };
+  const attRows = ((recentAtt ?? []) as unknown as AR[]).filter((r) => r.students?.active).map((r) => ({ ...r, date: r.sessions.date }));
+  const streaks = absenceStreaks(attRows).slice(0, 8);
 
   type S = { start_time: string; end_time: string; rooms: { name: string } | null; groups: { id: string; name: string; color: string; group_members: { student_id: string }[] } };
   const todays = (slots ?? []) as unknown as S[];
@@ -56,6 +62,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     <>
       <PageHeader title={`Dobar dan${first ? `, ${first}` : ''}`} subtitle={dateLong(today)} />
       <Flash ok={sp.ok === 'lozinka' ? 'Lozinka je sačuvana. Dobro došao u Klasiko!' : undefined} />
+      <InstallCard />
 
       {ctx.isOwner && (
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -79,6 +86,28 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             ))}
           </ol>
           <p className="mt-3 text-[13px] font-semibold text-mut">Treba ti pomoć oko prenosa podataka? Pošalji tabelu na <a className="font-extrabold text-brand" href="https://wa.me/381638219713" target="_blank" rel="noopener">WhatsApp</a> i uvešćemo je besplatno.</p>
+        </Card>
+      )}
+
+      {streaks.length > 0 && (
+        <Card title="Propustili 2 ili više časova zaredom" className="mb-6">
+          <ul className="flex flex-col divide-y divide-line">
+            {streaks.map(({ student_id, streak, last }) => {
+              const st = last.students!;
+              const phone = st.parent_phone || st.phone;
+              return (
+                <li key={student_id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                  <div className="min-w-0">
+                    {ctx.isOwner ? <Link href={`/ucenici/${student_id}`} className="font-extrabold text-ink hover:text-brand">{fullName(st)}</Link> : <span className="font-extrabold text-ink">{fullName(st)}</span>}
+                    <div className="text-[12px] font-semibold text-mut">{last.sessions.groups?.name} · {streak} časa zaredom</div>
+                  </div>
+                  {phone && (
+                    <a className="btn btn-sm btn-soft" target="_blank" rel="noopener" href={`https://wa.me/${phone.replace(/\D/g, '').replace(/^0/, '381')}?text=${encodeURIComponent(`Dobar dan! Primetili smo da ${fullName(st)} nije bio/la na poslednja ${streak} časa. Da li je sve u redu? Ako treba, dogovorićemo nadoknadu. ${ctx.org.name}`)}`}>Javi se roditelju</a>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </Card>
       )}
 
@@ -122,7 +151,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </Card>
         ) : (
           <Card title="Moje grupe">
-            <p className="text-[15px] font-semibold text-mut">Imaš {groupCount} {groupCount === 1 ? 'grupu' : 'grupa'}.</p>
+            <p className="text-[15px] font-semibold text-mut">Imaš {groupCount} {groupCount === 1 ? 'grupu' : 'grupa'}. Ovog meseca si održao/la <b className="text-ink">{(myHeldRes as { count: number | null }).count ?? 0}</b> {((myHeldRes as { count: number | null }).count ?? 0) === 1 ? 'čas' : 'časova'}.</p>
             <Link href="/grupe" className="btn btn-soft mt-3">Pogledaj grupe</Link>
           </Card>
         )}
