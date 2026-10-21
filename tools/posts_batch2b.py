@@ -279,7 +279,7 @@ POSTS_2B = [
  'tag': 'Rast škole',
  'title': 'Šest brojeva koje vlasnik škole treba da prati svakog meseca',
  'seo_title': 'Izveštaji za školu: šest brojeva za praćenje | Klasiko',
- 'desc': 'Koje izveštaje za školu gledati svakog meseca: aktivni polaznici, novi upisi, odustajanja, prisustvo, naplata i popunjenost grupa. Kako ih računati i šta raditi.',
+ 'desc': 'Šest brojeva koje vlasnik škole treba da prati svakog meseca: aktivni učenici, novi upisi, odustajanja, prisustvo, naplata i popunjenost grupa.',
  'excerpt': 'Šest brojeva, jednom mesečno, koji ti pokazuju kako škola stvarno stoji i gde treba da reaguješ.',
  'lead': 'Većina vlasnika škola i klubova zna da li je „dobar” ili „loš” mesec, ali teško kaže zašto. Osećaj je koristan, ali brojevi pokazuju problem dok je još mali. Ne treba ti komplikovana analitika: šest brojeva, jednom mesečno, dovoljno je da znaš kako stojiš i šta da uradiš.',
  'body': '''
@@ -374,7 +374,7 @@ POSTS_2B = [
  'tag': 'Rast škole',
  'title': 'Upis u septembru: plan pripreme za školu i klub, nedelju po nedelju',
  'seo_title': 'Upis u septembru: plan pripreme nedelju po nedelju | Klasiko',
- 'desc': 'Priprema za upis u septembru: plan od kraja jula do kraja septembra za škole i klubove. Stari polaznici, nove grupe, raspored po smenama, cene, marketing i uplate.',
+ 'desc': 'Plan pripreme za septembarski upis u školi ili klubu, nedelju po nedelju: grupe, raspored po smenama, cene, promocija i prvi mesec.',
  'excerpt': 'Plan od kraja jula do kraja septembra, nedelju po nedelju, da upis prođe bez haosa i sa punim grupama.',
  'lead': 'Za većinu škola i klubova septembar odlučuje kako će izgledati cela godina. Ako upis počneš da planiraš prvog septembra, već kasniš: roditelji biraju aktivnosti krajem avgusta, a raspored zavisi od smena koje se saznaju u poslednji čas. Evo plana od kraja jula do kraja septembra, nedelju po nedelju.',
  'body': '''

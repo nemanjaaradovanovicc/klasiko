@@ -137,8 +137,8 @@ ld = {"@context": "https://schema.org", "@graph": [
     C.bc_ld(bc, '/blog'),
 ]}
 cards = ''.join(post_card(p) for p in reversed(POSTS))
-page = C.head('Blog za vlasnike škola i klubova: saveti za organizaciju | Klasiko',
-              'Praktični saveti za vlasnike škola jezika, plesnih škola, klubova borilačkih veština i edukativnih centara: članarine, raspored časova i kako privući nove učenike.',
+page = C.head('Blog: saveti za vlasnike škola i klubova | Klasiko',
+              'Praktični saveti za vlasnike škola jezika, plesnih škola, klubova, edukativnih centara i vrtića: članarine, raspored, upis i roditelji.',
               '/blog', og_title='Klasiko blog: saveti za vođenje škole', ld=ld) + C.header('/blog') + f'''<main id="sadrzaj">
 <section class="hero">
 <div class="wrap hero-in">

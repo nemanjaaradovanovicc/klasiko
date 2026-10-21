@@ -88,8 +88,8 @@ def build(OUT, post_card, POSTS):
     bc = [('Početna', '/'), ('Cene', None)]
     ld = {"@context": "https://schema.org", "@graph": [C.ORG, software_ld(), C.bc_ld(bc, '/cene'), faq_ld(PRICE_FAQ)]}
     inc = ''.join(f'<li>{x}</li>' for x in INCLUDED)
-    page = C.head('Cene Klasika: paketi od 2.990 RSD mesečno, 14 dana besplatno | Klasiko',
-                  'Cene programa Klasiko za škole, klubove i vrtiće: Start 2.990, Rast 5.990 i Pro 9.990 RSD mesečno. Godišnje 2 meseca gratis, lifetime licenca, 14 dana besplatno.',
+    page = C.head('Cene Klasika: od 2.990 RSD, 14 dana besplatno | Klasiko',
+                  'Cene programa Klasiko: Start 2.990, Rast 5.990 i Pro 9.990 RSD mesečno. Godišnje dva meseca gratis, lifetime licenca, 14 dana besplatno.',
                   '/cene', og_title='Cene Klasika: od 2.990 RSD mesečno', ld=ld) + C.header('/cene') + f'''<main id="sadrzaj">
 <section class="hero">
 <div class="wrap hero-in" style="align-items:center;text-align:center">

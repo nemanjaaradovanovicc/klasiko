@@ -79,18 +79,26 @@
 
   // Meta Pixel, učitava se tek posle pristanka (isti izbor važi na celom sajtu)
   (function(){
-    var PIXEL_ID='1620883076403226',KEY='klasiko_consent';
+    var PIXEL_ID='1620883076403226',GA_ID='G-LVY1D42QZP',KEY='klasiko_consent';
+    function loadGA(){
+      if(!GA_ID||window.__klasikoGA)return;window.__klasikoGA=true;
+      window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){dataLayer.push(arguments);};
+      gtag('consent','update',{ad_storage:'granted',ad_user_data:'granted',ad_personalization:'granted',analytics_storage:'granted'});
+      var g=document.createElement('script');g.async=true;g.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;document.head.appendChild(g);
+      gtag('js',new Date());gtag('config',GA_ID);
+    }
     function load(){
+      loadGA();
       if(!PIXEL_ID||window.fbq)return;
       !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
       fbq('init',PIXEL_ID);fbq('track','PageView');
     }
     var c=null;try{c=localStorage.getItem(KEY);}catch(e){}
     var box=document.getElementById('cookie');
-    if(c==='yes'){load();}else if(c!=='no'&&PIXEL_ID&&box){box.hidden=false;}
+    if(c==='yes'){load();}else if(c!=='no'&&box){box.hidden=false;}
     if(box)box.addEventListener('click',function(e){var v=e.target.getAttribute('data-consent');if(!v)return;
       try{localStorage.setItem(KEY,v);}catch(err){}box.hidden=true;if(v==='yes')load();});
-    window.klasikoTrackLead=function(src){if(window.fbq)fbq('track','Lead',{content_name:'Lista cekanja',source:src});};
+    window.klasikoTrackLead=function(src){if(window.fbq)fbq('track','Lead',{content_name:'Lista cekanja',source:src});if(window.__klasikoGA)gtag('event','generate_lead',{source:src});};
   })();
 
   // Cene: mesečno / godišnje

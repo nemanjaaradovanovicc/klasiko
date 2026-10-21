@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <script>document.documentElement.className="js";</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Klasiko | Program za vođenje škole, kluba i vrtića, 14 dana besplatno</title>
-<meta name="description" content="Klasiko je program za škole jezika, plesne škole, klubove borilačkih veština, edukativne centre i privatne vrtiće: učenici, raspored, prisustvo i članarine sa IPS QR uplatama. Od 2.990 RSD, 14 dana besplatno.">
+<title>Klasiko | Program za vođenje škole, kluba i vrtića</title>
+<meta name="description" content="Program za škole jezika, plesne škole, klubove, edukativne centre i vrtiće: učenici, raspored, prisustvo i članarine sa IPS QR. Od 2.990 RSD.">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="author" content="Klasiko">
 <link rel="canonical" href="https://www.klasiko.rs/">
@@ -391,18 +391,18 @@ img{max-width:100%}
 .k .k-demo .hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
 .k .k-demo button[type=submit]{height:58px;border:0;border-radius:999px;background:#FF6B5E;color:#3A0F0A;font-family:inherit;font-size:17px;font-weight:800;cursor:pointer}
 @media (max-width:560px){.k .k-df{grid-template-columns:1fr}}
+.k .nav-links a{display:inline-flex;align-items:center;min-height:44px}
+.k a[href="/cene"],.k a[href="/blog"],.k a[href^="tel:"],.k a[href="https://app.klasiko.rs"]{display:inline-flex;align-items:center;min-height:44px}
+.k footer a{display:inline-flex;align-items:center;min-height:32px}
 </style>
 <script>
 window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-LVY1D42QZP"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-LVY1D42QZP');
+// Google Consent Mode v2: sve odbijeno dok posetilac ne prihvati kolačiće
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied' });
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -453,7 +453,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div style="position: relative; max-width: 1200px; margin: 0 auto; padding: clamp(36px, 7vw, 100px) clamp(16px, 4vw, 48px) clamp(40px, 5vw, 72px); display: flex; flex-wrap: wrap; align-items: center; gap: clamp(32px, 5vw, 64px)">
 <div style="flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(18px, 2.2vw, 24px)">
 <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: #FFE8E5; color: #8C3A31; font-size: 14px; font-weight: 800"><span class="ping" style="position: relative; width: 8px; height: 8px; border-radius: 50%; background: #FF6B5E"></span>14 dana besplatno, bez kartice</span>
-<h1 class="split" style="margin: 0; font-size: clamp(46px, 6.4vw, 84px); line-height: 0.98; font-weight: 800; letter-spacing: -0.055em; color: #5B2A86; text-wrap: balance">Vodi školu, ne tabele<span style="color: #FF6B5E">.</span></h1>
+<h1 style="margin: 0; font-size: clamp(46px, 6.4vw, 84px); line-height: 0.98; font-weight: 800; letter-spacing: -0.055em; color: #5B2A86; text-wrap: balance">Vodi školu, ne tabele<span style="color: #FF6B5E">.</span></h1>
 <p style="margin: 0; max-width: 540px; font-size: clamp(18px, 1.6vw, 21px); line-height: 1.5; font-weight: 500; color: #4A3A5C">Učenici, grupe, raspored časova, prisustvo i članarine sa IPS QR uplatama, na jednom mestu. Klasiko je program za vođenje škola, klubova i privatnih vrtića: manje administracije, više vremena za nastavu.</p>
 <div id="prijava" style="width: 100%; max-width: 580px; display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; flex-wrap: wrap; gap: 10px">
@@ -819,7 +819,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 </div>
 </div>
 <div class="cookie" id="cookie" hidden role="dialog" aria-label="Kolačići">
-<p>Koristimo kolačiće za merenje uspešnosti reklama (Meta Pixel). Više u <a href="/privatnost">Politici privatnosti</a>.</p>
+<p>Uz tvoj pristanak koristimo kolačiće za statistiku poseta (Google Analytics) i merenje reklama (Meta Pixel). Više u <a href="/privatnost">Politici privatnosti</a>.</p>
 <button class="no" type="button" data-consent="no">Odbij</button><button class="ok" type="button" data-consent="yes">Prihvatam</button>
 </div>
 <script>
@@ -827,17 +827,25 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   // Upiši ID svog Meta Pixela između navodnika, npr. '123456789012345'
   var PIXEL_ID = '1620883076403226';
   var KEY = 'klasiko_consent';
+  var GA_ID = 'G-LVY1D42QZP';
+  function loadGA(){
+    if(!GA_ID || window.__klasikoGA) return; window.__klasikoGA = true;
+    gtag('consent', 'update', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' });
+    var g=document.createElement('script'); g.async=true; g.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID; document.head.appendChild(g);
+    gtag('js', new Date()); gtag('config', GA_ID);
+  }
   function load(){
+    loadGA();
     if(!PIXEL_ID || window.fbq) return;
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', PIXEL_ID); fbq('track', 'PageView');
   }
   var c=null; try{c=localStorage.getItem(KEY);}catch(e){}
   var box=document.getElementById('cookie');
-  if(c==='yes'){load();} else if(c!=='no' && PIXEL_ID){box.hidden=false;}
+  if(c==='yes'){load();} else if(c!=='no'){box.hidden=false;}
   box.addEventListener('click',function(e){var v=e.target.getAttribute('data-consent');if(!v)return;
     try{localStorage.setItem(KEY,v);}catch(err){} box.hidden=true; if(v==='yes')load();});
-  window.klasikoTrackLead=function(src){ if(window.fbq) fbq('track','Lead',{content_name:'Lista cekanja',source:src}); };
+  window.klasikoTrackLead=function(src){ if(window.fbq) fbq('track','Lead',{content_name:'Lista cekanja',source:src}); if(window.__klasikoGA) gtag('event','generate_lead',{source:src}); };
 })();
 </script>
 <script>
@@ -850,7 +858,7 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
   // Animacije pri skrolovanju i lepljiva traka na telefonu
   var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var hero=document.querySelector('#vrh > div[style*="max-width: 1200px"] > div:first-child');
-  if(hero){Array.prototype.forEach.call(hero.children,function(el,i){if(el.tagName==='H1')return;el.classList.add('hero-in');el.style.setProperty('--d',(i*90)+'ms');});}
+  if(hero){Array.prototype.forEach.call(hero.children,function(el,i){if(el.tagName==='H1'||el.tagName==='P')return;el.classList.add('hero-in');el.style.setProperty('--d',(i*90)+'ms');});}
   var items=[];
   document.querySelectorAll('section:not(#vrh) > div > *').forEach(function(el){items.push(el);});
   document.querySelectorAll('section:not(#vrh) [style*="display: grid"] > *, section:not(#vrh) ol > li, #problem [style*="border-bottom"]').forEach(function(el,i){

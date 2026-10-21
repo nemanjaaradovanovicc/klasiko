@@ -299,6 +299,12 @@ h2{margin:0;font-size:clamp(30px,4.2vw,50px);line-height:1.05;font-weight:800;le
 .cookie button{height:44px;padding:0 18px;border-radius:999px;border:0;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .cookie .ok{background:#FF6B5E;color:#3A0F0A}.cookie .no{background:rgba(255,255,255,.14);color:#FFFFFF}
 
+/* Površine za dodir (WCAG 2.2: bar 24px, na telefonu oko 44px) */
+.nav a{display:inline-flex;align-items:center;min-height:44px}
+.crumbs a{display:inline-flex;align-items:center;min-height:32px}
+.ftr nav a,.ftr .bot a{display:inline-flex;align-items:center;min-height:32px}
+.cookie a{display:inline-block;padding:4px 0}
+
 /* Podnožje */
 .ftr{background:var(--pd);color:#E6DAF2}
 .ftr .top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:32px;padding-top:44px;padding-bottom:44px}
@@ -338,7 +344,7 @@ h2{margin:0;font-size:clamp(30px,4.2vw,50px);line-height:1.05;font-weight:800;le
 @media (prefers-reduced-motion:no-preference){
   .js .rv{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .9s cubic-bezier(.16,1,.3,1);transition-delay:var(--d,0ms)}
   .js .rv.in{opacity:1;transform:none}
-  .js .hero-in>*{animation:kUp .8s cubic-bezier(.16,1,.3,1) both}
+  .js .hero-in>*:not(h1):not(.lead){animation:kUp .8s cubic-bezier(.16,1,.3,1) both}
   .js .hero-in>*:nth-child(2){animation-delay:.08s}.js .hero-in>*:nth-child(3){animation-delay:.16s}.js .hero-in>*:nth-child(4){animation-delay:.24s}.js .hero-in>*:nth-child(5){animation-delay:.32s}.js .hero-in>*:nth-child(6){animation-delay:.4s}
   .badge i::after{animation:kPing 2s cubic-bezier(0,0,.2,1) infinite}
   .hero::before{animation:kBlob 18s ease-in-out infinite}
