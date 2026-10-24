@@ -69,8 +69,13 @@ Za brz pregled izgleda bez forme dovoljno je dvaput kliknuti na `public/index.ht
 
 ## Pre objave popuni
 
-- `[KONTAKT EMAIL]` u podnožju `index.html` i u `privatnost.html`
-- `[DATUM]`, `[NAZIV PREDUZETNIKA ILI FIRME]`, `[ADRESA]`, `[PIB]`, `[MB]` u `privatnost.html`
+- `[DATUM]`, `[NAZIV PREDUZETNIKA ILI FIRME]`, `[ADRESA]`, `[PIB]`, `[MB]` u `tools/privatnost.py`, pa pokreni `python3 tools/build.py`
+
+## Izmene sajta
+
+Podstranice, blog, `privatnost`, `404` i `sitemap.xml` generiše `python3 tools/build.py` iz fajlova u `tools/`. Te HTML fajlove ne menjaj ručno.
+`public/index.html` se menja ručno, osim delova između oznaka `nav:start` i `nav:end` (meni), koje build upisuje iz `build_common.py`, `site.css` i `site.js`.
+Posle izmena pokreni `python3 tools/check_links.py` da proveriš da nema pokvarenih linkova.
 
 Politika privatnosti je šablon napisan prema srpskom Zakonu o zaštiti podataka o ličnosti i GDPR-u. Nije pravni savet; dobro je da je pregleda pravnik pre lansiranja.
 

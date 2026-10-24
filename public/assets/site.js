@@ -13,6 +13,35 @@
   }
   window.addEventListener('scroll',function(){if(!tick){tick=true;requestAnimationFrame(onScroll);}},{passive:true});onScroll();
 
+  // nav:start — glavni meni; build.py isti blok kopira u index.html
+  (function(){
+    var hdr=document.querySelector('.hdr');if(!hdr)return;
+    var burger=hdr.querySelector('.burger'),dds=hdr.querySelectorAll('.dd'),mq=window.matchMedia('(max-width:980px)');
+    function setDd(dd,open){dd.classList.toggle('open',open);dd.querySelector('.dd-btn').setAttribute('aria-expanded',open?'true':'false');}
+    function closeDds(except){Array.prototype.forEach.call(dds,function(d){if(d!==except)setDd(d,false);});}
+    function setMenu(open){
+      hdr.classList.toggle('open',open);document.documentElement.classList.toggle('nav-open',open);
+      if(burger){burger.setAttribute('aria-expanded',open?'true':'false');burger.setAttribute('aria-label',open?'Zatvori meni':'Meni');}
+      if(!open)closeDds();
+    }
+    Array.prototype.forEach.call(dds,function(dd){
+      dd.querySelector('.dd-btn').addEventListener('click',function(){var o=!dd.classList.contains('open');closeDds(dd);setDd(dd,o);});
+      dd.addEventListener('mouseleave',function(){if(!mq.matches)setDd(dd,false);});
+      dd.addEventListener('focusout',function(e){if(!mq.matches&&!dd.contains(e.relatedTarget))setDd(dd,false);});
+    });
+    if(burger)burger.addEventListener('click',function(){setMenu(!hdr.classList.contains('open'));});
+    hdr.querySelectorAll('.nav a').forEach(function(a){a.addEventListener('click',function(){setMenu(false);});});
+    document.addEventListener('click',function(e){if(!hdr.contains(e.target)){closeDds();if(hdr.classList.contains('open'))setMenu(false);}});
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Escape')return;
+      var btn=hdr.querySelector('.dd.open .dd-btn');
+      if(hdr.classList.contains('open')&&!btn){setMenu(false);if(burger)burger.focus();}
+      else if(btn){closeDds();btn.focus();}
+    });
+    if(mq.addEventListener)mq.addEventListener('change',function(){setMenu(false);});
+  })();
+  // nav:end
+
   // Pojavljivanje pri skrolovanju
   var items=document.querySelectorAll('.sec-head,.grid>*,.links>*,.posts>*,.faq>details,.panel,.steps>li,.cta,.prose>h2,.callout,.inline-cta,.tbl');
   if(!reduce&&'IntersectionObserver' in window){

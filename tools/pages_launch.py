@@ -84,6 +84,7 @@ def software_ld():
 
 
 def build(OUT, post_card, POSTS):
+    BY_SLUG = {p['slug']: p for p in POSTS}
     # ----- /cene -----
     bc = [('Početna', '/'), ('Cene', None)]
     ld = {"@context": "https://schema.org", "@graph": [C.ORG, software_ld(), C.bc_ld(bc, '/cene'), faq_ld(PRICE_FAQ)]}
@@ -120,6 +121,14 @@ def build(OUT, post_card, POSTS):
 <div class="wrap split">
 <div class="sec-head" style="margin:0;flex:1 1 300px"><span class="eyebrow">Pitanja o cenama</span><h2>Česta pitanja<span class="dot">.</span></h2><p>Imaš još pitanja? Pozovi <a href="tel:{C.PHONE_TEL}">{C.PHONE}</a> ili piši na <a href="{C.WA}" target="_blank" rel="noopener">WhatsApp</a>.</p></div>
 <div class="faq" style="flex:2 1 520px">{faq_html(PRICE_FAQ)}</div>
+</div>
+</section>
+<section class="sec alt">
+<div class="wrap">
+<div class="sec-head"><span class="eyebrow">Pre odluke</span><h2>Saveti o ceni i izboru programa<span class="dot">.</span></h2></div>
+<div class="posts">{''.join(post_card(BY_SLUG[s]) for s in ('najbolji-program-za-vodjenje-skole', 'cena-casa-i-clanarine', 'ips-qr-kod-za-clanarine'))}</div>
+<div class="sec-head" style="margin:56px 0 24px"><span class="eyebrow">Klasiko pravimo za</span></div>
+<div class="links">{''.join(f'<a class="lk" href="{q}"><small>Za koga</small><strong>{l}</strong><em>Pogledaj →</em></a>' for q, l in C.NICHES)}</div>
 </div>
 </section>
 {C.cta('cene')}

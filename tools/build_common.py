@@ -28,13 +28,24 @@ NICHES = [
  ('/edukativni-centri', 'Edukativni centri i akademije'),
  ('/vrtici', 'Privatni vrtići'),
 ]
+# Kratak opis ispod naziva u padajućem meniju
+NICHE_HINTS = {
+ '/skole-jezika': 'Grupe po nivou, raspored i članarine',
+ '/plesne-skole': 'Grupe po uzrastu, prisustvo i roditelji',
+ '/borilacke-vestine': 'Članovi, treninzi, pojasevi i članarine',
+ '/edukativni-centri': 'Kursevi, predavači i rate',
+ '/vrtici': 'Dolasci, odlasci i mesečne uplate',
+}
 POSTS = []  # popunjava build.py
+# Članci u podnožju svake stranice (najvažniji za pretragu)
+FOOTER_POSTS = ['najbolji-program-za-vodjenje-skole', 'excel-ili-program-za-skolu', 'evidencija-clanarina', 'ips-qr-kod-za-clanarine', 'zastita-podataka-dece']
 
 def e(s):
     return html.escape(s, quote=True)
 
-def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=None, extra='', robots='index, follow, max-image-preview:large, max-snippet:-1'):
+def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=None, extra='', robots='index, follow, max-image-preview:large, max-snippet:-1', canonical=True):
     url = SITE + path
+    canon = f'<link rel="canonical" href="{url}">\n' if canonical else ''
     ld_html = ''
     if ld:
         ld_html = '<script type="application/ld+json">\n' + json.dumps(ld, ensure_ascii=False, indent=1) + '\n</script>\n'
@@ -47,8 +58,7 @@ def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=N
 <title>{e(title)}</title>
 <meta name="description" content="{e(desc)}">
 <meta name="robots" content="{robots}">
-<link rel="canonical" href="{url}">
-<meta name="theme-color" content="#5B2A86">
+{canon}<meta name="theme-color" content="#5B2A86">
 <meta name="format-detection" content="telephone=no">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="256x256" href="/favicon.png">
@@ -73,7 +83,7 @@ def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=N
 {extra}<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/manrope-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('consent','default',{{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'}});</script>
-<link rel="stylesheet" href="/assets/site.css?v=4">
+<link rel="stylesheet" href="/assets/site.css?v=5">
 <script>
 window.va = window.va || function () {{ (window.vaq = window.vaq || []).push(arguments); }};
 </script>
@@ -84,20 +94,39 @@ window.va = window.va || function () {{ (window.vaq = window.vaq || []).push(arg
 <div class="progress" aria-hidden="true"></div>
 '''
 
+CARET = '<svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+
+
 def header(current=''):
-    def a(href, label):
+    """Zaglavlje sa glavnim menijem. Isti HTML ide i u index.html, privatnost i 404 (vidi build.py)."""
+    def a(href, label, cls=''):
         cur = ' aria-current="page"' if current == href else ''
-        return f'<a href="{href}"{cur}>{label}</a>'
+        c = f' class="{cls}"' if cls else ''
+        return f'<a href="{href}"{c}{cur}>{label}</a>'
+    niche_cur = ' data-current' if current in NICHE_HINTS else ''
+    cur_attr = ' aria-current="page"'
+    items = '\n'.join(
+        f'<a href="{p}"{cur_attr if current == p else ""}><strong>{l}</strong><small>{NICHE_HINTS[p]}</small></a>'
+        for p, l in NICHES)
     return f'''<header class="hdr">
-<div class="wrap">
+<div class="hdr-in">
 <a class="logo" href="/" aria-label="Klasiko, početna"><picture><source srcset="/logo-128.webp" type="image/webp"><img src="/logo-128.png" alt="Klasiko logo" width="64" height="64"></picture></a>
-<nav class="nav" aria-label="Glavni meni">
+<nav class="nav" id="glavni-meni" aria-label="Glavni meni">
+<div class="dd"{niche_cur}>
+<button class="dd-btn" type="button" aria-expanded="false" aria-controls="meni-za-koga">Za koga{CARET}</button>
+<div class="dd-menu" id="meni-za-koga">
+{items}
+<a class="dd-all" href="/#za-koga">Sve vrste škola i klubova →</a>
+</div>
+</div>
 {a('/#kako-radi','Kako radi')}
-{a('/#za-koga','Za koga')}
 {a('/cene','Cene')}
 {a('/blog','Blog')}
+<a class="nav-login" href="https://app.klasiko.rs">Prijava</a>
+{a('/demo','Zakaži besplatan demo','nav-demo')}
 </nav>
-<a class="btn sm" href="/demo">Zakaži demo</a>
+<a class="hdr-cta" href="/demo">Zakaži demo</a>
+<button class="burger" type="button" aria-expanded="false" aria-controls="glavni-meni" aria-label="Meni"><span></span></button>
 </div>
 </header>
 '''
@@ -159,7 +188,8 @@ def cta(source, title='Probaj Klasiko 14 dana besplatno', text='Zakaži kratak d
 
 def footer():
     niche = ''.join(f'<a href="{p}">{l}</a>' for p, l in NICHES)
-    blog = ''.join(f'<a href="/blog/{p["slug"]}">{p["short"]}</a>' for p in POSTS[:4])
+    by_slug = {p['slug']: p for p in POSTS}
+    blog = ''.join(f'<a href="/blog/{s}">{by_slug[s]["short"]}</a>' for s in FOOTER_POSTS if s in by_slug)
     return f'''<footer class="ftr">
 <div class="wrap top">
 <div class="brand">
@@ -182,7 +212,7 @@ def footer():
 <p>Uz tvoj pristanak koristimo kolačiće za statistiku poseta (Google Analytics) i merenje reklama (Meta Pixel). Više u <a href="/privatnost">Politici privatnosti</a>.</p>
 <button class="no" type="button" data-consent="no">Odbij</button><button class="ok" type="button" data-consent="yes">Prihvatam</button>
 </div>
-<script src="/assets/site.js?v=4" defer></script>
+<script src="/assets/site.js?v=5" defer></script>
 </body>
 </html>
 '''

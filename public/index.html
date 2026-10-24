@@ -289,7 +289,6 @@ img{max-width:100%}
 /* ===== Nove animacije ===== */
 .k .progress{position:fixed;left:0;top:0;height:3px;width:100%;z-index:20;transform-origin:0 50%;transform:scaleX(var(--p,0));background:linear-gradient(90deg,#5B2A86,#FF6B5E);pointer-events:none}
 .k header{transition:box-shadow .3s ease,background-color .3s ease}
-.k header.scrolled{box-shadow:0 10px 30px rgba(91,42,134,0.10)}
 .k .orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(60px);opacity:.55}
 .k .orb-a{width:360px;height:360px;left:-120px;top:180px;background:radial-gradient(circle,#EADCF7,transparent 70%)}
 .k .orb-b{width:300px;height:300px;right:12%;top:420px;background:radial-gradient(circle,#FFE1DC,transparent 70%)}
@@ -391,7 +390,59 @@ img{max-width:100%}
 .k .k-demo .hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
 .k .k-demo button[type=submit]{height:58px;border:0;border-radius:999px;background:#FF6B5E;color:#3A0F0A;font-family:inherit;font-size:17px;font-weight:800;cursor:pointer}
 @media (max-width:560px){.k .k-df{grid-template-columns:1fr}}
-.k .nav-links a{display:inline-flex;align-items:center;min-height:44px}
+/* nav:start — glavni meni; build.py isti blok kopira u index.html */
+.hdr{position:sticky;top:0;z-index:30;border-bottom:1px solid #EFE7F6;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:box-shadow .3s ease;font-family:'Manrope','Segoe UI',system-ui,sans-serif}
+.hdr.scrolled{box-shadow:0 10px 30px rgba(91,42,134,.10)}
+.hdr-in{max-width:1200px;margin:0 auto;padding:12px clamp(16px,4vw,48px);display:flex;align-items:center;gap:16px}
+.hdr .logo{flex:0 0 auto;display:block;width:44px;height:48px;position:relative;overflow:hidden;margin-right:auto}
+.hdr .logo img{position:absolute;left:-10px;top:-7px;width:64px;height:64px;max-width:none}
+.hdr .nav{display:flex;align-items:center;gap:clamp(14px,2.2vw,30px);font-size:15px;font-weight:700}
+.hdr .nav a,.hdr .dd-btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:#2E1A42;text-decoration:none}
+.hdr .nav>a:hover,.hdr .dd-btn:hover,.hdr .nav>a[aria-current=page],.hdr .dd[data-current]>.dd-btn,.hdr .nav .nav-login{color:#5B2A86}
+.hdr .nav .nav-demo{display:none}
+.hdr .dd{position:relative}
+.hdr .dd-btn{padding:0;border:0;background:none;font:inherit;cursor:pointer}
+.hdr .caret{width:12px;height:12px;transition:transform .2s ease}
+.hdr .dd.open .caret{transform:rotate(180deg)}
+.hdr .dd-menu{position:absolute;top:calc(100% + 10px);left:50%;width:340px;margin-left:-170px;padding:8px;border:1px solid #EFE7F6;border-radius:20px;background:#fff;box-shadow:0 24px 60px rgba(46,26,66,.16);display:grid;gap:2px;opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .18s ease,transform .18s ease,visibility 0s linear .18s}
+.hdr .dd-menu::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px}
+.hdr .dd.open .dd-menu{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+@media (hover:hover) and (min-width:981px){.hdr .dd:hover .dd-menu{opacity:1;visibility:visible;transform:none;transition-delay:0s}.hdr .dd:hover .caret{transform:rotate(180deg)}}
+html:not(.js) .hdr .dd:focus-within .dd-menu{opacity:1;visibility:visible;transform:none}
+.hdr .dd-menu a{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;padding:10px 14px;border-radius:14px}
+.hdr .dd-menu a:hover{background:#F7F3FB}
+.hdr .dd-menu a[aria-current=page]{background:#F3ECF9}
+.hdr .dd-menu strong{font-size:15px;font-weight:800;color:#2E1A42}
+.hdr .dd-menu small{font-size:13px;font-weight:600;line-height:1.35;color:#6F5390}
+.hdr .dd-menu .dd-all{min-height:44px;margin-top:4px;border-top:1px solid #EFE7F6;border-radius:0 0 14px 14px;font-size:14px;font-weight:800;color:#5B2A86}
+.hdr .hdr-cta{flex:0 0 auto;display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:999px;background:#5B2A86;color:#fff;font-size:15px;font-weight:800;text-decoration:none;white-space:nowrap}
+.hdr .burger{display:none;flex:0 0 auto;width:44px;height:44px;margin-right:-8px;padding:0;border:0;border-radius:12px;background:none;color:#2E1A42;cursor:pointer;align-items:center;justify-content:center}
+.hdr .burger span,.hdr .burger span::before,.hdr .burger span::after{display:block;width:22px;height:2px;border-radius:2px;background:currentColor;transition:transform .2s ease,background-color .2s ease}
+.hdr .burger span{position:relative}
+.hdr .burger span::before,.hdr .burger span::after{content:"";position:absolute;left:0}
+.hdr .burger span::before{top:-7px}
+.hdr .burger span::after{top:7px}
+.hdr.open .burger span{background-color:transparent}
+.hdr.open .burger span::before{transform:translateY(7px) rotate(45deg)}
+.hdr.open .burger span::after{transform:translateY(-7px) rotate(-45deg)}
+@media (max-width:980px){
+  .js .hdr .burger{display:inline-flex}
+  .hdr .nav{position:absolute;left:0;right:0;top:100%;flex-direction:column;align-items:stretch;gap:0;max-height:calc(100dvh - 73px);overflow-y:auto;overscroll-behavior:contain;padding:4px clamp(16px,4vw,48px) calc(20px + env(safe-area-inset-bottom,0px));background:#fff;border-bottom:1px solid #EFE7F6;box-shadow:0 24px 40px rgba(46,26,66,.14);font-size:17px}
+  .js .hdr .nav{display:none}
+  .js .hdr.open .nav{display:flex}
+  .hdr .nav>a,.hdr .dd-btn{width:100%;min-height:54px;justify-content:space-between;border-bottom:1px solid #EFE7F6}
+  .hdr .dd-menu{position:static;width:auto;margin:0;padding:4px 0 8px;border:0;border-radius:0;box-shadow:none;opacity:1;visibility:visible;transform:none;transition:none}
+  .hdr .dd-menu::before{display:none}
+  .js .hdr .dd:not(.open) .dd-menu{display:none}
+  .hdr .dd-menu a{padding:10px 12px}
+  .hdr .nav .nav-demo{display:flex;justify-content:center;height:52px;margin-top:18px;border:0;border-radius:999px;background:#5B2A86;color:#fff;font-weight:800}
+  html:not(.js) .hdr-in{flex-wrap:wrap}
+  html:not(.js) .hdr .nav{position:static;flex:1 1 100%;max-height:none;padding:0;box-shadow:none;border:0}
+  html.nav-open{overflow:hidden}
+  html.nav-open .cookie,html.nav-open .m-sticky{visibility:hidden}
+}
+@media (max-width:400px){.hdr .hdr-cta{height:40px;padding:0 14px;font-size:14px}}
+/* nav:end */
 .k a[href="/cene"],.k a[href="/blog"],.k a[href^="tel:"],.k a[href="https://app.klasiko.rs"]{display:inline-flex;align-items:center;min-height:44px}
 .k footer a{display:inline-flex;align-items:center;min-height:32px}
 </style>
@@ -407,7 +458,7 @@ gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_pe
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
-<div style="font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif; color: #2E1A42; background: #FFFFFF; overflow: hidden; -webkit-font-smoothing: antialiased">
+<div style="font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif; color: #2E1A42; background: #FFFFFF; overflow: hidden; overflow-x: clip; overflow-y: visible; -webkit-font-smoothing: antialiased">
 <style>
 .k a{color:#5B2A86}
 .k details summary{list-style:none;cursor:pointer}
@@ -418,8 +469,6 @@ gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_pe
 .k .m-sticky{display:none}
 .k input[type=range]{accent-color:#5B2A86}
 @media (max-width: 760px){
-.k .nav-links{display:none!important}
-.k .hdr-cta{height:42px!important;padding:0 16px!important;font-size:14px!important}
 .k .stack-btn{flex:1 1 100%!important}
 .k .m-sticky{display:flex}
 .k .m-pad{padding-bottom:96px!important}
@@ -430,21 +479,33 @@ gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_pe
 <div class="k m-pad">
 <div class="progress" aria-hidden="true"></div>
 
-<header style="position: sticky; top: 0; z-index: 5; border-bottom: 1px solid #EFE7F6; background: rgba(255,255,255,0.94); backdrop-filter: blur(10px)">
-<div style="max-width: 1200px; margin: 0 auto; padding: 12px clamp(16px, 4vw, 48px); display: flex; align-items: center; justify-content: space-between; gap: 16px">
-<a href="#vrh" aria-label="Klasiko, početna" style="flex: 0 0 auto; display: block; width: 44px; height: 48px; position: relative; overflow: hidden"><picture><source srcset="/logo-128.webp" type="image/webp"><img src="/logo-128.png" alt="Klasiko logo" width="64" height="64" decoding="async" style="position: absolute; left: -10px; top: -7px; width: 64px; height: 64px; max-width: none"></picture></a>
-<nav class="nav-links" aria-label="Glavni meni" style="display: flex; gap: clamp(16px, 2.4vw, 32px); font-size: 15px; font-weight: 700">
-<a href="#problem" style="text-decoration: none; color: #2E1A42">Problem</a>
-<a href="#kako-radi" style="text-decoration: none; color: #2E1A42">Kako radi</a>
-<a href="#za-koga" style="text-decoration: none; color: #2E1A42">Za koga</a>
-<a href="#cene" style="text-decoration: none; color: #2E1A42">Cene</a>
-<a href="#faq" style="text-decoration: none; color: #2E1A42">FAQ</a>
-<a href="/blog" style="text-decoration: none; color: #2E1A42">Blog</a>
-<a href="https://app.klasiko.rs" style="text-decoration: none; color: #5B2A86">Prijava</a>
+<!-- nav:start -->
+<header class="hdr">
+<div class="hdr-in">
+<a class="logo" href="/" aria-label="Klasiko, početna"><picture><source srcset="/logo-128.webp" type="image/webp"><img src="/logo-128.png" alt="Klasiko logo" width="64" height="64"></picture></a>
+<nav class="nav" id="glavni-meni" aria-label="Glavni meni">
+<div class="dd">
+<button class="dd-btn" type="button" aria-expanded="false" aria-controls="meni-za-koga">Za koga<svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<div class="dd-menu" id="meni-za-koga">
+<a href="/skole-jezika"><strong>Škole jezika</strong><small>Grupe po nivou, raspored i članarine</small></a>
+<a href="/plesne-skole"><strong>Plesne škole</strong><small>Grupe po uzrastu, prisustvo i roditelji</small></a>
+<a href="/borilacke-vestine"><strong>Borilačke veštine</strong><small>Članovi, treninzi, pojasevi i članarine</small></a>
+<a href="/edukativni-centri"><strong>Edukativni centri i akademije</strong><small>Kursevi, predavači i rate</small></a>
+<a href="/vrtici"><strong>Privatni vrtići</strong><small>Dolasci, odlasci i mesečne uplate</small></a>
+<a class="dd-all" href="/#za-koga">Sve vrste škola i klubova →</a>
+</div>
+</div>
+<a href="/#kako-radi">Kako radi</a>
+<a href="/cene">Cene</a>
+<a href="/blog">Blog</a>
+<a class="nav-login" href="https://app.klasiko.rs">Prijava</a>
+<a href="/demo" class="nav-demo">Zakaži besplatan demo</a>
 </nav>
-<a class="hdr-cta" href="#demo" style="display: inline-flex; align-items: center; height: 46px; padding: 0 22px; border-radius: 999px; background: #5B2A86; color: #FFFFFF; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap">Zakaži demo</a>
+<a class="hdr-cta" href="/demo">Zakaži demo</a>
+<button class="burger" type="button" aria-expanded="false" aria-controls="glavni-meni" aria-label="Meni"><span></span></button>
 </div>
 </header>
+<!-- nav:end -->
 
 <main id="sadrzaj">
 <section id="vrh" style="position: relative">
@@ -1034,6 +1095,36 @@ gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_pe
     .finally(function(){btn.disabled=false;btn.textContent=label;});
   });
 })();
+</script>
+<script>
+// nav:start — glavni meni; build.py isti blok kopira u index.html
+  (function(){
+    var hdr=document.querySelector('.hdr');if(!hdr)return;
+    var burger=hdr.querySelector('.burger'),dds=hdr.querySelectorAll('.dd'),mq=window.matchMedia('(max-width:980px)');
+    function setDd(dd,open){dd.classList.toggle('open',open);dd.querySelector('.dd-btn').setAttribute('aria-expanded',open?'true':'false');}
+    function closeDds(except){Array.prototype.forEach.call(dds,function(d){if(d!==except)setDd(d,false);});}
+    function setMenu(open){
+      hdr.classList.toggle('open',open);document.documentElement.classList.toggle('nav-open',open);
+      if(burger){burger.setAttribute('aria-expanded',open?'true':'false');burger.setAttribute('aria-label',open?'Zatvori meni':'Meni');}
+      if(!open)closeDds();
+    }
+    Array.prototype.forEach.call(dds,function(dd){
+      dd.querySelector('.dd-btn').addEventListener('click',function(){var o=!dd.classList.contains('open');closeDds(dd);setDd(dd,o);});
+      dd.addEventListener('mouseleave',function(){if(!mq.matches)setDd(dd,false);});
+      dd.addEventListener('focusout',function(e){if(!mq.matches&&!dd.contains(e.relatedTarget))setDd(dd,false);});
+    });
+    if(burger)burger.addEventListener('click',function(){setMenu(!hdr.classList.contains('open'));});
+    hdr.querySelectorAll('.nav a').forEach(function(a){a.addEventListener('click',function(){setMenu(false);});});
+    document.addEventListener('click',function(e){if(!hdr.contains(e.target)){closeDds();if(hdr.classList.contains('open'))setMenu(false);}});
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='Escape')return;
+      var btn=hdr.querySelector('.dd.open .dd-btn');
+      if(hdr.classList.contains('open')&&!btn){setMenu(false);if(burger)burger.focus();}
+      else if(btn){closeDds();btn.focus();}
+    });
+    if(mq.addEventListener)mq.addEventListener('change',function(){setMenu(false);});
+  })();
+  // nav:end
 </script>
 </body>
 </html>

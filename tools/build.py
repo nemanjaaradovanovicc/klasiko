@@ -6,7 +6,8 @@ from posts import POSTS
 from posts_more import MORE_POSTS
 from posts_batch2a import POSTS_2A
 from posts_batch2b import POSTS_2B
-POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B
+from posts_batch3 import POSTS_3
+POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B + POSTS_3
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
 C.POSTS[:] = POSTS
@@ -14,6 +15,20 @@ import math
 for _p in POSTS:
     _p['minutes'] = max(3, math.ceil(len(re.sub(r'<[^>]+>', ' ', _p['body']).split()) / 200))
 BY_SLUG = {p['slug']: p for p in POSTS}
+
+
+def related_posts(p, n=3):
+    """Najsrodniji članci: ista tema, zajednička stranica za vrstu škole, međusobni linkovi."""
+    def score(q):
+        sc = 3 if q['tag'] == p['tag'] else 0
+        sc += 2 * sum(1 for nc in NICHE_PAGES if p['slug'] in nc['blog'] and q['slug'] in nc['blog'])
+        sc += 1 if f"/blog/{q['slug']}" in p['body'] else 0
+        sc += 1 if f"/blog/{p['slug']}" in q['body'] else 0
+        return sc
+    i = POSTS.index(p)
+    others = [q for q in POSTS if q['slug'] != p['slug']]
+    # Kod istog skora prednost imaju članci posle ovog (kružno), da se linkovi ravnomerno rasporede.
+    return sorted(others, key=lambda q: (-score(q), (POSTS.index(q) - i) % len(POSTS)))[:n]
 
 def post_card(p):
     return f'''<a class="post-card" href="/blog/{p['slug']}"><div class="cov" aria-hidden="true"><span>{p['tag']}</span></div><div class="bd"><strong>{C.e(p['title'])}</strong><p>{C.e(p['excerpt'])}</p><em>Pročitaj, {p['minutes']} min →</em></div></a>'''
@@ -67,7 +82,7 @@ for n in NICHE_PAGES:
     faqs = ''.join(f'<details{" open" if i == 0 else ""}><summary>{C.e(q)}</summary><p>{C.e(a)}</p></details>' for i, (q, a) in enumerate(n['faq']))
     others = ''.join(f'<a class="lk" href="{p}"><small>Za koga</small><strong>{l}</strong><em>Pogledaj →</em></a>' for p, l in C.NICHES if p != path)
     posts = ''.join(post_card(BY_SLUG[s]) for s in n['blog'])
-    page = C.head(n['title'], n['desc'], path, og_title=n['h1'] + ' | Klasiko', ld=ld) + C.header() + f'''<main id="sadrzaj">
+    page = C.head(n['title'], n['desc'], path, og_title=n['h1'] + ' | Klasiko', ld=ld) + C.header(path) + f'''<main id="sadrzaj">
 <section class="hero">
 <div class="wrap hero-grid">
 <div class="hero-in">
@@ -185,7 +200,7 @@ for p in POSTS:
          "publisher": {"@id": C.SITE + "/#organization"}},
         C.bc_ld(bc, path),
     ]}
-    related = ''.join(post_card(q) for q in POSTS if q['slug'] != p['slug'])
+    related = ''.join(post_card(q) for q in related_posts(p))
     extra = f'<meta property="article:published_time" content="{C.DATE}">\n<meta property="article:author" content="Nemanja Radovanović">\n'
     page = C.head(p['seo_title'], p['desc'], path, og_title=p['title'], og_type='article', ld=ld, extra=extra) + C.header('/blog') + f'''<main id="sadrzaj">
 <article>
@@ -207,6 +222,7 @@ for p in POSTS:
 <div class="wrap">
 <div class="sec-head"><span class="eyebrow">Pročitaj još</span><h2>Još saveta sa bloga<span class="dot">.</span></h2></div>
 <div class="posts">{related}</div>
+<p style="margin:28px 0 0"><a class="btn soft" href="/blog">Svi članci na blogu</a></p>
 <div class="sec-head" style="margin:56px 0 24px"><span class="eyebrow">Klasiko pravimo za</span></div>
 <div class="links">{''.join(f'<a class="lk" href="{q}"><small>Za koga</small><strong>{l}</strong><em>Pogledaj →</em></a>' for q, l in C.NICHES)}</div>
 </div>
@@ -267,6 +283,74 @@ print('ok /hvala')
 
 import pages_launch
 pages_launch.build(OUT, post_card, POSTS)
+
+# ---------- Politika privatnosti ----------
+import privatnost
+bc = [('Početna', '/'), ('Politika privatnosti', None)]
+page = C.head('Politika privatnosti | Klasiko',
+              'Politika privatnosti sajta i aplikacije Klasiko: koje podatke prikupljamo, zašto, koliko ih čuvamo i kako ostvaruješ svoja prava.',
+              '/privatnost', robots='noindex, follow') + C.header() + f'''<main id="sadrzaj">
+<header class="post-hero hero">
+<div class="wrap hero-in">
+{C.crumbs(bc)}
+<h1>Politika privatnosti<span class="dot">.</span></h1>
+<div class="meta"><span>Poslednja izmena: {privatnost.UPDATED}</span></div>
+</div>
+</header>
+<div class="prose">
+{privatnost.BODY}</div>
+</main>
+''' + C.footer()
+open(os.path.join(OUT, 'privatnost.html'), 'w', encoding='utf-8').write(page)
+print('ok /privatnost')
+
+# ---------- 404 ----------
+popular = [BY_SLUG[s] for s in ('evidencija-clanarina', 'raspored-casova', 'excel-ili-program-za-skolu')]
+page = C.head('Stranica nije pronađena | Klasiko', 'Tražena stranica ne postoji.', '/404', robots='noindex, follow', canonical=False) + C.header() + f'''<main id="sadrzaj">
+<section class="hero">
+<div class="wrap hero-in">
+<span class="badge"><i></i>Greška 404</span>
+<h1>Ova stranica ne postoji<span class="dot">.</span></h1>
+<p class="lead">Možda je premeštena ili je adresa pogrešno upisana. Evo gde možeš da nastaviš.</p>
+<div class="demo-btns"><a class="btn" href="/">Početna strana</a><a class="btn soft" href="/blog">Blog</a><a class="btn soft" href="/cene">Cene</a></div>
+</div>
+</section>
+<section class="sec alt">
+<div class="wrap">
+<div class="sec-head"><span class="eyebrow">Klasiko pravimo za</span></div>
+<div class="links">{''.join(f'<a class="lk" href="{q}"><small>Za koga</small><strong>{l}</strong><em>Pogledaj →</em></a>' for q, l in C.NICHES)}</div>
+<div class="sec-head" style="margin:56px 0 24px"><span class="eyebrow">Najčitanije na blogu</span></div>
+<div class="posts">{''.join(post_card(q) for q in popular)}</div>
+</div>
+</section>
+</main>
+''' + C.footer()
+open(os.path.join(OUT, '404.html'), 'w', encoding='utf-8').write(page)
+print('ok /404')
+
+# ---------- Početna: isti meni kao na ostalim stranicama ----------
+# index.html se uređuje ručno; između oznaka nav:start / nav:end ovde se upisuju header, CSS i JS iz site.css i site.js.
+def between(text, start, end):
+    i = text.index(start)
+    return i, text.index(end, i) + len(end)
+
+def put(text, start, end, new):
+    i, j = between(text, start, end)
+    return text[:i] + new + text[j:]
+
+css = open(os.path.join(OUT, 'assets', 'site.css'), encoding='utf-8').read()
+js = open(os.path.join(OUT, 'assets', 'site.js'), encoding='utf-8').read()
+i, j = between(css, '/* nav:start', '/* nav:end */')
+nav_css = css[i:j]
+i, j = between(js, '// nav:start', '// nav:end')
+nav_js = js[i:j]
+ip = os.path.join(OUT, 'index.html')
+idx = open(ip, encoding='utf-8').read()
+idx = put(idx, '/* nav:start', '/* nav:end */', nav_css)
+idx = put(idx, '<!-- nav:start -->', '<!-- nav:end -->', '<!-- nav:start -->\n' + C.header().strip() + '\n<!-- nav:end -->')
+idx = put(idx, '// nav:start', '// nav:end', nav_js)
+open(ip, 'w', encoding='utf-8').write(idx)
+print('ok / (meni)')
 
 # ---------- Sitemap ----------
 urls = [('/', '1.0', 'weekly'), ('/cene', '0.9', 'monthly'), ('/demo', '0.8', 'monthly')] + [(n['path'], '0.9', 'monthly') for n in NICHE_PAGES] + [('/blog', '0.8', 'weekly')] + [('/blog/' + p['slug'], '0.7', 'monthly') for p in POSTS]
