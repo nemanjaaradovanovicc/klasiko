@@ -276,14 +276,14 @@ img{max-width:100%}
 }
 .k .card-hover{transition:transform .25s ease,box-shadow .25s ease}
 @media (prefers-reduced-motion: no-preference){
-.js .k .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0ms)}
-.js .k .reveal.in{opacity:1;transform:none}
+.js .k .reveal{transform:translateY(16px);transition:transform .7s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0ms)}
+.js .k .reveal.in{transform:none}
 .k .float-a{animation:kFloatA 6s ease-in-out infinite}
 .k .float-b{animation:kFloatB 7s ease-in-out infinite}
 .k .hero-in{animation:kUp .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0ms)}
 @keyframes kFloatA{0%,100%{transform:rotate(3deg) translateY(0)}50%{transform:rotate(3deg) translateY(-10px)}}
 @keyframes kFloatB{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(-3deg) translateY(8px)}}
-@keyframes kUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes kUp{from{transform:translateY(12px)}to{transform:none}}
 }
 
 /* ===== Nove animacije ===== */
@@ -307,11 +307,11 @@ img{max-width:100%}
 .k .tilt{transition:transform .5s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d;will-change:transform}
 .k .confetti{position:fixed;width:9px;height:9px;border-radius:2px;pointer-events:none;z-index:30}
 @media (prefers-reduced-motion: no-preference){
-.js .k .reveal{opacity:0;transform:translateY(28px) scale(.985);transition:opacity .8s ease,transform .9s cubic-bezier(.16,1,.3,1);transition-delay:var(--d,0ms)}
-.js .k .reveal.in{opacity:1;transform:none}
-.js .k h2.reveal{transform:translateY(32px);filter:blur(6px);transition:opacity .8s ease,transform .9s cubic-bezier(.16,1,.3,1),filter .8s ease}
-.js .k h2.reveal.in{filter:none;transform:none}
-.js .k .split .w{opacity:0;transform:translateY(.45em) rotate(3deg);filter:blur(8px);animation:kWord .9s cubic-bezier(.16,1,.3,1) forwards;animation-delay:var(--d,0ms)}
+.js .k .reveal{transform:translateY(16px);transition:transform .8s cubic-bezier(.16,1,.3,1);transition-delay:var(--d,0ms)}
+.js .k .reveal.in{transform:none}
+.js .k h2.reveal{transform:translateY(16px)}
+.js .k h2.reveal.in{transform:none;filter:none}
+.js .k .split .w{animation:kWord .9s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--d,0ms)}
 .k .blob{animation:kBlob 18s ease-in-out infinite}
 .k .orb-a{animation:kDrift 16s ease-in-out infinite}
 .k .orb-b{animation:kDrift 20s ease-in-out infinite reverse}
@@ -320,16 +320,10 @@ img{max-width:100%}
 .k .float-phone{animation:kFloatP 7s ease-in-out infinite}
 .k .ring-pulse{animation:kRing 6s ease-in-out infinite}
 .k .orbit{animation:kOrbit 14s ease-in-out infinite}
-.js .k .dash{animation:kDash 1.2s cubic-bezier(.16,1,.3,1) .25s backwards}
-.js .k .dash .row{opacity:0;transform:translateX(-14px);transition:opacity .5s ease,transform .6s cubic-bezier(.16,1,.3,1);transition-delay:var(--d,0ms)}
-.js .k .dash.go .row{opacity:1;transform:none}
-.js .k .pill{transform:scale(.6);opacity:0;transition:transform .5s cubic-bezier(.3,1.6,.5,1),opacity .3s ease;transition-delay:var(--d,0ms)}
-.js .k .in .pill,.js .k .dash.go .pill{transform:none;opacity:1}
-.js .k .bar{transform:scaleY(.15);transform-origin:50% 100%;opacity:.3;transition:transform .6s cubic-bezier(.3,1.5,.5,1),opacity .4s ease;transition-delay:var(--d,0ms)}
-.js .k .bars-in .bar{transform:none;opacity:1}
+.js .k .dash{animation:kDash .8s cubic-bezier(.16,1,.3,1) both}
 .k .wobble{animation:kWob 4s ease-in-out infinite;animation-delay:var(--d,0ms)}
 .k .calc-num.bump{animation:kBump .35s ease}
-@keyframes kWord{to{opacity:1;transform:none;filter:none}}
+@keyframes kWord{from{transform:translateY(8px)}to{transform:none}}
 @keyframes kBlob{0%,100%{border-radius:50%;transform:translate(0,0) scale(1)}33%{border-radius:46% 54% 58% 42%/48% 44% 56% 52%;transform:translate(-30px,20px) scale(1.04)}66%{border-radius:55% 45% 42% 58%/52% 58% 42% 48%;transform:translate(20px,-14px) scale(.97)}}
 @keyframes kDrift{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,-40px)}}
 @keyframes kBounce{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-26px) scale(.92)}55%{transform:translateY(-26px) scale(.92)}90%{transform:translateY(0) scale(1.15,.85)}}
@@ -337,7 +331,7 @@ img{max-width:100%}
 @keyframes kFloatP{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(-1deg)}}
 @keyframes kRing{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.5}}
 @keyframes kOrbit{0%,100%{transform:translate(0,0)}25%{transform:translate(-30px,-16px)}50%{transform:translate(-10px,-34px)}75%{transform:translate(18px,-12px)}}
-@keyframes kDash{from{opacity:0;transform:perspective(1200px) rotateX(14deg) rotateY(-10deg) translateY(40px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes kDash{from{transform:translateY(12px)}to{transform:none}}
 @keyframes kWob{0%,100%{translate:0 0}50%{translate:0 -4px}}
 @keyframes kBump{50%{transform:scale(1.06)}}
 }
@@ -443,7 +437,7 @@ html:not(.js) .hdr .dd:focus-within .dd-menu{opacity:1;visibility:visible;transf
 }
 @media (max-width:400px){.hdr .hdr-cta{height:40px;padding:0 14px;font-size:14px}}
 /* nav:end */
-.k a[href="/cene"],.k a[href="/blog"],.k a[href^="tel:"],.k a[href="https://app.klasiko.rs"]{display:inline-flex;align-items:center;min-height:44px}
+.k a[href="/cene"],.k a[href="/blog"],.k a[href^="tel:+381638219713"],.k a[href="https://app.klasiko.rs"]{display:inline-flex;align-items:center;min-height:44px}
 .k footer a{display:inline-flex;align-items:center;min-height:32px}
 </style>
 <script>
@@ -926,9 +920,18 @@ gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_pe
     if(items.indexOf(el)<0){el.style.setProperty('--d',((i%6)*70)+'ms');items.push(el);}
     if(el.parentElement&&el.parentElement.style.display==='grid'&&!el.closest('#kako-radi'))el.classList.add('card-hover');
   });
-  if(!reduce&&'IntersectionObserver' in window){
-    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
-    items.forEach(function(el){el.classList.add('reveal');io.observe(el);});
+  if(!reduce){
+    var vh=window.innerHeight||document.documentElement.clientHeight||800,below=[];
+    items.forEach(function(el){
+      var box=el.getBoundingClientRect();
+      if(box.bottom>0&&box.top<vh)el.classList.add('in');
+      else{el.classList.add('reveal');below.push(el);}
+    });
+    if(below.length&&'IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px',threshold:0.01});
+      below.forEach(function(el){io.observe(el);});
+      setTimeout(function(){below.forEach(function(el){el.classList.add('in');});io.disconnect();},2500);
+    }else below.forEach(function(el){el.classList.add('in');});
   }
   var bar=document.querySelector('.m-sticky'),form=document.getElementById('prijava');
   if(bar&&form&&'IntersectionObserver' in window){
@@ -975,10 +978,8 @@ gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_pe
   if(dash){
     dash.querySelectorAll('[style*="border-radius: 11px"]').forEach(function(r,i){r.classList.add('row');r.style.setProperty('--d',(i*120)+'ms');});
     dash.querySelectorAll('[style*="border-radius: 999px"][style*="font-size: 11px"]').forEach(function(p,i){p.classList.add('pill');p.style.setProperty('--d',(500+i*140)+'ms');});
-    setTimeout(function(){
-      dash.classList.add('go');
-      dash.querySelectorAll('[data-count]').forEach(function(el){countUp(el,+el.getAttribute('data-count'),1200);});
-    },reduce?0:900);
+    dash.classList.add('go');
+    dash.querySelectorAll('[data-count]').forEach(function(el){countUp(el,+el.getAttribute('data-count'),reduce?0:900);});
     if(finePtr&&!reduce){
       var wrap=dash.closest('.tilt-wrap');
       wrap.addEventListener('pointermove',function(e){
@@ -993,9 +994,7 @@ gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_pe
   if(bars.length){
     bars.forEach(function(b,i){b.style.setProperty('--d',(i*80)+'ms');});
     var bp=bars[0].parentElement;
-    if('IntersectionObserver' in window&&!reduce){
-      var bo=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){bp.classList.add('bars-in');bo.disconnect();}});},{threshold:.5});bo.observe(bp);
-    }else bp.classList.add('bars-in');
+    bp.classList.add('bars-in');
   }
   document.querySelectorAll('.k .wobble').forEach(function(w,i){w.style.setProperty('--d',(i*-700)+'ms');});
   // Kartice sa reflektorom
