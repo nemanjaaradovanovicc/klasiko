@@ -83,7 +83,7 @@ def head(title, desc, path, og_title=None, og_desc=None, og_type='website', ld=N
 {extra}<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/manrope-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('consent','default',{{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'}});</script>
-<link rel="stylesheet" href="/assets/site.css?v=5">
+<link rel="stylesheet" href="/assets/site.css?v=6">
 <script>
 window.va = window.va || function () {{ (window.vaq = window.vaq || []).push(arguments); }};
 </script>
@@ -212,7 +212,7 @@ def footer():
 <p>Uz tvoj pristanak koristimo kolačiće za statistiku poseta (Google Analytics) i merenje reklama (Meta Pixel). Više u <a href="/privatnost">Politici privatnosti</a>.</p>
 <button class="no" type="button" data-consent="no">Odbij</button><button class="ok" type="button" data-consent="yes">Prihvatam</button>
 </div>
-<script src="/assets/site.js?v=5" defer></script>
+<script src="/assets/site.js?v=6" defer></script>
 </body>
 </html>
 '''

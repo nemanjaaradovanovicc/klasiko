@@ -44,12 +44,20 @@
 
   // Pojavljivanje pri skrolovanju
   var items=document.querySelectorAll('.sec-head,.grid>*,.links>*,.posts>*,.faq>details,.panel,.steps>li,.cta,.prose>h2,.callout,.inline-cta,.tbl');
-  if(!reduce&&'IntersectionObserver' in window){
-    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:.08});
+  if(!reduce){
+    var vh=window.innerHeight||document.documentElement.clientHeight||800,below=[];
     Array.prototype.forEach.call(items,function(el){
       var sib=el.parentElement?Array.prototype.indexOf.call(el.parentElement.children,el):0;
-      el.style.setProperty('--d',((sib%6)*70)+'ms');el.classList.add('rv');io.observe(el);
+      el.style.setProperty('--d',((sib%6)*70)+'ms');
+      var box=el.getBoundingClientRect();
+      if(box.bottom>0&&box.top<vh)el.classList.add('in');
+      else{el.classList.add('rv');below.push(el);}
     });
+    if(below.length&&'IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px',threshold:0.01});
+      below.forEach(function(el){io.observe(el);});
+      setTimeout(function(){below.forEach(function(el){el.classList.add('in');});io.disconnect();},2500);
+    }else below.forEach(function(el){el.classList.add('in');});
   }
 
   // Reflektor na karticama

@@ -40,8 +40,24 @@ for root, _, files in os.walk(PUB):
 
 errors, warns = [], []
 inbound = defaultdict(set)
+# tel: bez broja, uključujući CSS href^="tel:" koji alati prijave kao prazan link
+bare_tel = re.compile(r'tel:(?!\+381638219713)')
+for root, _, files in os.walk(PUB):
+    for f in files:
+        if not f.endswith(('.html', '.css', '.js')) or f in SKIP:
+            continue
+        path = os.path.join(root, f)
+        text = open(path, encoding='utf-8').read()
+        for m in bare_tel.finditer(text):
+            line = text[:m.start()].count('\n') + 1
+            errors.append(f'{os.path.relpath(path, PUB)}:{line}: tel: bez broja')
+            break
 for src, p in sorted(pages.items()):
     for h in p.links:
+        if h.lower().startswith('tel:'):
+            digits = re.sub(r'\D', '', h)
+            if len(digits) < 8:
+                errors.append(f'{src}: prazan tel link {h}')
         if re.match(r'^[a-z]+:', h) and not h.startswith('https://www.klasiko.rs'):
             if h.startswith('http://'):
                 warns.append(f'{src}: nije https: {h}')
