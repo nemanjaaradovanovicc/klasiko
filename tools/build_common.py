@@ -1,7 +1,7 @@
 import json, html
 
 SITE = 'https://www.klasiko.rs'
-EMAIL = 'nemanja.r@vgrubs.com'
+EMAIL = 'klasiko.rs@gmail.com'
 PHONE = '+381 63 8219713'
 PHONE_TEL = '+381638219713'
 WA = 'https://wa.me/381638219713?text=' + 'Zdravo%2C%20zanima%20me%20Klasiko.%20%C5%BDelim%20da%20zaka%C5%BEem%20demo.'
