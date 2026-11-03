@@ -6,7 +6,7 @@ UPDATED = '[DATUM]'
 BODY = '''<p>Ova politika objašnjava koje podatke prikupljamo kada koristiš sajt klasiko.rs, kada se prijaviš za savete na mejl ili zatražiš demo, i kako obrađujemo podatke koje škole unose u aplikaciju Klasiko.</p>
 
 <h2>Ko je rukovalac podacima</h2>
-<p>[NAZIV PREDUZETNIKA ILI FIRME], [ADRESA], PIB [PIB], matični broj [MB]. Kontakt za pitanja o podacima: <a href="mailto:nemanja.r@vgrubs.com">nemanja.r@vgrubs.com</a>.</p>
+<p>[NAZIV PREDUZETNIKA ILI FIRME], [ADRESA], PIB [PIB], matični broj [MB]. Kontakt za pitanja o podacima: <a href="mailto:klasiko.rs@gmail.com">klasiko.rs@gmail.com</a>.</p>
 
 <h2>Koje podatke prikupljamo</h2>
 <ul>
@@ -39,5 +39,5 @@ BODY = '''<p>Ova politika objašnjava koje podatke prikupljamo kada koristiš sa
 <p>Imaš pravo na pristup svojim podacima, njihovu ispravku i brisanje, ograničenje obrade, prenosivost i povlačenje pristanka. Ako smatraš da su ti prava povređena, možeš podneti pritužbu Povereniku za informacije od javnog značaja i zaštitu podataka o ličnosti.</p>
 
 <h2>Kontakt</h2>
-<p>Za sva pitanja o privatnosti piši nam na <a href="mailto:nemanja.r@vgrubs.com">nemanja.r@vgrubs.com</a>.</p>
+<p>Za sva pitanja o privatnosti piši nam na <a href="mailto:klasiko.rs@gmail.com">klasiko.rs@gmail.com</a>.</p>
 '''
