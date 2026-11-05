@@ -48,6 +48,8 @@ for root, _, files in os.walk(PUB):
             continue
         path = os.path.join(root, f)
         text = open(path, encoding='utf-8').read()
+        if re.search(r'''(?:href|src)\s*=\s*['"][^'"]*/social/|url\(\s*['"]?/social/''', text):
+            errors.append(f'{os.path.relpath(path, PUB)}: link ka /social/ nije dozvoljen')
         for m in bare_tel.finditer(text):
             line = text[:m.start()].count('\n') + 1
             errors.append(f'{os.path.relpath(path, PUB)}:{line}: tel: bez broja')
