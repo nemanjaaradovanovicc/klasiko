@@ -8,15 +8,28 @@ from posts_batch2a import POSTS_2A
 from posts_batch2b import POSTS_2B
 from posts_batch3 import POSTS_3
 from posts_batch4 import POSTS_4
-POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B + POSTS_3 + POSTS_4
+from posts_batch5 import POSTS_5
+POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B + POSTS_3 + POSTS_4 + POSTS_5
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
 # public/social/ (karuseli za društvene mreže) je ručno održavan.
 # Ovaj skript upisuje samo HTML i sitemap.xml i ne briše sadržaj public/.
 C.POSTS[:] = POSTS
 import math
+
+def with_faq(p):
+    """FAQ sekcija i tekst za broj reči. Postojeći članci nemaju ključ faq i ostaju isti."""
+    body = p['body']
+    if not p.get('faq'):
+        return body
+    parts = ['<h2 id="pitanja">Česta pitanja</h2>']
+    for q, a in p['faq']:
+        parts.append(f'<h3>{C.e(q)}</h3>')
+        parts.append(f'<p>{C.e(a)}</p>')
+    return body.rstrip() + '\n' + '\n'.join(parts) + '\n'
+
 for _p in POSTS:
-    _p['minutes'] = max(3, math.ceil(len(re.sub(r'<[^>]+>', ' ', _p['body']).split()) / 200))
+    _p['minutes'] = max(3, math.ceil(len(re.sub(r'<[^>]+>', ' ', with_faq(_p)).split()) / 200))
 BY_SLUG = {p['slug']: p for p in POSTS}
 
 
@@ -185,16 +198,16 @@ print('ok /blog')
 
 for p in POSTS:
     path = '/blog/' + p['slug']
-    body = p['body']
+    body = with_faq(p)
     heads = re.findall(r'<h2 id="([^"]+)">([^<]+)</h2>', body)
     toc = '<nav class="toc" aria-label="Sadržaj članka"><b>U ovom članku</b><ol>' + ''.join(f'<li><a href="#{i}">{t}</a></li>' for i, t in heads) + '</ol></nav>'
+    words = len(re.sub(r'<[^>]+>', ' ', body).split())
     # forma u sredini članka
     mid = heads[len(heads) // 2][0]
     inline = f'''<div class="inline-cta col"><p>Klasiko drži učenike, raspored, prisustvo i članarine na jednom mestu, sa IPS QR uplatama i uvozom iz Excel-a. Probaj ga 14 dana besplatno.</p>{C.demo_buttons(dark=True)}</div>\n'''
     body = body.replace(f'<h2 id="{mid}">', inline + f'<h2 id="{mid}">', 1)
-    words = len(re.sub(r'<[^>]+>', ' ', p['body']).split())
     bc = [('Početna', '/'), ('Blog', '/blog'), (p['short'], None)]
-    ld = {"@context": "https://schema.org", "@graph": [
+    graph = [
         C.ORG,
         {"@type": "BlogPosting", "@id": C.SITE + path + "#article", "headline": p['title'], "description": p['desc'],
          "url": C.SITE + path, "mainEntityOfPage": C.SITE + path, "image": C.SITE + "/og-image.png",
@@ -202,7 +215,10 @@ for p in POSTS:
          "author": {"@type": "Person", "name": "Nemanja Radovanović", "jobTitle": "Osnivač, Klasiko"},
          "publisher": {"@id": C.SITE + "/#organization"}},
         C.bc_ld(bc, path),
-    ]}
+    ]
+    if p.get('faq'):
+        graph.append(faq_ld(p['faq']))
+    ld = {"@context": "https://schema.org", "@graph": graph}
     related = ''.join(post_card(q) for q in related_posts(p))
     extra = f'<meta property="article:published_time" content="{p.get('date', C.DATE)}">\n<meta property="article:author" content="Nemanja Radovanović">\n'
     page = C.head(p['seo_title'], p['desc'], path, og_title=p['title'], og_type='article', ld=ld, extra=extra) + C.header('/blog') + f'''<main id="sadrzaj">
