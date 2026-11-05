@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createOrgUser, resetUserPassword, setActive, type Creds } from '@/lib/users';
 import { normalizeAccount } from '@/lib/ips';
-import { PLANS } from '@/lib/types';
+import { teacherLimitError } from '@/lib/plan';
+import { audit } from '@/lib/audit';
 
 function s(fd: FormData, k: string): string | null {
   const v = String(fd.get(k) ?? '').trim();
@@ -72,13 +73,12 @@ export async function addTeamMember(_: Creds | undefined, fd: FormData): Promise
   const email = s(fd, 'email')?.toLowerCase();
   const role = fd.get('role') === 'owner' ? 'owner' : 'teacher';
   if (!fullName || !email) return { error: 'Unesi ime i email.' };
-  const limit = PLANS[ctx.org.plan].teachers;
-  if (limit && !ctx.isSuper) {
-    const db = createAdminClient();
-    const { count } = await db.from('profiles').select('id', { count: 'exact', head: true }).eq('org_id', ctx.org.id).eq('active', true);
-    if ((count ?? 0) >= limit + 1) return { error: `Paket ${PLANS[ctx.org.plan].name} uključuje do ${limit} predavača. Za više pređi na veći paket.` };
+  if (role === 'teacher') {
+    const limit = await teacherLimitError(createAdminClient(), ctx.org, ctx.isSuper);
+    if (limit) return { error: limit };
   }
   const res = await createOrgUser(ctx.org.id, role, fullName, email, s(fd, 'phone'));
+  if (!res.error) await audit({ userId: ctx.userId, email: ctx.email }, 'team.add', { orgId: ctx.org.id, target: email, details: { role } });
   revalidatePath('/podesavanja');
   return res;
 }
@@ -86,7 +86,9 @@ export async function addTeamMember(_: Creds | undefined, fd: FormData): Promise
 export async function resetTeamPassword(_: Creds | undefined, fd: FormData): Promise<Creds> {
   const ctx = await requireOwner();
   const userId = String(fd.get('user_id'));
-  if (!(await assertMember(ctx.org.id, userId))) return { error: 'Korisnik nije iz tvoje škole.' };
+  const member = await assertMember(ctx.org.id, userId);
+  if (!member) return { error: 'Korisnik nije iz tvoje škole.' };
+  await audit({ userId: ctx.userId, email: ctx.email }, 'team.reset_password', { orgId: ctx.org.id, target: userId });
   return resetUserPassword(userId);
 }
 
@@ -94,7 +96,35 @@ export async function toggleTeamMember(fd: FormData) {
   const ctx = await requireOwner();
   const userId = String(fd.get('user_id'));
   if (userId === ctx.userId) redirect('/podesavanja?err=' + encodeURIComponent('Ne možeš da deaktiviraš sebe.'));
-  if (await assertMember(ctx.org.id, userId)) await setActive(userId, fd.get('active') === '1');
+  const member = await assertMember(ctx.org.id, userId);
+  const active = fd.get('active') === '1';
+  if (member) {
+    if (active && member.role === 'teacher') {
+      const limit = await teacherLimitError(createAdminClient(), ctx.org, ctx.isSuper);
+      if (limit) redirect('/podesavanja?err=' + encodeURIComponent(limit) + '#tim');
+    }
+    await setActive(userId, active);
+    await audit({ userId: ctx.userId, email: ctx.email }, 'team.set_active', { orgId: ctx.org.id, target: userId, details: { active } });
+  }
   revalidatePath('/podesavanja');
   redirect('/podesavanja?ok=tim#tim');
+}
+
+// Automatska naplata i popust za braću i sestre.
+export async function updateAutomation(fd: FormData) {
+  const ctx = await requireOwner();
+  const num = (k: string, min: number, max: number, def: number) => {
+    const x = Number(s(fd, k) ?? def);
+    return Number.isFinite(x) ? Math.min(max, Math.max(min, x)) : def;
+  };
+  const supabase = await createClient();
+  const { error } = await supabase.from('organizations').update({
+    auto_charges: fd.get('auto_charges') === 'on',
+    auto_charge_day: Math.round(num('auto_charge_day', 1, 28, 1)),
+    auto_reminders: fd.get('auto_reminders') === 'on',
+    reminder_days_before: Math.round(num('reminder_days_before', 0, 14, 3)),
+    sibling_discount_pct: num('sibling_discount_pct', 0, 100, 0),
+  }).eq('id', ctx.org.id);
+  revalidatePath('/', 'layout');
+  redirect('/podesavanja?' + (error ? 'err=' + encodeURIComponent(error.message) : 'ok=auto') + '#automatika');
 }

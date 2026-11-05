@@ -3,10 +3,11 @@
 import { useActionState } from 'react';
 import { login } from './actions';
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState(login, undefined);
   return (
     <form action={action} className="flex flex-col gap-4">
+      {next && <input type="hidden" name="next" value={next} />}
       <label className="block">
         <span className="label">Email</span>
         <input className="input" name="email" type="email" autoComplete="email" required autoFocus />

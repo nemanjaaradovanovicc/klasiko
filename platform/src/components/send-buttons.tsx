@@ -3,10 +3,7 @@
 import { useState, useTransition } from 'react';
 import { MessageCircle, Mail, Copy, Phone } from 'lucide-react';
 import { markInvoiceSent } from '@/app/(app)/admin/billing-actions';
-
-function intl(phone: string | null | undefined) {
-  return (phone ?? '').replace(/\D/g, '').replace(/^00/, '').replace(/^0/, '381');
-}
+import { intlPhone } from '@/lib/phone';
 
 export function SendButtons({ invoiceId, phone, email, message, subject, sentAt, compact = false }: {
   invoiceId: string; phone?: string | null; email?: string | null; message: string; subject: string; sentAt?: string | null; compact?: boolean;
@@ -16,7 +13,7 @@ export function SendButtons({ invoiceId, phone, email, message, subject, sentAt,
   const [sent, setSent] = useState(!!sentAt);
   const mark = () => { if (!sent) { setSent(true); start(() => markInvoiceSent(invoiceId)); } };
   const copy = async (msg: string) => { try { await navigator.clipboard.writeText(message); setNote(msg); setTimeout(() => setNote(''), 3500); } catch { setNote('Kopiranje nije uspelo'); } };
-  const num = intl(phone);
+  const num = intlPhone(phone);
   const cls = `btn btn-sm ${compact ? 'px-3' : ''}`;
   return (
     <div className="flex flex-wrap items-center gap-2">

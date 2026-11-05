@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation';
 import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui';
-import { dateLong, fullName, todayISO } from '@/lib/format';
+import { dateLong, fullName, parseDate } from '@/lib/format';
 import { Taker } from './taker';
+import { ConfirmButton } from '@/components/confirm';
 import type { AttStatus } from '../actions';
 import { scheduleMakeup, cancelMakeup } from '../actions';
 import { Card, Flash } from '@/components/ui';
@@ -15,14 +16,16 @@ export default async function TakeAttendance({ params, searchParams }: { params:
   const ctx = await requireOrg();
   const { groupId } = await params;
   const sp = await searchParams;
-  const date = sp.datum && /^\d{4}-\d{2}-\d{2}$/.test(sp.datum) ? sp.datum : todayISO();
+  const date = parseDate(sp.datum);
   const startTime = sp.vreme && /^\d{2}:\d{2}$/.test(sp.vreme) ? sp.vreme : '00:00';
   const supabase = await createClient();
-  const { data: g } = await supabase.from('groups').select('id, name, color').eq('id', groupId).eq('org_id', ctx.org.id).single();
+  const { data: g } = await supabase.from('groups').select('id, name, color, teacher_id').eq('id', groupId).eq('org_id', ctx.org.id).single();
   if (!g) notFound();
-  const [{ data: members }, { data: session }] = await Promise.all([
+  const [{ data: members }, { data: session }, { data: notices }, { data: teachers }] = await Promise.all([
     supabase.from('group_members').select('students(id, first_name, last_name, active)').eq('group_id', groupId),
-    supabase.from('sessions').select('id, status, note, makeup_for, attendance(student_id, status)').eq('group_id', groupId).eq('date', date).eq('start_time', startTime + ':00').maybeSingle(),
+    supabase.from('sessions').select('id, status, note, makeup_for, teacher_id, attendance(student_id, status)').eq('group_id', groupId).eq('date', date).eq('start_time', startTime + ':00').maybeSingle(),
+    supabase.from('absence_notices').select('student_id, note').eq('org_id', ctx.org.id).eq('date', date),
+    ctx.isOwner ? supabase.from('profiles').select('id, full_name').eq('org_id', ctx.org.id).eq('active', true).order('full_name') : Promise.resolve({ data: null }),
   ]);
   const { data: makeups } = session ? await supabase.from('sessions').select('id, date, start_time, status').eq('makeup_for', session.id) : { data: [] };
   const { data: slot } = await supabase.from('schedule_slots').select('end_time').eq('group_id', groupId).eq('start_time', startTime + ':00').limit(1).maybeSingle();
@@ -53,6 +56,9 @@ export default async function TakeAttendance({ params, searchParams }: { params:
         initialStatus={session?.status === 'cancelled' ? 'cancelled' : 'held'}
         initialNote={session?.note ?? ''}
         saved={!!session && session.status !== 'planned'}
+        absences={Object.fromEntries((notices ?? []).map((n) => [n.student_id, n.note ?? '']))}
+        teachers={teachers ?? undefined}
+        initialTeacher={session?.teacher_id ?? g.teacher_id ?? ''}
       />
       {session?.status === 'cancelled' && (
         <Card title="Nadoknada" className="mt-6">
@@ -62,7 +68,7 @@ export default async function TakeAttendance({ params, searchParams }: { params:
                 <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-soft px-3 py-2.5">
                   <a href={`/prisustvo/${groupId}?datum=${m.date}&vreme=${time(m.start_time)}`} className="font-bold text-brand">{dateSr(m.date)} u {time(m.start_time)}{m.status === 'held' ? ' · održana' : ' · zakazana'}</a>
                   {m.status === 'planned' && (
-                    <form action={cancelMakeup}><input type="hidden" name="id" value={m.id} /><input type="hidden" name="back" value={back} /><button className="text-[13px] font-bold text-coral-dark">Otkaži</button></form>
+                    <form action={cancelMakeup}><input type="hidden" name="id" value={m.id} /><input type="hidden" name="back" value={back} /><ConfirmButton message="Otkazati ovu nadoknadu?" className="text-[13px] font-bold text-coral-dark">Otkaži</ConfirmButton></form>
                   )}
                 </li>
               ))}

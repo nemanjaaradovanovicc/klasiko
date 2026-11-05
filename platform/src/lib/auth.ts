@@ -15,6 +15,12 @@ export interface Ctx {
   org: Organization | null;
   isSuper: boolean;
   isOwner: boolean; // vlasnik škole ili superadmin unutar škole
+  aal: string;
+}
+
+// Dvostepena prijava za admina Klasika je isključena. Uključuje se po želji sa SUPERADMIN_MFA=on.
+export function mfaMissing(ctx: Pick<Ctx, 'isSuper' | 'aal'>): boolean {
+  return ctx.isSuper && process.env.SUPERADMIN_MFA === 'on' && ctx.aal !== 'aal2';
 }
 
 // Jednom po zahtevu: korisnik, profil i trenutna škola.
@@ -47,6 +53,7 @@ export const getCtx = cache(async (): Promise<Ctx> => {
     org,
     isSuper,
     isOwner: isSuper || profile.role === 'owner',
+    aal: (claims.aal as string | undefined) ?? 'aal1',
   };
 });
 
@@ -71,6 +78,7 @@ export function orgAccess(org: Organization): { ok: boolean; reason?: string; da
 export async function requireOrg(): Promise<Ctx & { org: Organization }> {
   const ctx = await getCtx();
   if (ctx.profile.must_change_password) redirect('/lozinka');
+  if (mfaMissing(ctx)) redirect('/mfa');
   if (!ctx.org) redirect(ctx.isSuper ? '/admin' : '/login?greska=skola');
   if (!ctx.isSuper && !orgAccess(ctx.org).ok) redirect('/pretplata');
   return ctx as Ctx & { org: Organization };
@@ -85,6 +93,7 @@ export async function requireOwner(): Promise<Ctx & { org: Organization }> {
 export async function requireSuper(): Promise<Ctx> {
   const ctx = await getCtx();
   if (ctx.profile.must_change_password) redirect('/lozinka');
+  if (mfaMissing(ctx)) redirect('/mfa');
   if (!ctx.isSuper) redirect('/');
   return ctx;
 }

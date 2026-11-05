@@ -1,5 +1,5 @@
 import { Field, Select } from '@/components/ui';
-import type { Group } from '@/lib/types';
+import { FEE_TYPE_LABEL, type Group } from '@/lib/types';
 
 export const COLORS = ['#5B2A86', '#FF6B5E', '#2F7DBF', '#1F9D6B', '#E0A21B', '#C2417B', '#6B7280', '#0E9AA7'];
 
@@ -10,7 +10,9 @@ export function GroupFields({ g, teachers, rooms }: { g?: Partial<Group>; teache
       <Field label="Nivo ili uzrast" name="level" defaultValue={g?.level} placeholder="npr. B1, 7 do 9 godina, žuti pojas" />
       <Select label="Predavač" name="teacher_id" defaultValue={g?.teacher_id ?? ''} placeholder="Bez predavača" options={teachers.map((t) => ({ value: t.id, label: t.full_name }))} />
       <Select label="Sala" name="room_id" defaultValue={g?.room_id ?? ''} placeholder="Bez sale" options={rooms.map((r) => ({ value: r.id, label: r.name }))} />
-      <Field label="Mesečna cena (RSD)" name="monthly_fee" type="number" min={0} step="1" defaultValue={g?.monthly_fee} />
+      <Select label="Način naplate" name="fee_type" defaultValue={g?.fee_type ?? 'monthly'} options={Object.entries(FEE_TYPE_LABEL).map(([value, label]) => ({ value, label }))} />
+      <Field label="Cena (RSD)" name="monthly_fee" type="number" min={0} step="1" defaultValue={g?.monthly_fee} hint="Mesečna članarina ili cena paketa" />
+      <Field label="Časova u paketu" name="package_classes" type="number" min={1} step="1" defaultValue={g?.package_classes} hint="Samo za paket časova" />
       <Field label="Maksimalan broj učenika" name="capacity" type="number" min={1} defaultValue={g?.capacity} />
       <div>
         <span className="label">Boja u rasporedu</span>

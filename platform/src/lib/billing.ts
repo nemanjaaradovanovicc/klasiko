@@ -1,6 +1,7 @@
 import { PLANS, BILLING_LABEL, type Billing, type Invoice, type Organization, type Plan, type PlatformSettings } from '@/lib/types';
 import { addDays, dateSr, rsd, todayISO } from '@/lib/format';
 import { ipsPayload } from '@/lib/ips';
+import { waUrl } from '@/lib/phone';
 
 export const APP_URL = 'https://app.klasiko.rs';
 
@@ -94,6 +95,5 @@ export function needsBilling(org: Organization, days = 14): boolean {
 }
 
 export function waLink(phone: string | null | undefined, text: string): string {
-  const num = (phone ?? '').replace(/\D/g, '').replace(/^00/, '').replace(/^0/, '381');
-  return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+  return waUrl(phone, text);
 }

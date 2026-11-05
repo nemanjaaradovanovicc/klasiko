@@ -9,9 +9,12 @@ import type { Group } from '@/lib/types';
 import { updateGroup, setGroupActive, deleteGroup, addSlot, deleteSlot, addMembers } from '../actions';
 import { removeFromGroup } from '../../ucenici/actions';
 import { AttendanceGrid, type GridSession } from '@/components/attendance-grid';
-import { currentPeriod, shiftPeriod } from '@/lib/format';
+import { parsePeriod, shiftPeriod } from '@/lib/format';
+import { ConfirmButton, TypedConfirm } from '@/components/confirm';
+import { promoteFromWaitlist, removeFromWaitlist } from '../actions';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 
-const OK: Record<string, string> = { '1': 'Sačuvano.', nova: 'Grupa je napravljena. Dodaj učenike i termine.', termin: 'Termin je dodat u raspored.', clanovi: 'Učenici su dodati.' };
+const OK: Record<string, string> = { '1': 'Sačuvano.', nova: 'Grupa je napravljena. Dodaj učenike i termine.', termin: 'Termin je dodat u raspored.', clanovi: 'Učenici su dodati.', cekanje: 'Grupa je popunjena, pa su učenici bez mesta na listi čekanja.' };
 
 export default async function GroupPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string; mesec?: string }> }) {
   const ctx = await requireOrg();
@@ -20,19 +23,24 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const supabase = await createClient();
   const { data: g } = await supabase.from('groups').select('*').eq('id', id).eq('org_id', ctx.org.id).single<Group>();
   if (!g) notFound();
-  const period = sp.mesec && /^\d{4}-\d{2}$/.test(sp.mesec) ? sp.mesec : currentPeriod();
-  const [{ data: members }, { data: slots }, { data: teachers }, { data: rooms }, { data: all }, { data: monthSessions }] = await Promise.all([
+  const period = parsePeriod(sp.mesec);
+  const [{ data: members }, { data: slots }, { data: teachers }, { data: rooms }, all, { data: monthSessions }, { data: waiting }] = await Promise.all([
     supabase.from('group_members').select('student_id, students(id, first_name, last_name, parent_phone, phone, active)').eq('group_id', id),
     supabase.from('schedule_slots').select('id, weekday, start_time, end_time, rooms(name)').eq('group_id', id).order('weekday').order('start_time'),
     supabase.from('profiles').select('id, full_name').eq('org_id', ctx.org.id).eq('active', true).order('full_name'),
     supabase.from('rooms').select('id, name').eq('org_id', ctx.org.id).order('name'),
-    ctx.isOwner ? supabase.from('students').select('id, first_name, last_name').eq('org_id', ctx.org.id).eq('active', true).order('last_name') : Promise.resolve({ data: [] }),
+    ctx.isOwner ? fetchAll<{ id: string; first_name: string; last_name: string }>((a, b) => supabase.from('students').select('id, first_name, last_name').eq('org_id', ctx.org.id).eq('active', true).order('last_name').order('id').range(a, b)) : Promise.resolve([]),
     supabase.from('sessions').select('id, date, status, attendance(student_id, status)').eq('group_id', id).gte('date', `${period}-01`).lt('date', `${shiftPeriod(period, 1)}-01`),
+    supabase.from('group_waitlist').select('student_id, created_at, students(first_name, last_name)').eq('group_id', id).order('created_at'),
   ]);
   type M = { student_id: string; students: { id: string; first_name: string; last_name: string; parent_phone: string | null; phone: string | null; active: boolean } | null };
   const mem = ((members ?? []) as unknown as M[]).filter((m) => m.students).sort((a, b) => fullName(a.students!).localeCompare(fullName(b.students!), 'sr'));
   const inGroup = new Set(mem.map((m) => m.student_id));
-  const candidates = (all ?? []).filter((s) => !inGroup.has(s.id));
+  type W = { student_id: string; created_at: string; students: { first_name: string; last_name: string } | null };
+  const waitList = (waiting ?? []) as unknown as W[];
+  const onWait = new Set(waitList.map((w) => w.student_id));
+  const candidates = all.filter((s) => !inGroup.has(s.id) && !onWait.has(s.id));
+  const seatsLeft = g.capacity ? Math.max(0, g.capacity - mem.length) : null;
   type S = { id: string; weekday: number; start_time: string; end_time: string; rooms: { name: string } | null };
   const sl = (slots ?? []) as unknown as S[];
   const today = todayISO();
@@ -71,7 +79,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                           <input type="hidden" name="student_id" value={m.student_id} />
                           <input type="hidden" name="group_id" value={g.id} />
                           <input type="hidden" name="back" value={`/grupe/${g.id}`} />
-                          <button className="text-[13px] font-bold text-coral-dark hover:underline">Ukloni</button>
+                          <ConfirmButton message={`Ukloniti ${fullName(m.students!)} iz grupe?`} className="text-[13px] font-bold text-coral-dark hover:underline">Ukloni</ConfirmButton>
                         </form>
                       )}
                     </div>
@@ -82,7 +90,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             {ctx.isOwner && candidates.length > 0 && (
               <form action={addMembers} className="mt-4 border-t border-line pt-4">
                 <input type="hidden" name="group_id" value={g.id} />
-                <span className="label">Dodaj učenike (možeš izabrati više)</span>
+                <span className="label">Dodaj učenike (možeš izabrati više){seatsLeft !== null ? ` · slobodno mesta: ${seatsLeft}` : ''}</span>
                 <select name="student_id" multiple className="input h-40 py-2">
                   {candidates.map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
                 </select>
@@ -93,6 +101,25 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               </form>
             )}
           </Card>
+
+          {waitList.length > 0 && (
+            <Card title={`Lista čekanja (${waitList.length})`}>
+              {seatsLeft !== null && seatsLeft > 0 && <p className="mb-3 rounded-xl bg-ok-soft px-3 py-2 text-[13px] font-bold text-ok">Slobodno mesta: {seatsLeft}. Upiši učenika sa liste.</p>}
+              <ul className="flex flex-col divide-y divide-line">
+                {waitList.map((w) => (
+                  <li key={w.student_id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                    <span className="min-w-0 truncate font-bold text-ink">{w.students ? fullName(w.students) : ''}</span>
+                    {ctx.isOwner && (
+                      <span className="flex items-center gap-3">
+                        <form action={promoteFromWaitlist}><input type="hidden" name="group_id" value={g.id} /><input type="hidden" name="student_id" value={w.student_id} /><button className="btn btn-sm btn-soft" disabled={seatsLeft === 0}>Upiši</button></form>
+                        <form action={removeFromWaitlist}><input type="hidden" name="group_id" value={g.id} /><input type="hidden" name="student_id" value={w.student_id} /><ConfirmButton message="Ukloniti sa liste čekanja?" className="text-[13px] font-bold text-coral-dark hover:underline">Ukloni</ConfirmButton></form>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           <Card title="Istorija prisustva">
             <div id="prisustvo" className="scroll-mt-24" />
@@ -126,7 +153,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                       <form action={deleteSlot}>
                         <input type="hidden" name="id" value={x.id} />
                         <input type="hidden" name="group_id" value={g.id} />
-                        <button className="text-[13px] font-bold text-coral-dark hover:underline">Obriši</button>
+                        <ConfirmButton message="Obrisati ovaj termin iz rasporeda?" className="text-[13px] font-bold text-coral-dark hover:underline">Obriši</ConfirmButton>
                       </form>
                     )}
                   </li>
@@ -158,7 +185,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 {!g.active && (
                   <form action={deleteGroup}>
                     <input type="hidden" name="id" value={g.id} />
-                    <button className="btn btn-sm btn-danger">Obriši trajno</button>
+                    <TypedConfirm label="Obriši trajno" warning="Brisanje uklanja i celu istoriju prisustva ove grupe." />
                   </form>
                 )}
               </div>

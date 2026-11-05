@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Stat, Badge } from '@/components/ui';
-import { currentPeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr } from '@/lib/format';
+import { attendanceStats, currentPeriod, parsePeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr, time } from '@/lib/format';
+import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ExportButton } from './export';
 
 export const metadata = { title: 'Izveštaji' };
@@ -12,41 +13,36 @@ const METHOD: Record<string, string> = { cash: 'Gotovina', bank: 'Račun', card:
 export default async function Reports({ searchParams }: { searchParams: Promise<{ mesec?: string }> }) {
   const ctx = await requireOwner();
   const sp = await searchParams;
-  const period = sp.mesec && /^\d{4}-\d{2}$/.test(sp.mesec) ? sp.mesec : currentPeriod();
+  const period = parsePeriod(sp.mesec);
   const start = `${period}-01`;
   const end = `${shiftPeriod(period, 1)}-01`;
   const sixAgo = `${shiftPeriod(period, -5)}-01`;
   const supabase = await createClient();
-  const [{ data: payments }, { data: charges }, { data: sessions }, { data: students }, { data: groups }, { data: profiles }, { data: slots }] = await Promise.all([
-    supabase.from('payments').select('amount, paid_at, method, students(first_name, last_name), charges(period, description)').eq('org_id', ctx.org.id).gte('paid_at', sixAgo).lt('paid_at', end),
-    supabase.from('charges').select('amount, payments(amount)').eq('org_id', ctx.org.id).eq('period', period),
-    supabase.from('sessions').select('id, group_id, status, date, start_time, teacher_id, attendance(status)').eq('org_id', ctx.org.id).gte('date', start).lt('date', end),
-    supabase.from('students').select('first_name, last_name, birth_date, phone, email, parent_name, parent_phone, parent_email, joined_at, left_at, active, custom_fee, discount_pct, group_members(groups(name))').eq('org_id', ctx.org.id).order('last_name'),
+  type P = { id: string; amount: number; paid_at: string; method: string; students: { first_name: string; last_name: string } | null; charges: { period: string; description: string | null } | null };
+  type C = { id: string; amount: number; payments: { amount: number }[] };
+  type Se = { id: string; group_id: string; status: string; date: string; start_time: string; end_time: string | null; teacher_id: string | null; attendance: { status: string }[] };
+  type St = { id: string; first_name: string; last_name: string; birth_date: string | null; phone: string | null; email: string | null; parent_name: string | null; parent_phone: string | null; parent_email: string | null; joined_at: string; left_at: string | null; active: boolean; custom_fee: number | null; discount_pct: number; group_members: { groups: { name: string } | null }[] };
+  const [pays, chs, allSess, sts, { data: groups }, { data: profiles }, { data: slots }] = await Promise.all([
+    fetchAll<P>((a, b) => supabase.from('payments').select('id, amount, paid_at, method, students(first_name, last_name), charges(period, description)').eq('org_id', ctx.org.id).gte('paid_at', sixAgo).lt('paid_at', end).order('id').range(a, b)),
+    fetchAll<C>((a, b) => supabase.from('charges').select('id, amount, payments(amount)').eq('org_id', ctx.org.id).eq('period', period).order('id').range(a, b)),
+    fetchAll<Se>((a, b) => supabase.from('sessions').select('id, group_id, status, date, start_time, end_time, teacher_id, attendance(status)').eq('org_id', ctx.org.id).gte('date', start).lt('date', end).neq('status', 'planned').order('id').range(a, b)),
+    fetchAll<St>((a, b) => supabase.from('students').select('id, first_name, last_name, birth_date, phone, email, parent_name, parent_phone, parent_email, joined_at, left_at, active, custom_fee, discount_pct, group_members(groups(name))').eq('org_id', ctx.org.id).order('last_name').order('id').range(a, b)),
     supabase.from('groups').select('id, name, color, capacity, teacher_id, active, group_members(student_id)').eq('org_id', ctx.org.id).order('name'),
     supabase.from('profiles').select('id, full_name, role').eq('org_id', ctx.org.id),
     supabase.from('schedule_slots').select('group_id, weekday, start_time, end_time').eq('org_id', ctx.org.id),
   ]);
 
-  type P = { amount: number; paid_at: string; method: string; students: { first_name: string; last_name: string } | null; charges: { period: string; description: string | null } | null };
-  const pays = (payments ?? []) as unknown as P[];
   const months = [5, 4, 3, 2, 1, 0].map((i) => shiftPeriod(period, -i));
   const byMonth = months.map((m) => ({ m, sum: pays.filter((p) => p.paid_at.startsWith(m)).reduce((a, p) => a + Number(p.amount), 0) }));
   const max = Math.max(1, ...byMonth.map((x) => x.sum));
   const thisMonth = byMonth[5].sum;
 
-  type C = { amount: number; payments: { amount: number }[] };
-  const chs = (charges ?? []) as unknown as C[];
   const expected = chs.reduce((a, c) => a + Number(c.amount), 0);
   const collected = chs.reduce((a, c) => a + Math.min(Number(c.amount), c.payments.reduce((x, p) => x + Number(p.amount), 0)), 0);
 
-  type Se = { id: string; group_id: string; status: string; date: string; start_time: string; teacher_id: string | null; attendance: { status: string }[] };
-  const allSess = (sessions ?? []) as unknown as Se[];
   const sess = allSess.filter((s) => s.status === 'held');
-  const att = sess.flatMap((s) => s.attendance);
-  const rate = att.length ? Math.round((att.filter((a) => a.status === 'present').length / att.length) * 100) : null;
+  const rate = attendanceStats(sess.flatMap((s) => s.attendance)).pct;
 
-  type St = { first_name: string; last_name: string; birth_date: string | null; phone: string | null; email: string | null; parent_name: string | null; parent_phone: string | null; parent_email: string | null; joined_at: string; left_at: string | null; active: boolean; custom_fee: number | null; discount_pct: number; group_members: { groups: { name: string } | null }[] };
-  const sts = (students ?? []) as unknown as St[];
   const newCount = sts.filter((s) => s.joined_at >= start && s.joined_at < end).length;
   const leftCount = sts.filter((s) => s.left_at && s.left_at >= start && s.left_at < end).length;
 
@@ -58,13 +54,18 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   // Izveštaj po predavaču: održani i otkazani časovi i sati (trajanje iz termina u rasporedu, inače 60 min).
   const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name || 'Bez imena']));
   const slotEnd = new Map((slots ?? []).map((x) => [`${x.group_id}:${x.weekday}:${String(x.start_time).slice(0, 5)}`, x]));
+  const span = (from: string, to: string) => {
+    const [h1, m1] = from.split(':').map(Number);
+    const [h2, m2] = to.split(':').map(Number);
+    return Math.max(0, h2 * 60 + m2 - (h1 * 60 + m1));
+  };
   const minutesOf = (se: Se) => {
+    // Nadoknada ima sopstveno vreme završetka; ostali časovi trajanje uzimaju iz rasporeda.
+    if (se.end_time) return span(time(se.start_time), time(se.end_time));
     const wd = ((new Date(se.date + 'T12:00:00Z').getUTCDay() + 6) % 7) + 1;
     const sl = slotEnd.get(`${se.group_id}:${wd}:${se.start_time.slice(0, 5)}`);
     if (!sl) return 60;
-    const [h1, m1] = String(sl.start_time).split(':').map(Number);
-    const [h2, m2] = String(sl.end_time).split(':').map(Number);
-    return Math.max(0, h2 * 60 + m2 - (h1 * 60 + m1));
+    return span(time(String(sl.start_time)), time(String(sl.end_time)));
   };
   const perTeacher = new Map<string, { name: string; held: number; cancelled: number; minutes: number }>();
   for (const se of allSess) {
@@ -77,8 +78,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   const hours = (m: number) => (m / 60).toLocaleString('sr-Latn-RS', { maximumFractionDigits: 1 });
   const groupStats = grs.map((g) => {
     const gs = sess.filter((s) => s.group_id === g.id);
-    const a = gs.flatMap((s) => s.attendance);
-    return { ...g, sessions: gs.length, rate: a.length ? Math.round((a.filter((x) => x.status === 'present').length / a.length) * 100) : null };
+    return { ...g, sessions: gs.length, rate: attendanceStats(gs.flatMap((s) => s.attendance)).pct };
   });
 
   const label = periodLabel(period);
@@ -160,7 +160,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
             ))}
           </ul>
         )}
-        <p className="mt-3 text-[12px] font-semibold text-mut">Računaju se časovi za koje je upisano prisustvo. Trajanje se uzima iz termina u rasporedu.</p>
+        <p className="mt-3 text-[12px] font-semibold text-mut">Računaju se časovi za koje je upisano prisustvo, na predavača koji je držao čas. Vlasnik predavača menja pri upisu prisustva. Zakazane nadoknade se računaju tek kad se održe. Opravdani izostanci ne ulaze u procenat prisustva.</p>
       </Card>
 
       <Card title="Izvoz u Excel" className="mt-6">
@@ -175,7 +175,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
             label={`Uplate, ${label.toLowerCase()}`}
             fileName={`klasiko-uplate-${period}.xlsx`}
             header={['Datum', 'Učenik', 'Za period', 'Opis', 'Način', 'Iznos']}
-            rows={pays.filter((p) => p.paid_at.startsWith(period)).sort((a, b) => a.paid_at.localeCompare(b.paid_at)).map((p) => [dateSr(p.paid_at), p.students ? fullName(p.students) : '', p.charges ? periodLabel(p.charges.period) : '', p.charges?.description ?? '', METHOD[p.method], Number(p.amount)])}
+            rows={pays.filter((p) => p.paid_at.startsWith(period)).sort((a, b) => a.paid_at.localeCompare(b.paid_at)).map((p) => [dateSr(p.paid_at), p.students ? fullName(p.students) : '', p.charges ? periodLabel(p.charges.period) : 'Avans', p.charges?.description ?? '', METHOD[p.method], Number(p.amount)])}
           />
         </div>
       </Card>

@@ -20,7 +20,7 @@ export function StudentFields({ s, kids = true }: { s?: Partial<Student>; kids?:
       )}
       <div className="sm:col-span-2 mt-2 text-[13px] font-extrabold uppercase tracking-wider text-mut">Članarina</div>
       <Field label="Posebna mesečna cena (RSD)" name="custom_fee" type="number" step="1" min={0} defaultValue={s?.custom_fee} hint="Prazno = cena grupe" />
-      <Field label="Popust (%)" name="discount_pct" type="number" step="1" min={0} max={100} defaultValue={s?.discount_pct ?? 0} hint="Npr. 10 za brata ili sestru" />
+      <Field label="Popust (%)" name="discount_pct" type="number" step="1" min={0} max={100} defaultValue={s?.discount_pct ?? 0} hint="Popust za braću i sestre podesi u Podešavanjima" />
       <div className="sm:col-span-2"><TextArea label="Napomena" name="notes" defaultValue={s?.notes} placeholder="Alergije, posebne napomene, dogovori..." /></div>
     </div>
   );

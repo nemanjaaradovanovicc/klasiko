@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import jsQR from 'jsqr';
 import { Camera, CameraOff } from 'lucide-react';
-import { checkinByCode, checkinManual, type CheckinResult } from './actions';
+import { matchesSearch } from '@/lib/match';
+import { checkinByCode, checkinManual, undoCheckin, type CheckinResult } from './actions';
 
 export function Scanner({ students }: { students: { id: string; name: string; state: 'in' | 'out' | null }[] }) {
   const video = useRef<HTMLVideoElement>(null);
@@ -15,6 +16,14 @@ export function Scanner({ students }: { students: { id: string; name: string; st
   const [q, setQ] = useState('');
   const [pending, start] = useTransition();
   const last = useRef<{ code: string; t: number }>({ code: '', t: 0 });
+  // Ime osobe se čita iz reference, da kucanje ne bi ponovo pokretalo kameru.
+  const pickedRef = useRef('');
+  useEffect(() => { pickedRef.current = picked; }, [picked]);
+  // Posle upisanog odlaska ime se briše, da ne ostane upisano za sledeće dete.
+  const show = (r: CheckinResult) => {
+    setRes(r);
+    if (r.ok && r.kind === 'out') setPicked('');
+  };
 
   useEffect(() => {
     if (!on) return;
@@ -38,7 +47,7 @@ export function Scanner({ students }: { students: { id: string; name: string; st
             if (code?.data && (code.data !== last.current.code || Date.now() - last.current.t > 4000)) {
               last.current = { code: code.data, t: Date.now() };
               navigator.vibrate?.(80);
-              start(async () => setRes(await checkinByCode(code.data, picked || null)));
+              start(async () => { try { show(await checkinByCode(code.data, pickedRef.current || null)); } catch { setRes({ error: 'Nema veze sa serverom. Skeniraj ponovo.' }); } });
             }
           }
         }
@@ -47,9 +56,10 @@ export function Scanner({ students }: { students: { id: string; name: string; st
       raf = requestAnimationFrame(tick);
     }).catch(() => { setErr('Kamera nije dostupna. Dozvoli pristup kameri u podešavanjima browsera.'); setOn(false); });
     return () => { stop = true; cancelAnimationFrame(raf); stream?.getTracks().forEach((t) => t.stop()); };
-  }, [on, picked]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [on]);
 
-  const filtered = q ? students.filter((s) => s.name.toLowerCase().includes(q.toLowerCase())) : [];
+  const filtered = q ? students.filter((s) => matchesSearch(s.name, q)) : [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -64,7 +74,7 @@ export function Scanner({ students }: { students: { id: string; name: string; st
           <div className="grid aspect-[4/3] place-items-center bg-soft p-6 text-center">
             <div>
               <Camera size={40} className="mx-auto text-brand" />
-              <p className="mt-2 text-[14px] font-semibold text-ink-2">Uključi kameru i prinesi QR karticu deteta. Prvo skeniranje beleži dolazak, drugo odlazak.</p>
+              <p className="mt-2 text-[14px] font-semibold text-ink-2">Uključi kameru i prinesi QR karticu deteta. Prvo skeniranje beleži dolazak, a sledeće (posle bar 2 minuta) odlazak.</p>
             </div>
           </div>
         )}
@@ -83,6 +93,9 @@ export function Scanner({ students }: { students: { id: string; name: string; st
             <>
               <div className="text-[22px] font-extrabold">{res.name}</div>
               <div className="text-[15px] font-bold opacity-90">{res.kind === 'in' ? 'Dolazak upisan' : 'Odlazak upisan'} · {new Date(res.at!).toLocaleTimeString('sr-Latn-RS', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Belgrade' })}</div>
+              {res.id && (
+                <button type="button" disabled={pending} className="mt-2 rounded-full bg-white/20 px-3 py-1 text-[13px] font-extrabold hover:bg-white/30" onClick={() => start(async () => { const u = await undoCheckin(res.id!); setRes(u.ok ? { error: `Upis je poništen: ${res.name}.` } : { error: u.error }); })}>Poništi</button>
+              )}
             </>
           ) : <div className="font-bold">{res.error}</div>}
         </div>
@@ -96,8 +109,8 @@ export function Scanner({ students }: { students: { id: string; name: string; st
             <li key={s.id} className="flex items-center justify-between gap-2 py-2">
               <span className="min-w-0 truncate font-bold text-ink">{s.name}</span>
               <span className="flex shrink-0 gap-1.5">
-                <button type="button" disabled={pending} className="btn btn-sm bg-ok hover:bg-[#186a42]" onClick={() => start(async () => { setRes(await checkinManual(s.id, 'in')); setQ(''); })}>Došao</button>
-                <button type="button" disabled={pending} className="btn btn-sm" onClick={() => start(async () => { setRes(await checkinManual(s.id, 'out', picked || null)); setQ(''); })}>Otišao</button>
+                <button type="button" disabled={pending} className="btn btn-sm bg-ok hover:bg-[#186a42]" onClick={() => start(async () => { try { show(await checkinManual(s.id, 'in')); setQ(''); } catch { setRes({ error: 'Nema veze sa serverom. Pokušaj ponovo.' }); } })}>Došao</button>
+                <button type="button" disabled={pending} className="btn btn-sm" onClick={() => start(async () => { try { show(await checkinManual(s.id, 'out', pickedRef.current || null)); setQ(''); } catch { setRes({ error: 'Nema veze sa serverom. Pokušaj ponovo.' }); } })}>Otišao</button>
               </span>
             </li>
           ))}

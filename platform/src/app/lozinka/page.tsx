@@ -12,7 +12,7 @@ export default async function PasswordPage() {
           {ctx.profile.must_change_password ? 'Postavi svoju lozinku' : 'Promena lozinke'}
         </h1>
         <p className="mb-6 mt-1 text-center text-[15px] font-semibold text-mut">
-          {ctx.profile.must_change_password ? 'Dobio si privremenu lozinku. Pre početka postavi svoju, od bar 8 znakova.' : ctx.email}
+          {ctx.profile.must_change_password ? 'Dobio/la si privremenu lozinku. Pre početka postavi svoju, od bar 8 znakova.' : ctx.email}
         </p>
         <div className="card p-6">
           <PasswordForm />

@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getCtx, orgAccess } from '@/lib/auth';
+import { getCtx, mfaMissing, orgAccess } from '@/lib/auth';
 import { SideNav, MobileNav, LogoutButton, type NavItem } from '@/components/nav';
 import { ROLE_LABEL } from '@/lib/types';
 import { exitOrg } from './admin/actions';
@@ -11,6 +11,7 @@ import { QuickActions, type QuickAction } from '@/components/quick-actions';
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getCtx();
   if (ctx.profile.must_change_password) redirect('/lozinka');
+  if (mfaMissing(ctx)) redirect('/mfa');
 
   let items: NavItem[] = [];
   if (ctx.org && ctx.isOwner) {
@@ -22,6 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/grupe', label: 'Grupe', icon: 'UsersRound' },
       { href: '/raspored', label: 'Raspored', icon: 'CalendarDays' },
       { href: '/roditelji', label: 'Roditelji', icon: 'HeartHandshake' },
+      { href: '/obavestenja', label: 'Obaveštenja', icon: 'Megaphone' },
       { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
       { href: '/izvestaji', label: 'Izveštaji', icon: 'BarChart3' },
       { href: '/podesavanja', label: 'Podešavanja', icon: 'Settings' },
@@ -33,11 +35,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/raspored', label: 'Raspored', icon: 'CalendarDays', mobile: true },
       { href: '/grupe', label: 'Moje grupe', icon: 'UsersRound', mobile: true },
       { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
+      { href: '/obavestenja', label: 'Obaveštenja', icon: 'Megaphone' },
     ];
   }
   if (ctx.isSuper) {
     items.push({ href: '/admin', label: 'Admin', icon: 'Shield', mobile: !ctx.org });
     items.push({ href: '/admin/naplata', label: 'Naplata', icon: 'Receipt', mobile: !ctx.org });
+    items.push({ href: '/admin/dnevnik', label: 'Dnevnik', icon: 'ScrollText', mobile: !ctx.org });
   }
 
   let quick: QuickAction[] = [];
@@ -45,7 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     quick = [
       { href: '/prisustvo', label: 'Upiši prisustvo', hint: 'Današnji časovi', icon: 'CheckSquare' },
       { href: '/ucenici/novi', label: 'Novi učenik', hint: 'Upis sa grupom i kontaktom roditelja', icon: 'UserPlus' },
-      { href: '/uplate?prikaz=neplaceno', label: 'Evidentiraj uplatu', hint: 'Ko još nije platio ovaj mesec', icon: 'Wallet' },
+      { href: '/uplate/dugovanja', label: 'Ko duguje', hint: 'Ukupan dug po roditelju i podsetnici', icon: 'Wallet' },
       { href: '/grupe/nova', label: 'Nova grupa', hint: 'Naziv, predavač, cena i termin', icon: 'UsersRound' },
     ];
   } else if (ctx.org) {
@@ -113,7 +117,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {!ctx.isSuper && access?.ok && access.daysLeft !== undefined && ctx.isOwner && (
           <div className="bg-coral-soft px-4 py-2 text-center text-[13px] font-bold text-coral-dark print:hidden lg:px-8">
             Probni period: još {access.daysLeft} {access.daysLeft === 1 ? 'dan' : 'dana'}.{' '}
-            <a className="underline" href="https://wa.me/381638219713?text=Zdravo%2C%20%C5%BEelim%20da%20aktiviram%20Klasiko" target="_blank" rel="noopener">Aktiviraj pretplatu</a>
+            <Link className="underline" href="/podesavanja#pretplata">Aktiviraj pretplatu</Link>
           </div>
         )}
 

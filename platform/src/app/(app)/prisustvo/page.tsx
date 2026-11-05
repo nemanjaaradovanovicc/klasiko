@@ -2,14 +2,14 @@ import Link from 'next/link';
 import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Empty, Badge } from '@/components/ui';
-import { addDays, dateLong, isoWeekday, time, todayISO } from '@/lib/format';
+import { addDays, dateLong, isoWeekday, parseDate, time, todayISO } from '@/lib/format';
 
 export const metadata = { title: 'Prisustvo' };
 
 export default async function AttendanceList({ searchParams }: { searchParams: Promise<{ datum?: string }> }) {
   const ctx = await requireOrg();
   const sp = await searchParams;
-  const date = sp.datum && /^\d{4}-\d{2}-\d{2}$/.test(sp.datum) ? sp.datum : todayISO();
+  const date = parseDate(sp.datum);
   const wd = isoWeekday(date);
   const supabase = await createClient();
   const [{ data: slots }, { data: sessions }] = await Promise.all([

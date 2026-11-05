@@ -25,6 +25,12 @@ export interface Organization {
   admin_notes: string | null;
   billing_name: string | null;
   billing_address: string | null;
+  auto_charges: boolean;
+  auto_charge_day: number;
+  auto_reminders: boolean;
+  reminder_days_before: number;
+  sibling_discount_pct: number;
+  terms_accepted_at: string | null;
   created_at: string;
 }
 
@@ -58,6 +64,7 @@ export interface Student {
   left_at: string | null;
   ref_no: number;
   checkin_code: string | null;
+  family_id: string | null;
 }
 
 export interface Group {
@@ -71,7 +78,16 @@ export interface Group {
   capacity: number | null;
   color: string;
   active: boolean;
+  fee_type: FeeType;
+  package_classes: number | null;
 }
+
+export type FeeType = 'monthly' | 'package' | 'manual';
+export const FEE_TYPE_LABEL: Record<FeeType, string> = {
+  monthly: 'Mesečna članarina',
+  package: 'Paket časova',
+  manual: 'Polugodište ili rate (ručno)',
+};
 
 export interface Room {
   id: string;

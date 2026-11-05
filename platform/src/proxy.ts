@@ -1,9 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC = ['/login', '/zaboravljena-lozinka', '/r'];
+// Javno bez prijave. Cron ima sopstvenu proveru tajnog ključa.
+const PUBLIC = ['/login', '/zaboravljena-lozinka', '/registracija', '/auth', '/r', '/api/cron'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
@@ -28,12 +29,17 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.search = '';
+    // Posle prijave korisnik se vraća tamo gde je krenuo (npr. link za uplatu iz poruke).
+    if (path !== '/' && request.method === 'GET') url.searchParams.set('next', path + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
-  if (user && path === '/login') {
+  // Sa ?greska= stranica za prijavu mora da se prikaže i uz važeću sesiju, inače nastaje beskonačno preusmeravanje.
+  if (user && path === '/login' && !request.nextUrl.searchParams.has('greska')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/';
+    const next = request.nextUrl.searchParams.get('next');
     url.search = '';
+    url.pathname = next && next.startsWith('/') && !next.startsWith('//') ? next.split('?')[0] : '/';
+    if (next?.includes('?')) url.search = next.slice(next.indexOf('?'));
     return NextResponse.redirect(url);
   }
   return response;
