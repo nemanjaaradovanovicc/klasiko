@@ -7,7 +7,8 @@ from posts_more import MORE_POSTS
 from posts_batch2a import POSTS_2A
 from posts_batch2b import POSTS_2B
 from posts_batch3 import POSTS_3
-POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B + POSTS_3
+from posts_batch4 import POSTS_4
+POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B + POSTS_3 + POSTS_4
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
 C.POSTS[:] = POSTS
@@ -148,7 +149,7 @@ ld = {"@context": "https://schema.org", "@graph": [
     {"@type": "Blog", "@id": C.SITE + "/blog#blog", "url": C.SITE + "/blog", "name": "Klasiko blog",
      "description": "Praktični saveti za vlasnike škola jezika, plesnih škola, klubova i edukativnih centara.",
      "inLanguage": "sr-Latn", "publisher": {"@id": C.SITE + "/#organization"},
-     "blogPost": [{"@type": "BlogPosting", "headline": p['title'], "url": C.SITE + "/blog/" + p['slug'], "datePublished": C.DATE} for p in POSTS]},
+     "blogPost": [{"@type": "BlogPosting", "headline": p['title'], "url": C.SITE + "/blog/" + p['slug'], "datePublished": p.get('date', C.DATE)} for p in POSTS]},
     C.bc_ld(bc, '/blog'),
 ]}
 cards = ''.join(post_card(p) for p in reversed(POSTS))
@@ -195,13 +196,13 @@ for p in POSTS:
         C.ORG,
         {"@type": "BlogPosting", "@id": C.SITE + path + "#article", "headline": p['title'], "description": p['desc'],
          "url": C.SITE + path, "mainEntityOfPage": C.SITE + path, "image": C.SITE + "/og-image.png",
-         "datePublished": C.DATE, "dateModified": C.DATE, "inLanguage": "sr-Latn", "wordCount": words,
+         "datePublished": p.get('date', C.DATE), "dateModified": p.get('date', C.DATE), "inLanguage": "sr-Latn", "wordCount": words,
          "author": {"@type": "Person", "name": "Nemanja Radovanović", "jobTitle": "Osnivač, Klasiko"},
          "publisher": {"@id": C.SITE + "/#organization"}},
         C.bc_ld(bc, path),
     ]}
     related = ''.join(post_card(q) for q in related_posts(p))
-    extra = f'<meta property="article:published_time" content="{C.DATE}">\n<meta property="article:author" content="Nemanja Radovanović">\n'
+    extra = f'<meta property="article:published_time" content="{p.get('date', C.DATE)}">\n<meta property="article:author" content="Nemanja Radovanović">\n'
     page = C.head(p['seo_title'], p['desc'], path, og_title=p['title'], og_type='article', ld=ld, extra=extra) + C.header('/blog') + f'''<main id="sadrzaj">
 <article>
 <header class="post-hero hero">
@@ -210,7 +211,7 @@ for p in POSTS:
 <span class="badge"><i></i>{p['tag']}</span>
 <h1>{C.e(p['title'])}<span class="dot">.</span></h1>
 <p class="lead">{C.e(p['lead'])}</p>
-<div class="meta"><span class="av" aria-hidden="true">NR</span><span>Nemanja Radovanović</span><span class="sep">·</span><time datetime="{C.DATE}">{C.DATE_SR}</time><span class="sep">·</span><span class="rt">{p['minutes']} min čitanja</span></div>
+<div class="meta"><span class="av" aria-hidden="true">NR</span><span>Nemanja Radovanović</span><span class="sep">·</span><time datetime="{p.get('date', C.DATE)}">{p.get('date_sr', C.DATE_SR)}</time><span class="sep">·</span><span class="rt">{p['minutes']} min čitanja</span></div>
 </div>
 </header>
 <div class="prose">
@@ -355,9 +356,10 @@ print('ok / (meni)')
 # ---------- Sitemap ----------
 urls = [('/', '1.0', 'weekly'), ('/cene', '0.9', 'monthly'), ('/demo', '0.8', 'monthly')] + [(n['path'], '0.9', 'monthly') for n in NICHE_PAGES] + [('/blog', '0.8', 'weekly')] + [('/blog/' + p['slug'], '0.7', 'monthly') for p in POSTS]
 sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+post_dates = {'/blog/' + p['slug']: p.get('date', C.DATE) for p in POSTS}
 for u, pr, cf in urls:
     img = f'\n    <image:image><image:loc>{C.SITE}/og-image.png</image:loc></image:image>' if u == '/' else ''
-    sm += f'  <url>\n    <loc>{C.SITE}{u}</loc>\n    <lastmod>{C.DATE}</lastmod>\n    <changefreq>{cf}</changefreq>\n    <priority>{pr}</priority>{img}\n  </url>\n'
+    sm += f'  <url>\n    <loc>{C.SITE}{u}</loc>\n    <lastmod>{post_dates.get(u, C.DATE)}</lastmod>\n    <changefreq>{cf}</changefreq>\n    <priority>{pr}</priority>{img}\n  </url>\n'
 sm += '</urlset>\n'
 open(os.path.join(OUT, 'sitemap.xml'), 'w', encoding='utf-8').write(sm)
 print('ok sitemap', len(urls))

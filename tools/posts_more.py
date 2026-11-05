@@ -207,6 +207,8 @@ MORE_POSTS = [
 <h2 id="privatnost">Privatnost i podaci dece</h2>
 <p>U zajedničkoj grupi nikada ne objavljuj ko nije platio, ocene, zdravstvene informacije ili probleme sa ponašanjem. Za fotografije i snimke dece pribavi pisanu saglasnost roditelja, najbolje pri upisu. To je i pitanje poštovanja i pitanje zakona o zaštiti podataka o ličnosti.</p>
 
+<p>Jedan od najboljih načina da smanjiš pitanja je redovan <a href="/blog/mesecni-izvestaj-za-roditelje">mesečni izveštaj za roditelje</a>.</p>
+
 <h2 id="zakljucak">Zaključak</h2>
 <p>Manje poruka ne dolazi od bržeg odgovaranja, nego od jasnih pravila: jedan kanal, radno vreme za poruke, sve bitno na početku godine, šabloni i ciljana obaveštenja. Uz to, povremena pohvala čini da roditelji budu na tvojoj strani.</p>
 <p>Klasiko pravimo da obaveštenja stižu baš onim roditeljima kojih se tiču, jednim klikom, bez prosleđivanja kroz pet grupa. Pogledaj kako ga zamišljamo za <a href="/plesne-skole">plesne škole</a>, <a href="/borilacke-vestine">klubove</a> i <a href="/skole-jezika">škole jezika</a>.</p>
@@ -353,6 +355,8 @@ MORE_POSTS = [
 <h2 id="objava">Objavi cenu jasno</h2>
 <p>Jasna cena na sajtu i u upisnom materijalu štedi vreme i tebi i roditeljima. Ako ne želiš da objaviš tačan iznos, objavi okvir i šta je uključeno. „Cena na upit” najčešće znači da veliki deo zainteresovanih nikad ne pošalje upit.</p>
 
+<p>Sledeći korak je način naplate: uporedi <a href="/blog/paketi-casova-ili-mesecna-clanarina">pakete časova, članarinu i rate</a> i proveri <a href="/blog/popust-za-bracu-i-sestre">koliki popust za braću i sestre</a> ima smisla.</p>
+
 <h2 id="zakljucak">Zaključak</h2>
 <p>Cena koja održava školu računa se od troškova, uključujući i tvoj rad, deli se sa realnim brojem polaznika i proverava kroz popunjenost grupa. Popusti treba da nagrađuju lojalnost i sigurnost, a poskupljenja da budu najavljena i objašnjena.</p>
 <p>Klasiko pravimo i da ti pokaže brojeve koje ova računica traži: koliko aktivnih polaznika imaš, koliko je grupa puna i ko kasni sa uplatom. Prijavi se na listu čekanja i budi među prvima koji ga probaju.</p>
@@ -428,6 +432,8 @@ MORE_POSTS = [
 
 <h2 id="organizacija">Organizacija zadržava polaznike</h2>
 <p>Roditelji retko kažu „ispisali smo dete jer je organizacija bila haotična”, ali to je čest skriveni razlog. Jasan raspored, obaveštenja koja stižu na vreme i bez zabune oko uplata čine da je tvoja škola lak izbor, iz godine u godinu.</p>
+
+<p>Leto je čest trenutak kada se kontakt izgubi, a <a href="/blog/letnja-skola-i-kamp">letnja škola ili kamp</a> može da ga sačuva.</p>
 
 <h2 id="zakljucak">Zaključak</h2>
 <p>Polaznici najčešće odustaju zbog stvari na koje škola može da utiče: napredak koji se ne vidi, pogrešna grupa ili termin, izgubljen ritam i loša organizacija. Posebna pažnja u prvom mesecu, praćenje izostanaka i vidljiv napredak zadržavaju veliki deo njih.</p>
@@ -509,6 +515,8 @@ MORE_POSTS = [
 
 <h2 id="treneri">Kad klub poraste: pomoćni treneri</h2>
 <p>Kada uvedeš pomoćne trenere, pravila moraju da budu zapisana: ko vodi koju grupu, ko beleži prisustvo, ko prima uplate i kome se javljaju problemi. Klub koji funkcioniše samo kada je glavni trener prisutan, ne može da raste.</p>
+
+<p>Ako tek osnivaš organizaciju, kreni od teksta <a href="/blog/kako-osnovati-sportski-klub">kako osnovati sportski klub</a>, a u borilačkim veštinama pogledaj i <a href="/blog/polaganje-za-pojaseve">kako da organizuješ polaganje za pojaseve</a>.</p>
 
 <h2 id="zakljucak">Zaključak</h2>
 <p>Dobro vođen klub za decu ima jasne grupe po uzrastu, stabilan raspored treninga, urednu evidenciju članova i članarina, organizovana takmičenja i roditelje koji znaju gde da nađu informacije. Sve to štedi vreme koje ti treba za ono najvažnije: rad sa decom.</p>

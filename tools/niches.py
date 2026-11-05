@@ -36,7 +36,7 @@ NICHE_PAGES = [
   ('Sve imam u Excelu. Mogu li da prebacim podatke?', 'Možeš. Uvoz iz Excel-a je ugrađen u aplikaciju, a ako ti je lakše, pošalji nam tabelu i mi besplatno prenesemo učenike i grupe.'),
   ('Koliko košta Klasiko?', 'Paketi su Start 2.990, Rast 5.990 i Pro 9.990 dinara mesečno, a godišnja pretplata donosi dva meseca gratis. Prvih 14 dana je besplatno, bez kartice i bez obaveze.'),
  ],
- 'blog': ['grupe-po-nivou', 'raspored-casova', 'cena-casa-i-clanarine'],
+ 'blog': ['grupe-po-nivou', 'kako-otvoriti-skolu-jezika', 'mesecni-izvestaj-za-roditelje'],
 },
 {
  'path': '/plesne-skole', 'file': 'plesne-skole.html', 'src': 'ples',
@@ -75,7 +75,7 @@ NICHE_PAGES = [
   ('Kako da podsetim roditelje na članarinu?', 'Na stranici Uplate kod svakog neplaćenog zaduženja imaš dugme koje otvara WhatsApp sa gotovom porukom, i IPS QR kod koji roditelj skenira u aplikaciji banke.'),
   ('Koliko košta Klasiko?', 'Paketi su Start 2.990, Rast 5.990 i Pro 9.990 dinara mesečno, a godišnja pretplata donosi dva meseca gratis. Prvih 14 dana je besplatno, bez kartice i bez obaveze.'),
  ],
- 'blog': ['kako-privuci-nove-ucenike', 'komunikacija-sa-roditeljima', 'evidencija-clanarina'],
+ 'blog': ['godisnji-koncert-plesne-skole', 'komunikacija-sa-roditeljima', 'evidencija-clanarina'],
 },
 {
  'path': '/borilacke-vestine', 'file': 'borilacke-vestine.html', 'src': 'borilacke',
@@ -114,7 +114,7 @@ NICHE_PAGES = [
   ('Kako se vodi članarina za braću i sestre?', 'Svakom članu možeš da upišeš popust u procentima ili posebnu cenu, i Klasiko ga uračunava pri svakom mesečnom obračunu.'),
   ('Koliko košta Klasiko?', 'Paketi su Start 2.990, Rast 5.990 i Pro 9.990 dinara mesečno, a godišnja pretplata donosi dva meseca gratis. Prvih 14 dana je besplatno, bez kartice i bez obaveze.'),
  ],
- 'blog': ['vodjenje-sportskog-kluba-za-decu', 'evidencija-prisustva', 'evidencija-clanarina'],
+ 'blog': ['vodjenje-sportskog-kluba-za-decu', 'polaganje-za-pojaseve', 'kako-osnovati-sportski-klub'],
 },
 {
  'path': '/edukativni-centri', 'file': 'edukativni-centri.html', 'src': 'centri',
@@ -153,7 +153,7 @@ NICHE_PAGES = [
   ('Radi li za kurseve koji traju nekoliko nedelja?', 'Da. Grupu za kratak kurs posle završetka premestiš u arhivu, a istorija prisustva i uplata ostaje sačuvana.'),
   ('Koliko košta Klasiko?', 'Paketi su Start 2.990, Rast 5.990 i Pro 9.990 dinara mesečno, a godišnja pretplata donosi dva meseca gratis. Prvih 14 dana je besplatno, bez kartice i bez obaveze.'),
  ],
- 'blog': ['excel-ili-program-za-skolu', 'kako-zadrzati-polaznike', 'raspored-casova'],
+ 'blog': ['excel-ili-program-za-skolu', 'privatna-muzicka-skola-vodjenje', 'letnja-skola-i-kamp'],
 },
 {
  'path': '/vrtici', 'file': 'vrtici.html', 'src': 'vrtic',
@@ -192,6 +192,6 @@ NICHE_PAGES = [
   ('Kako roditelji plaćaju?', 'Za svako mesečno zaduženje Klasiko pravi IPS QR kod: roditelj ga skenira u aplikaciji banke i podaci za uplatu se sami popune.'),
   ('Koliko košta Klasiko?', 'Paketi su Start 2.990, Rast 5.990 i Pro 9.990 dinara mesečno, a godišnja pretplata donosi dva meseca gratis. Prvih 14 dana je besplatno, bez kartice i bez obaveze.'),
  ],
- 'blog': ['program-za-vrtic', 'evidencija-dolazaka-vrtic', 'upis-u-privatni-vrtic'],
+ 'blog': ['program-za-vrtic', 'kako-otvoriti-privatni-vrtic', 'upis-u-privatni-vrtic'],
 },
 ]

@@ -88,6 +88,8 @@ POSTS = [
 </ul>
 <p>Dobar program za evidenciju članarina povezuje uplate sa polaznicima i grupama, sam pokazuje ko kasni i šalje podsetnike umesto tebe.</p>
 
+<p>Ako neko ipak kasni, pogledaj <a href="/blog/kasnjenje-sa-uplatom-clanarine">šta da uradiš i kako da napišeš poruku</a>.</p>
+
 <h2 id="zakljucak">Zaključak</h2>
 <p>Uredna evidencija članarina nije pitanje alata, nego navike: jedno mesto za sve uplate, upis istog dana, podsetnik pre roka i jedno mesečno zatvaranje. Kada to uvedeš, naplata postaje predvidiva, a ti dobijaš večeri nazad.</p>
 <p>Klasiko pravimo upravo za ovo: da članarine, grupe i polaznici budu na jednom mestu, a da podsetnici idu sami. Ako vodiš <a href="/skole-jezika">školu jezika</a>, <a href="/plesne-skole">plesnu školu</a> ili <a href="/borilacke-vestine">klub borilačkih veština</a>, prijavi se na listu čekanja i obezbedi popust za rane korisnike.</p>
@@ -177,6 +179,8 @@ POSTS = [
 <p><strong>Papir i tabla</strong> rade za jednu salu i par grupa. <strong>Excel ili Google Sheets</strong> su dovoljni dok raspored pravi i menja jedna osoba. Kada imaš više sala, više predavača i česte izmene, tabela postaje usko grlo: niko nije siguran koja verzija je poslednja, a provera preklapanja je ručna.</p>
 <p>Program za raspored časova sam upozorava na preklapanja, čuva jednu aktuelnu verziju i obaveštava samo grupe kojih se izmena tiče.</p>
 
+<p>Pre nego što složiš raspored, proveri i <a href="/blog/koliko-polaznika-u-grupi">koliko polaznika treba da ima svaka grupa</a>.</p>
+
 <h2 id="zakljucak">Zaključak</h2>
 <p>Dobar raspored počinje popisom sala, predavača i grupa, poštuje školske smene i ostavlja pauze i rezervu. Izmene su neizbežne, ali haos nije: drži raspored na jednom mestu i obaveštavaj samo one kojih se izmena tiče.</p>
 <p>Klasiko pravimo da raspored, grupe i obaveštenja budu na jednom mestu, za <a href="/skole-jezika">škole jezika</a>, <a href="/plesne-skole">plesne škole</a>, <a href="/borilacke-vestine">klubove</a> i <a href="/edukativni-centri">edukativne centre</a>. Prijavi se na listu čekanja i budi među prvima koji ga probaju.</p>
@@ -250,6 +254,8 @@ POSTS = [
 
 <h2 id="pracenje">Bonus: prati odakle dolaze upisi</h2>
 <p>Pri svakom upisu pitaj kako su čuli za tebe: Google, Instagram, preporuka, nastup, letak. Posle jednog upisnog roka znaćeš tačno šta radi, a šta možeš da preskočiš.</p>
+
+<p>Za detalje pogledaj vodiče za <a href="/blog/google-profil-za-skolu">Google profil</a>, <a href="/blog/instagram-za-skolu-i-klub">Instagram</a> i <a href="/blog/probni-cas-kako-do-upisa">probni čas</a>.</p>
 
 <h2 id="zakljucak">Zaključak</h2>
 <p>Nove učenike najviše donose stvari koje ne koštaju mnogo: sređen Google profil, recenzije, probni čas sa brzim nastavkom, preporuke i brz odgovor na upit. Uz to, škola koja je dobro organizovana lakše zadržava polaznike koje već ima.</p>
