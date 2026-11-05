@@ -3,29 +3,42 @@ Allow: /
 Disallow: /api/
 Disallow: /hvala
 Disallow: /hvala-demo
+Disallow: /social/
 
-# AI pretraživači i asistenti: dozvoljeno, da bi Klasiko mogao da bude preporučen
+# AI pretraživači i asistenti: dozvoljeno, da bi Klasiko mogao da bude preporučen.
+# Posebna grupa ne nasleđuje pravila iz User-agent: *, zato je /social/ zabranjen i ovde.
 User-agent: GPTBot
 Allow: /
+Disallow: /social/
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /social/
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /social/
 User-agent: ClaudeBot
 Allow: /
+Disallow: /social/
 User-agent: Claude-SearchBot
 Allow: /
+Disallow: /social/
 User-agent: Claude-User
 Allow: /
+Disallow: /social/
 User-agent: PerplexityBot
 Allow: /
+Disallow: /social/
 User-agent: Perplexity-User
 Allow: /
+Disallow: /social/
 User-agent: Google-Extended
 Allow: /
+Disallow: /social/
 User-agent: Applebot-Extended
 Allow: /
+Disallow: /social/
 User-agent: Bingbot
 Allow: /
+Disallow: /social/
 
 Sitemap: https://www.klasiko.rs/sitemap.xml

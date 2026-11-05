@@ -74,6 +74,7 @@ Za brz pregled izgleda bez forme dovoljno je dvaput kliknuti na `public/index.ht
 ## Izmene sajta
 
 Podstranice, blog, `privatnost`, `404` i `sitemap.xml` generiše `python3 tools/build.py` iz fajlova u `tools/`. Te HTML fajlove ne menjaj ručno.
+`public/social/` su ručno postavljeni fajlovi za objave na društvenim mrežama (karuseli). Build ih ne generiše i ne briše, jer ne prazni `public/`. Ne stavljaj link ka `/social/` na stranice sajta: `public/robots.txt` ima `Disallow: /social/`.
 `public/index.html` se menja ručno, osim delova između oznaka `nav:start` i `nav:end` (meni), koje build upisuje iz `build_common.py`, `site.css` i `site.js`.
 Posle izmena pokreni `python3 tools/check_links.py` da proveriš da nema pokvarenih linkova.
 

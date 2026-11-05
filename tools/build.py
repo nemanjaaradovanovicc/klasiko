@@ -11,6 +11,8 @@ from posts_batch4 import POSTS_4
 POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B + POSTS_3 + POSTS_4
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
+# public/social/ (karuseli za društvene mreže) je ručno održavan.
+# Ovaj skript upisuje samo HTML i sitemap.xml i ne briše sadržaj public/.
 C.POSTS[:] = POSTS
 import math
 for _p in POSTS:
