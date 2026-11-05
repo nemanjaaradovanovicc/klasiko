@@ -225,7 +225,7 @@ POSTS = [
 </div>
 
 <h2 id="vodjenje">Popust mora da se vidi</h2>
-<p>Svaki popust treba da ima iznos, razlog i datum isteka. Bez toga u decembru niko ne zna zašto neko dete plaća manje. Klasiko podržava popuste i posebne cene po polazniku, pa i QR kod prikazuje stvarni iznos. Ako ipak odlučiš da podigneš cenu, pomoći će ti <a href="/blog/obavestenje-o-poskupljenju-clanarine">šablon poruke o poskupljenju</a>.</p>
+<p>Svaki popust treba da ima iznos, razlog i datum isteka. Bez toga u decembru niko ne zna zašto neko dete plaća manje. Klasiko podržava popuste i posebne cene po polazniku, pa i QR kod prikazuje stvarni iznos. Ako ipak odlučiš da podigneš cenu, pomoći će ti <a href="/blog/najava-povecanja-cene">šablon poruke o poskupljenju</a>.</p>
 ''',
 },
 {
@@ -351,7 +351,7 @@ POSTS = [
 <h2 id="mesecno">Mesečna rutina</h2>
 <ol>
 <li>Prvog dana promeni mesec u H1.</li>
-<li>Upiši uplate iz izvoda, po postupku iz teksta <a href="/blog/uparivanje-uplata-sa-izvodom">uparivanje uplata sa izvodom</a>.</li>
+<li>Upiši uplate iz izvoda, po postupku iz teksta <a href="/blog/uparivanje-izvoda-iz-banke">uparivanje uplata sa izvodom</a>.</li>
 <li>Filtriraj kolonu I na iznose veće od nule.</li>
 <li>Pošalji <a href="/blog/kasnjenje-sa-uplatom-clanarine">podsetnik</a> svakom ko je na listi.</li>
 </ol>
@@ -475,7 +475,7 @@ POSTS = [
 </div>
 
 <h2 id="fotografije">Saglasnost za slike nije uslov</h2>
-<p>Pitanje o fotografijama odvoji od upisa i ostavi ga kao poseban izbor, a odbijanje ne sme da utiče na dete. Detaljnije o tome piše u tekstu <a href="/blog/fotografije-dece-na-mrezama">fotografije dece na mrežama</a>.</p>
+<p>Pitanje o fotografijama odvoji od upisa i ostavi ga kao poseban izbor, a odbijanje ne sme da utiče na dete. Detaljnije o tome piše u tekstu <a href="/blog/pristanak-za-fotografije-dece">fotografije dece na mrežama</a>.</p>
 
 <h2 id="kako">Papir ili online</h2>
 <ul>
@@ -487,67 +487,6 @@ POSTS = [
 
 <h2 id="posle">Posle potpisa</h2>
 <p>Roditelju pošalji kratku poruku sa terminom, grupom i <a href="/blog/pravila-skole-za-roditelje">pravilima škole</a>. U Klasiku unosiš polaznika, roditelja i grupu, a možeš i da pošalješ lični link na kojem roditelj vidi prisustvo, uplate i obaveštenja. Predavač vidi samo svoje grupe, tako da ne vidi ni plaćanja. Kako upis izgleda u celini, pogledaj u vodiču <a href="/blog/upis-u-septembru-plan">upis u septembru</a>.</p>
-''',
-},
-{
- 'slug': 'zamena-predavaca',
- 'short': 'Zamena predavača',
- 'tag': 'Organizacija',
- 'title': 'Kada predavač ili trener iznenada ne može da dođe: plan zamene koji radi u poslednjem trenutku',
- 'seo_title': 'Zamena predavača ili trenera: plan za hitne slučajeve | Klasiko',
- 'desc': 'Šta kad se predavač razboli sat pre časa: plan u tri nivoa, spisak zamena, gotove poruke roditeljima, predaja grupe i kako se plaća zamena.',
- 'excerpt': 'U 16 časova stiže poruka: „Bolestan sam”. Spisak zamena, šta svaki predavač treba da ostavi spremno, poruke roditeljima i pravila za honorar.',
- 'lead': 'Telefon zvoni u četiri, a grupa dolazi u pet. Ako je u tvojoj školi jedina zamena za svakoga vlasnik, onda je to pitanje vremena kada ćeš otkazati čas ili se pojaviti na dve lokacije. Pola sata organizacije unapred rešava većinu ovih situacija.',
- 'body': '''
-<h2 id="plan">Plan u tri nivoa</h2>
-<div class="tbl"><table>
-<thead><tr><th>Nivo</th><th>Rešenje</th><th>Kada</th></tr></thead>
-<tbody>
-<tr><td>1. Zamena</td><td>Drugi predavač drži čas po pripremljenom planu</td><td>Ima bar nekoliko sati ili postoji neko slobodan</td></tr>
-<tr><td>2. Spajanje</td><td>Grupa se spaja sa sličnom grupom</td><td>Veličina sale i uzrast to dozvoljavaju</td></tr>
-<tr><td>3. Otkazivanje</td><td>Čas se otkazuje i nadoknađuje po pravilima</td><td>Niko ne može bezbedno da preuzme</td></tr>
-</tbody></table></div>
-<p>Nemoj da pustiš decu da rade bez odgovorne odrasle osobe samo da čas ne bi propao. U sportu još treba i stručno lice, kako objašnjava tekst <a href="/blog/licenca-za-trenera">licenca za trenera</a>.</p>
-
-<h2 id="spisak">Spisak zamena</h2>
-<p>Napravi ga pre nego što ti zatreba, sa jednim redom po programu. Ne mora da bude komplikovano:</p>
-<div class="tbl"><table>
-<thead><tr><th>Program</th><th>Prva zamena</th><th>Druga zamena</th><th>Nije dostupna</th></tr></thead>
-<tbody>
-<tr><td>Engleski, deca</td><td>Milica</td><td>Marko</td><td>Milica utorkom</td></tr>
-<tr><td>Hip hop</td><td>Sara</td><td>Spajanje sa juniorima</td><td></td></tr>
-<tr><td>Karate, mlađi</td><td>Nikola</td><td>Vlasnik</td><td>Vlasnik sredom</td></tr>
-</tbody></table></div>
-<p>Dobro je da postoji i bar jedan spoljni saradnik. Povremeni kolega, stariji asistent ili kolega iz druge škole može da spase dan, a i ti ćeš možda njemu nekada pomoći.</p>
-
-<h2 id="priprema">Šta predavač treba da ostavi spremno</h2>
-<ul>
-<li>Spisak polaznika i napomene o tome ko šta ne sme da radi, sa kontaktom za hitne slučajeve.</li>
-<li>Gde su materijali, ključevi i oprema.</li>
-<li>Gde je grupa stala i šta je plan za sledeći čas.</li>
-<li>Jedan rezervni čas koji svako može da održi, bez posebne pripreme.</li>
-</ul>
-<p>Rezervni čas je vredan kao zlato. To je ponavljanje, igra ili vežba za koju zamena ne mora da zna šta je bilo prošle nedelje.</p>
-
-<h2 id="poruke">Poruke roditeljima</h2>
-<h3>Čas održava zamena</h3>
-<div class="tpl"><p>Dobar dan! Danas umesto [IME] čas sa grupom [GRUPA] u [SAT] drži [IME ZAMENE]. Termin i mesto ostaju isti. Hvala na razumevanju! [NAZIV ŠKOLE]</p></div>
-<h3>Čas je otkazan</h3>
-<div class="tpl"><p>Dobar dan! Nažalost, danas zbog [BOLESTI PREDAVAČA] otkazujemo čas grupe [GRUPA] u [SAT]. Nadoknada je [DATUM I SAT]. Ako vam taj termin ne odgovara, javite nam. Izvinite zbog kratkog roka. [NAZIV ŠKOLE]</p></div>
-<p>Javi čim znaš i to direktno, a ne samo u grupi koju niko ne čita u podne. Za ostale razloge otkazivanja pogledaj tekst <a href="/blog/komunikacija-sa-roditeljima">komunikacija sa roditeljima</a>.</p>
-
-<h2 id="honorar">Ko dobija novac</h2>
-<p>Pravilo zapiši unapred i neka bude isto za sve:</p>
-<ul>
-<li>Honorar za održan čas ide onome ko ga je održao.</li>
-<li>Ako zamena ima manje iskustva ili drugačiji model, dogovori posebnu satnicu.</li>
-<li>Otkazivanje pet minuta pre časa nije isto kao javljanje dan ranije. Dogovori rokove u skladu sa ugovorom i propisima o radu, naročito kod zaposlenih.</li>
-<li>Vlasnik koji drži zamenu upisuje i svoj čas. Tako računica pokazuje stvarnu cenu grupe.</li>
-</ul>
-<p>Sve zamene treba da se vide u obračunu, što pokriva tekst <a href="/blog/obracun-honorara-predavaca">obračun honorara</a>. Ako jedan predavač često odsustvuje, razgovarajte. Možda je preopterećen, a to je i pitanje <a href="/blog/kako-naci-i-zadrzati-predavaca">kako da zadržiš dobrog predavača</a>.</p>
-
-<h2 id="alat">Kako da svi znaju ko drži čas</h2>
-<p>Najčešći problem kasnije nije sama zamena, nego što je upisana na pogrešnog predavača. U Klasiku se pri upisu prisustva vidi ko je držao čas, pa je to moguće izmeniti i obračun ostaje tačan. Takođe, obaveštenje možeš da objaviš za celu grupu, a roditelji ga vide na svom linku. Poziv i dalje vredi kad je čas za sat vremena, jer nisu svi stalno na telefonu.</p>
 ''',
 },
 {

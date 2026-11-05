@@ -270,59 +270,6 @@ POSTS = [
 ''',
 },
 {
- 'slug': 'fotografije-dece-na-mrezama',
- 'short': 'Fotografije dece na mrežama',
- 'tag': 'Privatnost',
- 'title': 'Fotografije dece na Instagramu i sajtu škole: šablon saglasnosti i pravila za objave',
- 'seo_title': 'Fotografije dece na mrežama: saglasnost i šablon | Klasiko',
- 'desc': 'Kako da škola ili klub objavljuje fotografije dece: pisana saglasnost roditelja, šablon, šta raditi kada neko nije saglasan i kako da uklanjaš objave.',
- 'excerpt': 'Slika sa nastupa je najbolji marketing, ali na njoj je tuđe dete. Šablon saglasnosti, pravila za snimanje i šta da radiš kada roditelj kaže ne.',
- 'lead': 'Ništa ne prodaje školu kao fotografija dece na koncertu ili treningu. Ali to je i lični podatak deteta, a roditelji imaju različita shvatanja o tome. Dobra pravila nisu kočnica za objave: ona ti daju sigurnost da možeš da objaviš ono što želiš, a da pritom nikome ne praviš problem.',
- 'body': '''
-<h2 id="osnova">Osnovno pravilo</h2>
-<p>Fotografija na kojoj se dete može prepoznati je podatak o ličnosti prema <a href="https://www.paragraf.rs/propisi/zakon_o_zastiti_podataka_o_licnosti.html" rel="noopener">Zakonu o zaštiti podataka o ličnosti</a>. Za objavljivanje u marketinške svrhe najsigurnije je da imaš jasnu saglasnost roditelja ili staratelja, datu unapred, za konkretne kanale. Opšti pregled daje tekst <a href="/blog/zastita-podataka-dece">zaštita podataka dece</a>, a za svoj slučaj pitaj pravnika.</p>
-
-<h2 id="sablon">Šablon saglasnosti</h2>
-<div class="tpl"><p>Ja, [IME I PREZIME RODITELJA], roditelj/staratelj deteta [IME DETETA], [ ] dajem saglasnost [ ] ne dajem saglasnost da [NAZIV ŠKOLE] objavljuje fotografije i video-snimke na kojima se vidi moje dete, sa aktivnosti škole, na sledećim mestima:<br>[ ] sajt škole<br>[ ] Instagram i Facebook škole<br>[ ] štampani materijal<br>[ ] plaćene reklame<br>Uz objavu se neće navoditi puno ime deteta. Znam da odbijanje ne utiče na upis i da saglasnost mogu da povučem u svakom trenutku porukom na [KONTAKT], posle čega će škola ukloniti objavu u razumnom roku.<br>Datum i potpis: ________</p></div>
-<p>Odvoj saglasnost od ostalih uslova upisa, kao što pokazuje <a href="/blog/obrazac-za-upis-u-skolu">obrazac za upis</a>. Reklama je posebna stavka, jer mnogi roditelji prihvataju objavu na Instagramu škole, ali ne i da se slika deteta plaća i prikazuje širokoj publici.</p>
-
-<h2 id="praksa">Kako da to sprovedeš u praksi</h2>
-<ol>
-<li><strong>Spisak po grupi:</strong> napravi spisak dece bez saglasnosti, dostupan samo onima koji snimaju.</li>
-<li><strong>Pre snimanja proveri ko je tu:</strong> postavi decu bez saglasnosti tako da nisu u kadru, bez izdvajanja i bez komentarisanja pred grupom.</li>
-<li><strong>Odredi ko snima:</strong> jedna osoba, telefonom škole ili sa pristupom koji se može ukinuti.</li>
-<li><strong>Pregled pre objave:</strong> proveri lica u pozadini, natpise na opremi i ceo kadar.</li>
-<li><strong>Čuvanje:</strong> briši nepotrebne snimke, naročito sa ličnih telefona.</li>
-</ol>
-
-<h2 id="objave">Šta da ne objavljuješ</h2>
-<div class="tbl"><table>
-<thead><tr><th>Ne objavljuj</th><th>Bolje je</th></tr></thead>
-<tbody>
-<tr><td>Puno ime i uzrast uz fotografiju deteta</td><td>„Naša mlađa grupa” ili samo ime uz dozvolu</td></tr>
-<tr><td>Decu u kupaćim kostimima ili u svlačionici</td><td>Bez izuzetka: snimaj drugačije ili ne snimaj</td></tr>
-<tr><td>Dete koje plače, pada ili je postiđeno</td><td>Trenutke na koje bi i ono bilo ponosno</td></tr>
-<tr><td>Spisak grupa sa terminima i imenima</td><td>Termini bez imena dece</td></tr>
-<tr><td>Dokumente, uplate i rezultate sa imenima bez dogovora</td><td>Zbirne informacije</td></tr>
-</tbody></table></div>
-<div class="callout">
-<b>Dobre objave bez lica</b>
-<p>Snimak stopala u patikama, ruke na klavirskim dirkama, leđa na tatamiju, oprema pred trening ili predavač dok objašnjava. Ovakve objave su često zanimljivije, ne traže saglasnost za prepoznatljivo lice i koriste se i kada neko dete nije saglasno.</p>
-</div>
-
-<h2 id="roditelji-snimaju">Šta sa roditeljima koji snimaju</h2>
-<p>Na koncertima i turnirima roditelji snimaju svoju decu, a i tuđa upadaju u kadar. Ne možeš sve da kontrolišeš, ali možeš da postaviš pravilo: „Molimo vas da snimke sa drugom decom ne objavljujete javno bez dogovora sa njihovim roditeljima.” Na ulazu to podseti i usmeno, a u <a href="/blog/viber-grupa-sa-roditeljima">grupi sa roditeljima</a> uvedi isto pravilo.</p>
-
-<h2 id="uklanjanje">Kada roditelj traži da ukloniš fotografiju</h2>
-<p>Ukloni je brzo i bez rasprave, a zatim potvrdi. Tek pošto si je uklonio, po potrebi pitaj da li je bilo nešto što treba da promeniš.</p>
-<div class="tpl"><p>Poštovani, fotografija je uklonjena sa [KANAL]. Izvinite zbog neprijatnosti i hvala što ste nam javili. Ažurirali smo i vašu saglasnost, tako da se [IME DETETA] neće pojavljivati u novim objavama. [IME]</p></div>
-<p>Ne zaboravi stare objave, reklame i story isečke u istaknutom delu profila. Nije dovoljno ukloniti samo jednu objavu ako ista slika postoji negde drugde.</p>
-
-<h2 id="evidencija">Evidencija saglasnosti</h2>
-<p>Pristanak koji ne možeš da pronađeš ne pomaže. Čuvaj potpisane obrasce i napravi jednostavan spisak ko je šta odobrio, sa datumom. Taj spisak neka vidi samo onaj kome treba. Kako da dobiješ dobre fotografije za <a href="/blog/instagram-za-skolu-i-klub">Instagram škole</a>, pročitaj u posebnom vodiču. U Klasiku možeš da držiš kontakte roditelja i beleške po polazniku na jednom mestu, sa pristupom samo za ovlašćene osobe.</p>
-''',
-},
-{
  'slug': 'viber-grupa-sa-roditeljima',
  'short': 'Viber grupa sa roditeljima',
  'tag': 'Roditelji',
@@ -356,7 +303,7 @@ POSTS = [
 <li><strong>Spiskovi dužnika ili podsećanja na dug:</strong> opomena je uvek lična, kako piše u tekstu <a href="/blog/kasnjenje-sa-uplatom-clanarine">kašnjenje sa uplatom</a>.</li>
 <li><strong>Zdravstveni podaci o detetu:</strong> „Luka ima vaške” je primer poruke koja trajno ostaje u nečijem telefonu.</li>
 <li><strong>Komentari o ponašanju:</strong> razgovaraj samo sa roditeljem tog deteta.</li>
-<li><strong>Fotografije bez saglasnosti:</strong> pogledaj <a href="/blog/fotografije-dece-na-mrezama">pravila o fotografijama dece</a>.</li>
+<li><strong>Fotografije bez saglasnosti:</strong> pogledaj <a href="/blog/pristanak-za-fotografije-dece">pravila o fotografijama dece</a>.</li>
 <li><strong>Odgovori na javne napade:</strong> pređi u ličnu poruku, a ne odgovaraj u grupi.</li>
 </ul>
 
@@ -409,7 +356,7 @@ POSTS = [
 <div class="tbl"><table>
 <thead><tr><th>Žalba</th><th>Šta da proveriš</th><th>Primer rešenja</th></tr></thead>
 <tbody>
-<tr><td>Greška u naplati</td><td>Uplate i <a href="/blog/uparivanje-uplata-sa-izvodom">izvod</a></td><td>Izvini se odmah i ispravi evidenciju</td></tr>
+<tr><td>Greška u naplati</td><td>Uplate i <a href="/blog/uparivanje-izvoda-iz-banke">izvod</a></td><td>Izvini se odmah i ispravi evidenciju</td></tr>
 <tr><td>Dete nema napretka</td><td>Prisustvo i razgovor sa predavačem</td><td><a href="/blog/mesecni-izvestaj-za-roditelje">Kratak izveštaj</a> i plan za sledeća dva meseca</td></tr>
 <tr><td>Trener je bio grub</td><td>Razgovor sa obe strane, po potrebi i sa drugim svedocima</td><td>Jasni koraci prema predavaču i povratna informacija roditelju</td></tr>
 <tr><td>Dete je povređeno</td><td><a href="/blog/povreda-na-casu-protokol">Zapisnik</a> i osiguranje</td><td>Pozovi lično i pitaj kako je dete</td></tr>

@@ -159,7 +159,7 @@ POSTS = [
 </ul>
 <div class="callout c">
 <b>Pazi</b>
-<p>Ne objavljuj fotografije dece „za donatore” bez saglasnosti roditelja. Ne vezuj besplatno mesto za to da dete bude na slici. Pogledaj <a href="/blog/fotografije-dece-na-mrezama">pravila za fotografisanje dece</a>.</p>
+<p>Ne objavljuj fotografije dece „za donatore” bez saglasnosti roditelja. Ne vezuj besplatno mesto za to da dete bude na slici. Pogledaj <a href="/blog/pristanak-za-fotografije-dece">pravila za fotografisanje dece</a>.</p>
 </div>
 
 <h2 id="izvestaj">Izveštaj je razlog da daju ponovo</h2>
@@ -396,7 +396,7 @@ POSTS = [
 </tbody></table></div>
 <div class="callout c">
 <b>Pazi</b>
-<p>Ne ciljaj decu i ne koristi privatne podatke roditelja. Fotografije dece u reklami koristi samo uz izričitu, posebnu saglasnost roditelja. Pročitaj <a href="/blog/fotografije-dece-na-mrezama">pravila za fotografije dece</a>.</p>
+<p>Ne ciljaj decu i ne koristi privatne podatke roditelja. Fotografije dece u reklami koristi samo uz izričitu, posebnu saglasnost roditelja. Pročitaj <a href="/blog/pristanak-za-fotografije-dece">pravila za fotografije dece</a>.</p>
 </div>
 
 <h2 id="tekst">Primer teksta reklame</h2>
@@ -593,7 +593,7 @@ POSTS = [
 
 <h2 id="poverenje">Šta gradi poverenje</h2>
 <ul>
-<li><strong>Prave fotografije:</strong> tvoja sala i tvoji ljudi, a deca samo uz <a href="/blog/fotografije-dece-na-mrezama">saglasnost roditelja</a>.</li>
+<li><strong>Prave fotografije:</strong> tvoja sala i tvoji ljudi, a deca samo uz <a href="/blog/pristanak-za-fotografije-dece">saglasnost roditelja</a>.</li>
 <li><strong>Kvalifikacije:</strong> diplome i licence napisane konkretno, bez preterivanja.</li>
 <li><strong>Bezbednost:</strong> kako funkcioniše preuzimanje dece i šta se dešava u slučaju povrede.</li>
 <li><strong>Pravila:</strong> jasni uslovi za plaćanje, otkazivanje i <a href="/blog/nadoknada-propustenih-casova">nadoknadu</a>.</li>

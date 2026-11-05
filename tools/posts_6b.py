@@ -292,58 +292,6 @@ POSTS = [
 ''',
 },
 {
- 'slug': 'poziv-na-broj-za-clanarine',
- 'short': 'Poziv na broj za članarine',
- 'tag': 'Uplate',
- 'title': 'Poziv na broj za članarine: kako da ga smisliš da svaka uplata sama kaže čija je',
- 'seo_title': 'Poziv na broj za članarine: kako da ga odrediš | Klasiko',
- 'desc': 'Kako da uvedeš poziv na broj za uplate članarina, šta je model 97, šta da uradiš sa uplatama bez poziva na broj i primer sistema za porodice i grupe.',
- 'excerpt': 'Tri Jovanovića, sve iste uplate i nijedna reč o detetu. Kako jednostavan sistem poziva na broj rešava pitanje čija je koja uplata.',
- 'lead': 'Na izvodu stoji 5.000 dinara i ime roditelja, koje nije isto kao prezime deteta. Ili stoji samo „članarina”. Svaki takav red traži proveru i poruku. Dobar poziv na broj rešava to na samom početku: svakoj uplati daje oznaku po kojoj se odmah vidi kome pripada.',
- 'body': '''
-<h2 id="sta">Šta je poziv na broj</h2>
-<p>To je polje na uplatnici ili u mobilnom bankarstvu u koje se upisuje oznaka plaćanja. Svrhu plaćanja roditelj piše kako hoće, ali poziv na broj je niz brojeva po tvom sistemu. Upravo zato može da se pretražuje i uparuje, što sa rečju „članarina” nije moguće.</p>
-<p>Ispred poziva na broj stoji <strong>model</strong>. Model 97 koristi kontrolne brojeve koji proveravaju tačnost, pa se pogrešno upisan broj često otkriva. Model 00 nema te kontrole. Za način na koji to tvoja banka primenjuje, proveri uputstvo banke ili upitaj knjigovođu.</p>
-
-<h2 id="sistem">Kako da složiš broj</h2>
-<p>Najlakši sistem je šifra polaznika ili porodice, koja se ne menja. Kada se doda mesec, vidi se i period.</p>
-<div class="tbl"><table>
-<thead><tr><th>Sistem</th><th>Primer</th><th>Dobar kada</th></tr></thead>
-<tbody>
-<tr><td>Šifra polaznika</td><td>0142</td><td>Škola sa malo polaznika i jasnim mesečnim iznosom</td></tr>
-<tr><td>Šifra + mesec</td><td>0142-1126</td><td>Roditelji plaćaju po mesec, pa hoćeš da vidiš za koji</td></tr>
-<tr><td>Šifra porodice</td><td>F027</td><td>Više dece, jedna uplata (proveri da li banka dozvoljava slova)</td></tr>
-<tr><td>Grupa + polaznik</td><td>12-0142</td><td>Više programa sa različitim cenama</td></tr>
-</tbody></table></div>
-<p>Pazi na to da ne ubacuješ ime, godište ili JMBG deteta u broj. Poziv na broj prolazi kroz banke, pa treba da sadrži samo internu oznaku. To je u skladu i sa dobrom praksom iz teksta o <a href="/blog/zastita-podataka-dece">zaštiti podataka dece</a>.</p>
-
-<h2 id="uvodjenje">Kako da to uvedeš kod roditelja</h2>
-<ol>
-<li>Dodeli brojeve svima pre početka meseca, u istoj tabeli gde vodiš <a href="/blog/evidencija-clanarina">članarine</a>.</li>
-<li>Pošalji poruku svakom roditelju, a ne opšte uputstvo u grupi.</li>
-<li>Dodaj QR kod kada god možeš, jer se tada ništa ne prepisuje.</li>
-<li>Prvih mesec-dva uparuj ručno i ljubazno podseti one koji pogreše.</li>
-</ol>
-<div class="tpl"><p>Dobar dan! Od [MESEC] članarinu uplaćujete na račun [RAČUN], uz poziv na broj [POZIV NA BROJ]. Taj broj je samo vaš i ostaje isti svakog meseca. Pomoći će nam da uplate odmah prepoznamo i da vas ne zovemo bez potrebe. Hvala! [NAZIV ŠKOLE]</p></div>
-
-<h2 id="bez">Šta sa uplatama bez poziva na broj</h2>
-<p>Takvih uplata će uvek biti. Redosled je jednostavan:</p>
-<ul>
-<li>Potraži ime platioca u kontaktima roditelja.</li>
-<li>Pogledaj iznos: odgovara li baš jednoj članarini ili zbiru za dvoje dece?</li>
-<li>Ako ne možeš da je povežeš, ostavi uplatu kao „nepoznatu” i pošalji jednu kratku poruku onima koji su na listi.</li>
-<li>Ništa ne upisuj nasumice, jer pogrešno upareno izaziva dve opomene umesto jedne.</li>
-</ul>
-<p>Više o tome imaš u tekstu <a href="/blog/uparivanje-uplata-sa-izvodom">uparivanje uplata sa izvodom</a>.</p>
-
-<h2 id="primer">Kako izgleda u tabeli</h2>
-<p>Jedan polaznik ima jednu šifru od upisa do ispisa, a posle ispisa se ona ne dodeljuje novom detetu. Tako stari izvod i dalje pokazuje na pravu osobu. Ako ti je potrebna evidencija, čuvaj šifru kao prvu kolonu u tabeli, kao što pokazuje tekst <a href="/blog/tabela-u-excelu-za-clanarine">kako da napraviš tabelu za članarine</a>.</p>
-
-<h2 id="qr">Još lakše: QR kod</h2>
-<p>Kada roditelj skenira IPS QR kod, račun, iznos i poziv na broj popunjavaju se sami. Klasiko pravi takav kod za svaku uplatu i porodicu, pa roditelj ništa ne prepisuje, a tebi uplata stiže sa ispravnim brojem. Kako da to radiš i bez aplikacije, objašnjeno je u tekstu <a href="/blog/ips-qr-kod-generator">IPS QR kod generator</a>, a iskustvo roditelja u vodiču o <a href="/blog/ips-qr-kod-za-clanarine">IPS QR uplatama</a>.</p>
-''',
-},
-{
  'slug': 'ips-qr-kod-generator',
  'short': 'IPS QR kod generator',
  'tag': 'Uplate',
@@ -384,7 +332,7 @@ POSTS = [
 <p>Ručno pravljenje ima smisla u dva slučaja: jedan isti iznos za sve, na primer kotizacija za radionicu, ili mali broj polaznika i uplata. Razlika postaje velika kada imaš:</p>
 <ul>
 <li>Različite iznose zbog popusta, zaduženja i dugova.</li>
-<li>Različit <a href="/blog/poziv-na-broj-za-clanarine">poziv na broj</a> po polazniku.</li>
+<li>Različit <a href="/blog/poziv-na-broj-za-clanarinu">poziv na broj</a> po polazniku.</li>
 <li>Porodice koje jednim kodom plaćaju za dvoje dece.</li>
 <li>Promene svakog meseca.</li>
 </ul>
@@ -396,121 +344,6 @@ POSTS = [
 <h2 id="klasiko">Kako to radi u Klasiku</h2>
 <p>Klasiko pravi IPS QR kod iz podataka o uplati: iznos, račun škole i poziv na broj su već upisani. Roditelj kod vidi na svom ličnom linku i uz podsetnik, a uplatu može da plati pojedinačno ili jednom uplatom za sve. Kako to izgleda za roditelja objašnjeno je u tekstu <a href="/blog/ips-qr-kod-za-clanarine">IPS QR kod za uplatu članarine</a>, a pravila o gotovini u tekstu <a href="/blog/gotovina-ili-uplata-na-racun">gotovina ili uplata na račun</a>.</p>
 <p>Napominjemo da NBS, prema svojim uslovima, ne odgovara za funkcionisanje generisanog koda. Zato pre masovne upotrebe uradi kontrolu sa svojim računom, koja traje jedan minut.</p>
-''',
-},
-{
- 'slug': 'gotovina-ili-uplata-na-racun',
- 'short': 'Gotovina ili uplata na račun',
- 'tag': 'Uplate',
- 'title': 'Članarina u gotovini ili na račun: kako da pređeš na uplate bez gubitka roditelja',
- 'seo_title': 'Članarina u gotovini ili na račun: šta je bolje | Klasiko',
- 'desc': 'Prednosti i rizici gotovine i uplate na račun za škole i klubove, kako da roditelje prebaciš na uplate, šablon poruke i šta da radiš sa onima koji žele gotovinu.',
- 'excerpt': 'Koverat u svlačionici deluje jednostavno dok se ne izgubi. Poređenje načina plaćanja, plan prelaska u tri meseca i pravila ako i dalje primaš gotovinu.',
- 'lead': 'Koverat kod trenera deluje jednostavno, a često je najskuplji način naplate: traži praćenje, stvara rizik i uzima vreme sa časa. Uplatu na račun mnoge škole doživljavaju kao nešto što roditelji neće prihvatiti, a većina ih već svaki mesec na taj način plaća druge račune.',
- 'body': '''
-<h2 id="poredjenje">Poređenje</h2>
-<div class="tbl"><table>
-<thead><tr><th></th><th>Gotovina</th><th>Uplata na račun</th><th>IPS QR</th></tr></thead>
-<tbody>
-<tr><td>Za roditelja</td><td>Mora da ima novac kod sebe</td><td>Prepisuje podatke</td><td>Skenira i potvrdi</td></tr>
-<tr><td>Dokaz o uplati</td><td>Samo ako se izda potvrda</td><td>Izvod</td><td>Izvod</td></tr>
-<tr><td>Rizik</td><td>Gubitak, greška, sporovi „dao sam ti”</td><td>Uplata bez poziva na broj</td><td>Najmanji rizik greške</td></tr>
-<tr><td>Vreme vlasnika</td><td>Brojanje, upisivanje, predaja novca</td><td>Uparivanje</td><td>Uparivanje je lakše</td></tr>
-<tr><td>Predavač</td><td>Često naplaćuje na času</td><td>Ne učestvuje</td><td>Ne učestvuje</td></tr>
-</tbody></table></div>
-
-<h2 id="pravno">Šta sa porezima</h2>
-<p>Način na koji primaš novac ne menja tvoju obavezu da prihod prijaviš i, kada je propisano, izdaš račun. Gotovina nije „drugačiji” prihod. Pitaj knjigovođu šta za tvoj oblik poslovanja važi za gotovinu, dnevni pazar i <a href="/blog/fiskalna-kasa-za-skolu-i-klub">fiskalni uređaj</a>, naročito ako si udruženje ili preduzetnik.</p>
-
-<h2 id="plan">Plan prelaska u tri meseca</h2>
-<ol>
-<li><strong>Prvi mesec, pripremi:</strong> dodeli <a href="/blog/poziv-na-broj-za-clanarine">poziv na broj</a>, napiši novo pravilo i javi predavačima. Ponudi uplatu na račun kao novu mogućnost.</li>
-<li><strong>Drugi mesec, prebaci većinu:</strong> svaki podsetnik sa računom i QR kodom, gotovina samo u određenim terminima i kod jedne osobe.</li>
-<li><strong>Treći mesec, završi:</strong> za nove upise uplata isključivo na račun, a gotovina samo izuzetno, po dogovoru.</li>
-</ol>
-<p>Najbolji trenutak za promenu je početak školske godine ili novog ciklusa, jer tada roditelji i tako dobijaju nove informacije.</p>
-
-<h2 id="poruka">Poruka roditeljima</h2>
-<div class="tpl"><p>Poštovani roditelji, od [MESEC] članarinu možete da platite skeniranjem QR koda u aplikaciji svoje banke, što traje nekoliko sekundi. Svaki mesec ćete dobiti svoj kod, sa već upisanim iznosom. Tako predavači mogu da se bave samo časovima, a vi imate potvrdu o svakoj uplati. Ako vam je ovo novo ili ne koristite mobilno bankarstvo, javite nam se pa ćemo naći rešenje. Hvala! [NAZIV ŠKOLE]</p></div>
-<p>Ne počinji rečenicom „gotovina više nije dozvoljena”. Prvo pokaži šta roditelj dobija. Stariji roditelji ili baka koja plaća možda će tražiti pomoć, zato ih ne ostavljaj bez rešenja.</p>
-
-<h2 id="ako-primas">Ako i dalje primaš gotovinu</h2>
-<ul>
-<li><strong>Jedna osoba:</strong> novac prima samo vlasnik ili administracija, a ne svaki predavač.</li>
-<li><strong>Određeni termini:</strong> na primer prve nedelje u mesecu, ne usred časa.</li>
-<li><strong>Odmah upiši:</strong> uplata se evidentira istog trenutka, a ne „kad stignem kući”.</li>
-<li><strong>Daj potvrdu:</strong> po dogovoru sa knjigovođom, jer to rešava kasnije nesporazume.</li>
-<li><strong>Bez mešanja:</strong> novac škole se ne koristi za lične troškove pre nego što se evidentira.</li>
-</ul>
-<div class="callout c">
-<b>Pazi</b>
-<p>Trener koji nosi 200.000 dinara u torbi je rizik i za sebe i za klub. Ako nema drugog izbora, novac mora da stigne vlasniku istog dana i uz spisak.</p>
-</div>
-
-<h2 id="stariji">Kada neko ne koristi mobilno bankarstvo</h2>
-<p>Takvim roditeljima ponudi odštampanu uplatnicu sa svim podacima i pozivom na broj, koju mogu da plate u banci ili pošti. Ne moraju da uče ništa novo, a tebi uplata i dalje stiže sa oznakom. Izuzetak zapiši, da podsetnik i dalje ide u obliku koji im odgovara.</p>
-
-<h2 id="alat">Kako da pratiš obe vrste uplata</h2>
-<p>U Klasiku možeš da zabeležiš i gotovinu i uplate preko računa, tako da vidiš jedan spisak za ceo mesec. IPS QR kod se pravi sam, a predavač ne vidi uplate. Zato naplata zaista prestaje da bude njegov posao. Šta dalje ako neko ne plati vidiš u tekstu o <a href="/blog/kasnjenje-sa-uplatom-clanarine">kašnjenju sa uplatom</a>.</p>
-''',
-},
-{
- 'slug': 'uparivanje-uplata-sa-izvodom',
- 'short': 'Uparivanje uplata sa izvodom',
- 'tag': 'Uplate',
- 'title': 'Uparivanje uplata sa izvodom iz banke: kako da završiš za 15 minuta mesečno',
- 'seo_title': 'Uparivanje uplata sa izvodom iz banke: vodič | Klasiko',
- 'desc': 'Kako da uplate članarina uporediš sa izvodom iz banke: postupak korak po korak, šta sa nepoznatim uplatama, delimičnim iznosima i uplatama za dvoje dece.',
- 'excerpt': 'Izvod sa 80 redova, tri Petrovića i dve uplate bez svrhe. Postupak koji uparivanje pretvara u rutinu, sa pravilima za svaku problematičnu uplatu.',
- 'lead': 'Najneprijatnija poruka u ovom poslu je opomena roditelju koji je već platio. Do nje dolazi kada uplate na računu i tvoj spisak nisu usklađeni. Mesečno uparivanje izvoda sa evidencijom sprečava takve greške, a kada imaš postupak, ne traje dugo.',
- 'body': '''
-<h2 id="kada">Kada to da radiš</h2>
-<p>Dva puta mesečno je dovoljno za većinu škola: nekoliko dana posle roka za uplatu i pre slanja bilo koje opomene. Ako radiš samo jednom mesečno, onda uvek pre podsetnika. Pravilo glasi: nema opomene pre uparivanja.</p>
-
-<h2 id="postupak">Postupak u šest koraka</h2>
-<ol>
-<li><strong>Preuzmi izvod</strong> iz elektronskog bankarstva za traženi period, po mogućstvu u formatu koji može da se pretražuje.</li>
-<li><strong>Prvo poziv na broj:</strong> sve uplate sa ispravnim brojem uparuju se odmah.</li>
-<li><strong>Zatim ime platioca:</strong> pretraži listu roditelja i proveri odgovara li iznos.</li>
-<li><strong>Onda iznos:</strong> jedinstveni iznos, na primer zbir za dvoje dece, često otkriva čija je uplata.</li>
-<li><strong>Ostatak označi kao nepoznat:</strong> ne upisuj nasumice.</li>
-<li><strong>Proveri zbir:</strong> ukupno upareno i nepoznato treba da bude isto što i ukupne uplate na izvodu.</li>
-</ol>
-
-<h2 id="problemi">Kako da rešiš problematične uplate</h2>
-<div class="tbl"><table>
-<thead><tr><th>Situacija</th><th>Šta da uradiš</th></tr></thead>
-<tbody>
-<tr><td>Platilac se ne zove kao roditelj</td><td>Možda plaća baka ili firma. Zapiši to kao drugog platioca za to dete</td></tr>
-<tr><td>Iznos je veći od duga</td><td>Možda plaća unapred ili za dvoje dece. Pitaj i evidentiraj kao avans</td></tr>
-<tr><td>Iznos je manji od članarine</td><td>Upiši delimičnu uplatu i javi razliku, bez opomene</td></tr>
-<tr><td>Jedna uplata za više meseci</td><td>Rasporedi na najstarije neplaćene mesece, osim ako je dogovoreno drugačije</td></tr>
-<tr><td>Dve uplate za isti mesec</td><td>Obavesti roditelja i dogovori prenos ili povraćaj</td></tr>
-<tr><td>Nepoznata uplata</td><td>Poruka onima koji nisu platili taj iznos, ne u zajedničku grupu</td></tr>
-<tr><td>Uplata u gotovini je već upisana</td><td>Proveri da se ista uplata ne pojavljuje dva puta</td></tr>
-</tbody></table></div>
-
-<h2 id="poruka">Poruka za nepoznatu uplatu</h2>
-<div class="tpl"><p>Dobar dan! Stigla nam je uplata od [IZNOS] dinara dana [DATUM], bez oznake za koga je. Ako je od vas, javite nam, da je ispravno upišemo, pa vam neće stizati podsetnik. Hvala! [NAZIV ŠKOLE]</p></div>
-<div class="callout c">
-<b>Pazi</b>
-<p>Spisak uplata ne šalji u zajedničku grupu da bi „svako našao svoje”. Iznosi i imena su tuđi podaci, a poneko će i pogrešno protumačiti ko duguje.</p>
-</div>
-
-<h2 id="manje">Kako da bude manje posla</h2>
-<ul>
-<li>Uvedi <a href="/blog/poziv-na-broj-za-clanarine">jedinstven poziv na broj</a> za svakog polaznika ili porodicu.</li>
-<li>Koristi <a href="/blog/ips-qr-kod-za-clanarine">IPS QR kod</a>, jer tada roditelj ne prepisuje ništa.</li>
-<li>Pre početka godine zapiši sve platioce, ne samo jednog roditelja.</li>
-<li>Pravilo o raspodeli uplata napiši unapred, u <a href="/blog/pravila-skole-za-roditelje">pravilima škole</a>.</li>
-<li>Zadrži isti dan u mesecu za ovaj posao, da ga ne odlažeš.</li>
-</ul>
-
-<h2 id="ko">Ko treba da radi uparivanje</h2>
-<p>Ovaj posao treba da radi jedna osoba, redovno i sa pristupom izvodu. Ako ga rade dve osobe, dogovorite ko označava šta, da se ista uplata ne upiše dva puta. Predavač ne bi trebalo da ima pristup izvodu, jer na njemu postoje i podaci koji se ne tiču njegovih grupa.</p>
-
-<h2 id="klasiko">Uvoz izvoda u Klasiku</h2>
-<p>U Klasiku možeš da uvezeš izvod iz banke, a aplikacija predlaže uparivanje po pozivu na broj i drugim podacima. Ti potvrđuješ uplate, a one se upisuju polaznicima i zaduženjima. Lista „Ko duguje” odmah prikazuje stvarno stanje, pa podsetnici idu samo onima koji stvarno duguju. Ako uparivanje radiš u tabeli, pogledaj <a href="/blog/tabela-u-excelu-za-clanarine">kako da napraviš tabelu za članarine u Excel-u</a>.</p>
 ''',
 },
 {

@@ -269,7 +269,7 @@ POSTS = [
 <li><strong>Zdravstvena sposobnost:</strong> <a href="https://www.paragraf.rs/propisi/zakon_o_sportu.html" rel="noopener">Zakon o sportu</a> (član 19) govori o proveri sposobnosti pre takmičenja. Proveri šta se traži za takvo takmičenje.</li>
 <li><strong>Sudije i pravila:</strong> jasna, prilagođena uzrastu.</li>
 <li><strong>Ponašanje na tribinama:</strong> kratko pravilo i osoba koja reaguje.</li>
-<li><strong>Fotografije:</strong> saglasnost, po pravilima iz teksta <a href="/blog/fotografije-dece-na-mrezama">fotografije dece</a>.</li>
+<li><strong>Fotografije:</strong> saglasnost, po pravilima iz teksta <a href="/blog/pristanak-za-fotografije-dece">fotografije dece</a>.</li>
 </ul>
 
 <h2 id="dan">Na dan turnira</h2>
@@ -350,7 +350,7 @@ POSTS = [
 <p>Za sopstveni prostor na duži rok važe i dodatne provere iz teksta <a href="/blog/zakup-prostora-za-skolu">zakup prostora za školu</a>.</p>
 
 <h2 id="otkazivanje">Kada sala otkaže</h2>
-<p>Javi roditeljima čim saznaš, sa novim terminom ili planom za trening napolju. Poruku napiši kao u tekstu <a href="/blog/zamena-predavaca">zamena predavača</a> i ne prebacuj krivicu na salu. U Klasiku menjaš salu i termin u rasporedu i šalješ obaveštenje za celu grupu, a roditelji ga vide na svom linku. Tako jedan otkazan termin ne postane 40 poziva.</p>
+<p>Javi roditeljima čim saznaš, sa novim terminom ili planom za trening napolju. Poruku napiši kao u tekstu <a href="/blog/zamena-predavaca-kada-je-bolestan">zamena predavača</a> i ne prebacuj krivicu na salu. U Klasiku menjaš salu i termin u rasporedu i šalješ obaveštenje za celu grupu, a roditelji ga vide na svom linku. Tako jedan otkazan termin ne postane 40 poziva.</p>
 ''',
 },
 {

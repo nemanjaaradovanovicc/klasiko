@@ -274,7 +274,7 @@ POSTS = [
 <li>Imaj kontakt roditelja slavljenika i spisak dece.</li>
 <li>Proveri opremu pre svakog termina.</li>
 <li>Znaj ko pruža prvu pomoć. Vidi <a href="/blog/povreda-na-casu-protokol">protokol za povredu</a>.</li>
-<li>Fotografije drugih gostiju objavljuj samo uz <a href="/blog/fotografije-dece-na-mrezama">saglasnost roditelja</a>.</li>
+<li>Fotografije drugih gostiju objavljuj samo uz <a href="/blog/pristanak-za-fotografije-dece">saglasnost roditelja</a>.</li>
 </ul>
 
 <h2 id="dodatni">Kako da radni dani donose novac</h2>
@@ -545,7 +545,7 @@ POSTS = [
 <tr><td>Unesi samo aktuelne dugove kao dodatno zaduženje</td><td>Želiš jedan spisak za sve</td></tr>
 <tr><td>Prenesi celu istoriju ručno</td><td>Retko vredi truda</td></tr>
 </tbody></table></div>
-<p>Ako vodiš izvod iz banke, kasnije možeš da <a href="/blog/uparivanje-uplata-sa-izvodom">uparuješ uplate preko izvoda</a>.</p>
+<p>Ako vodiš izvod iz banke, kasnije možeš da <a href="/blog/uparivanje-izvoda-iz-banke">uparuješ uplate preko izvoda</a>.</p>
 
 <h2 id="tim">Korak 5: predavači i roditelji</h2>
 <p>Predavačima otvori nalog. Oni vide samo svoje grupe i beleže prisustvo, a uplate ne vide. Prvih nedelju dana proveravaj da li to rade, jer tako i nastaje navika. O tome šta tačno vidi predavač, možeš da mu objasniš za pet minuta.</p>

@@ -204,7 +204,7 @@ POSTS = [
 <p>Trener koji radi na dve lokacije i prima uplate na račun verovatno neće kupovati kasu sa štampačem, ako mu obaveza uopšte postoji. Škola sa recepcijom i roditeljima koji plaćaju na licu mesta ima drugačiju potrebu: brz uređaj i osobu koja zna da ga koristi. Udruženje koje naplaćuje članarinu svojim članovima treba posebno da proveri kako se ta naplata tretira, jer ne mora da važi isto što i za firmu koja prodaje kurseve.</p>
 
 <h2 id="tok">Kako da uklopiš kasu u mesečnu naplatu</h2>
-<p>Najviše grešaka nastaje kada se račun izdaje iz glave, tek kad neko pita. Zato uvedi stalan redosled: stigne uplata, zabeležiš je, izdaš račun ako za to imaš obavezu i arhiviraš podatke. Ako imaš mnogo uplata preko računa, pogledaj kako da ih <a href="/blog/uparivanje-uplata-sa-izvodom">uporediš sa izvodom iz banke</a>.</p>
+<p>Najviše grešaka nastaje kada se račun izdaje iz glave, tek kad neko pita. Zato uvedi stalan redosled: stigne uplata, zabeležiš je, izdaš račun ako za to imaš obavezu i arhiviraš podatke. Ako imaš mnogo uplata preko računa, pogledaj kako da ih <a href="/blog/uparivanje-izvoda-iz-banke">uporediš sa izvodom iz banke</a>.</p>
 <div class="callout">
 <b>Važno je razlikovati</b>
 <p>Klasiko vodi članarine, uplate i dugovanja i pravi IPS QR kod za plaćanje, ali nije fiskalna kasa i ne izdaje fiskalne račune. To su dva različita alata: jedan ti govori ko je platio, a drugi ispunjava poresku obavezu ako je imaš.</p>
@@ -487,55 +487,6 @@ POSTS = [
 
 <h2 id="navika">Računaj dva puta godišnje</h2>
 <p>Najbolji trenuci su pre upisa u septembru, da odrediš minimum za start grupe, i u januaru, posle prvog polugodišta. U Klasiku vidiš polaznike po grupama i uplate, pa brojeve za ovu računicu dobijaš bez ručnog prebrojavanja. Kada znaš prag, lakše je i <a href="/blog/cena-casa-i-clanarine">odrediti cenu članarine</a> i proceniti da li ti treba još jedna sala.</p>
-''',
-},
-{
- 'slug': 'obavestenje-o-poskupljenju-clanarine',
- 'short': 'Obaveštenje o poskupljenju',
- 'tag': 'Uplate',
- 'title': 'Kako da obavestiš roditelje o poskupljenju članarine: šablon poruke i plan',
- 'seo_title': 'Poskupljenje članarine: šablon poruke roditeljima | Klasiko',
- 'desc': 'Kako da najaviš višu članarinu bez svađe i ispisa: kada da javiš, šta da napišeš, gotove poruke roditeljima i odgovori na najčešće primedbe.',
- 'excerpt': 'Rokovi, gotova poruka i odgovori na primedbe. Kako da povećanje cene prođe kao obična poslovna odluka, a ne kao razlog da roditelji razmišljaju o ispisu.',
- 'lead': 'Većina vlasnika predugo odlaže poskupljenje, pa ga na kraju uradi naglo, porukom u grupi. To je razlog zbog kojeg roditelji reaguju. Nije važan samo iznos, nego i to koliko unapred znaju, koliko je obrazloženje jasno i da li imaju osećaj da se pravila odnose na sve.',
- 'body': '''
-<h2 id="kada">Kada da javiš</h2>
-<p>Najlakše je poskupljenje uvesti od nove školske godine ili novog ciklusa, jer roditelji tada ionako donose odluku. Daj bar mesec dana, a idealno dva, da mogu da se pripreme. Nikad ne menjaj cenu već tekućeg meseca niti za period koji je neko već platio.</p>
-<div class="tbl"><table>
-<thead><tr><th>Kada</th><th>Šta radiš</th></tr></thead>
-<tbody>
-<tr><td>8 nedelja pre</td><td>Izračunaj novu cenu i odluči šta važi za postojeće polaznike</td></tr>
-<tr><td>6 nedelja pre</td><td>Obavesti predavače, da ne saznaju od roditelja</td></tr>
-<tr><td>4 do 5 nedelja pre</td><td>Pošalji poruku roditeljima</td></tr>
-<tr><td>1 nedelju pre</td><td>Kratak podsetnik sa novim iznosom</td></tr>
-<tr><td>Prvi mesec</td><td>Lični razgovor sa onima koji imaju problem</td></tr>
-</tbody></table></div>
-
-<h2 id="poruka">Poruka koju možeš da pošalješ</h2>
-<div class="tpl"><p>Poštovani roditelji, od [DATUM] mesečna članarina za [PROGRAM] iznosi [NOVI IZNOS] dinara, umesto dosadašnjih [STARI IZNOS] dinara. Do ove promene dolazi zbog [JASAN RAZLOG, NPR. VIŠE CENE ZAKUPA SALE I HONORARA]. Trudimo se da kvalitet ostane isti: [JEDNA KONKRETNA STVAR]. Hvala vam što ste deo [NAZIV ŠKOLE]. Ako imate pitanja ili bilo kakvu teškoću, javite mi se lično na [BROJ]. [IME I PREZIME]</p></div>
-<p>Poruka je kratka, sa iznosom, datumom i razlogom. Ne izvinjava se pet puta i ne preteruje sa pričom o inflaciji. Pošalji je lično ili putem kanala obaveštenja, a ne tako da odgovori svih završe u zajedničkoj grupi.</p>
-
-<h2 id="razlog">Kako da objasniš razlog</h2>
-<ul>
-<li><strong>Dobro:</strong> „Zakup sale je povećan, a želimo da zadržimo iskusne predavače.”</li>
-<li><strong>Loše:</strong> „Sve poskupljuje, znate i sami.”</li>
-<li><strong>Dobro:</strong> „Otvaramo nabavku novih instrumenata i od septembra grupe ostaju do osam dece.”</li>
-<li><strong>Loše:</strong> obećanja koja nećeš moći da ispuniš, samo da bi cena izgledala opravdano.</li>
-</ul>
-<p>Ne moraš da pokazuješ knjige i ne moraš da se pravdaš. Pre odluke proveri računicu u tekstu <a href="/blog/cena-casa-i-clanarine">kako odrediti cenu časa i članarine</a>.</p>
-
-<h2 id="primedbe">Odgovori na česte primedbe</h2>
-<h3>„Kod drugih je jeftinije.”</h3>
-<div class="tpl"><p>Razumem, i hvala što mi to otvoreno kažete. Ne možemo da budemo najjeftiniji, jer imamo [KONKRETNA VREDNOST, NPR. GRUPE DO OSAM DECE]. Odluka je, naravno, vaša. Voleli bismo da [IME DETETA] ostane kod nas.</p></div>
-<h3>„Ne možemo to da plaćamo.”</h3>
-<div class="tpl"><p>Hvala što ste rekli. Hajde da se čujemo i vidimo šta je moguće, na primer drugi način plaćanja ili termin. Ne želimo da novac bude jedini razlog da [IME DETETA] prekine.</p></div>
-<div class="callout">
-<b>Savet</b>
-<p>Porodici u stvarnoj teškoći možeš da ponudiš rešenje po <a href="/blog/besplatna-mesta-i-socijalni-popust">jasnim pravilima za socijalni popust</a>. Važno je da to ne bude tajni popust za onog ko se najglasnije buni.</p>
-</div>
-
-<h2 id="posle">Posle poskupljenja</h2>
-<p>Prati ispise tri meseca i proveri da li si izgubio više polaznika nego što je računica dozvoljavala. Nekoliko ispisa je očekivano i često bude manje nego što se vlasnik plašio. U Klasiku možeš da promeniš članarinu po grupi ili po detetu i zadržiš posebnu cenu tamo gde si je dogovorio. Takođe, roditelji novi iznos vide na svom linku. Pre nego što sledeći put povećaš cenu, pogledaj i <a href="/blog/kako-zadrzati-polaznike">zašto polaznici odustaju</a>.</p>
 ''',
 },
 ]
