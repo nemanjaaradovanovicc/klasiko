@@ -8,7 +8,9 @@ from posts_batch2a import POSTS_2A
 from posts_batch2b import POSTS_2B
 from posts_batch3 import POSTS_3
 from posts_batch4 import POSTS_4
-POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B + POSTS_3 + POSTS_4
+from posts_batch5 import POSTS_5
+from topics import TOPICS, TOPIC_BY_TAG, NICHE_TOPIC, topic_path
+POSTS = POSTS + MORE_POSTS + POSTS_2A + POSTS_2B + POSTS_3 + POSTS_4 + POSTS_5
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public')
 # public/social/ (karuseli za društvene mreže) je ručno održavan.
@@ -85,6 +87,7 @@ for n in NICHE_PAGES:
     faqs = ''.join(f'<details{" open" if i == 0 else ""}><summary>{C.e(q)}</summary><p>{C.e(a)}</p></details>' for i, (q, a) in enumerate(n['faq']))
     others = ''.join(f'<a class="lk" href="{p}"><small>Za koga</small><strong>{l}</strong><em>Pogledaj →</em></a>' for p, l in C.NICHES if p != path)
     posts = ''.join(post_card(BY_SLUG[s]) for s in n['blog'])
+    hub = next(t for t in TOPICS if t['slug'] == NICHE_TOPIC[path])
     page = C.head(n['title'], n['desc'], path, og_title=n['h1'] + ' | Klasiko', ld=ld) + C.header(path) + f'''<main id="sadrzaj">
 <section class="hero">
 <div class="wrap hero-grid">
@@ -133,6 +136,7 @@ for n in NICHE_PAGES:
 <div class="wrap">
 <div class="sec-head"><span class="eyebrow">Sa bloga</span><h2>Saveti za lakše vođenje<span class="dot">.</span></h2></div>
 <div class="posts">{posts}</div>
+<p style="margin:28px 0 0"><a class="btn soft" href="{topic_path(hub)}">Svi članci: {hub['name']}</a></p>
 <div class="sec-head" style="margin:56px 0 24px"><span class="eyebrow">Klasiko pravimo i za</span></div>
 <div class="links">{others}</div>
 </div>
@@ -151,27 +155,35 @@ ld = {"@context": "https://schema.org", "@graph": [
     {"@type": "Blog", "@id": C.SITE + "/blog#blog", "url": C.SITE + "/blog", "name": "Klasiko blog",
      "description": "Praktični saveti za vlasnike škola jezika, plesnih škola, klubova i edukativnih centara.",
      "inLanguage": "sr-Latn", "publisher": {"@id": C.SITE + "/#organization"},
-     "blogPost": [{"@type": "BlogPosting", "headline": p['title'], "url": C.SITE + "/blog/" + p['slug'], "datePublished": p.get('date', C.DATE)} for p in POSTS]},
+     "blogPost": [{"@type": "BlogPosting", "headline": p['title'], "url": C.SITE + "/blog/" + p['slug'], "datePublished": p.get('date', C.DATE)} for p in list(reversed(POSTS))[:30]]},
     C.bc_ld(bc, '/blog'),
 ]}
-cards = ''.join(post_card(p) for p in reversed(POSTS))
-page = C.head('Blog: saveti za vlasnike škola i klubova | Klasiko',
-              'Praktični saveti za vlasnike škola jezika, plesnih škola, klubova, edukativnih centara i vrtića: članarine, raspored, upis i roditelji.',
-              '/blog', og_title='Klasiko blog: saveti za vođenje škole', ld=ld) + C.header('/blog') + f'''<main id="sadrzaj">
+TOPIC_POSTS = {t['slug']: [p for p in reversed(POSTS) if TOPIC_BY_TAG[p['tag']] is t] for t in TOPICS}
+chips = '<nav class="chips" aria-label="Teme bloga">' + ''.join(f'<a class="chip" href="{topic_path(t)}">{t["name"]} <small>{len(TOPIC_POSTS[t["slug"]])}</small></a>' for t in TOPICS) + '</nav>'
+sections = ''
+for i, t in enumerate(TOPICS):
+    cards = ''.join(post_card(p) for p in TOPIC_POSTS[t['slug']][:6])
+    sections += f'''<section class="sec{' alt' if i % 2 == 0 else ''}">
+<div class="wrap">
+<div class="sec-head"><span class="eyebrow">Tema</span><h2>{t['name']}<span class="dot">.</span></h2><p>{C.e(t['intro'])}</p></div>
+<div class="posts">{cards}</div>
+<p style="margin:28px 0 0"><a class="btn soft" href="{topic_path(t)}">Svi članci: {t['name']} ({len(TOPIC_POSTS[t['slug']])})</a></p>
+</div>
+</section>
+'''
+page = C.head('Blog: saveti za škole, klubove, vrtiće i roditelje | Klasiko',
+              'Praktični vodiči za škole jezika, plesne i muzičke škole, sportske klubove, vrtiće i roditelje: članarine, finansije, raspored, marketing i upis.',
+              '/blog', og_title='Klasiko blog: saveti za škole, klubove i roditelje', ld=ld) + C.header('/blog') + f'''<main id="sadrzaj">
 <section class="hero">
 <div class="wrap hero-in">
 {C.crumbs(bc)}
 <span class="badge"><i></i>Klasiko blog</span>
-<h1>Saveti za lakše vođenje škole<span class="dot">.</span></h1>
-<p class="lead">Praktični vodiči za vlasnike škola jezika, plesnih škola, klubova i edukativnih centara. Bez teorije, sa primerima koje možeš da primeniš već sutra.</p>
+<h1>Saveti za lakše vođenje škole i kluba<span class="dot">.</span></h1>
+<p class="lead">{len(POSTS)} praktičnih vodiča za škole jezika, plesne i muzičke škole, sportske klubove, vrtiće, edukativne centre i roditelje. Izaberi temu ili pogledaj najnovije članke ispod.</p>
+{chips}
 </div>
 </section>
-<section class="sec alt" style="padding-top:clamp(40px,6vw,72px)">
-<div class="wrap">
-<div class="posts">{cards}</div>
-</div>
-</section>
-<section class="sec" style="padding-bottom:0">
+{sections}<section class="sec" style="padding-bottom:0">
 <div class="wrap">
 <div class="sec-head"><span class="eyebrow">Saveti na mejl</span><h2>Novi članci i vesti o Klasiku, u tvom inboxu<span class="dot">.</span></h2><p>Ostavi email: povremeno šaljemo praktične savete za vođenje škole. Bez spama, odjava jednim klikom.</p></div>
 {C.form('prijava', 'blog-hero')}
@@ -183,6 +195,43 @@ page = C.head('Blog: saveti za vlasnike škola i klubova | Klasiko',
 open(os.path.join(OUT, 'blog', 'index.html'), 'w', encoding='utf-8').write(page)
 print('ok /blog')
 
+# ---------- Tematske stranice bloga ----------
+os.makedirs(os.path.join(OUT, 'blog', 'tema'), exist_ok=True)
+for t in TOPICS:
+    path = topic_path(t)
+    items = TOPIC_POSTS[t['slug']]
+    bc = [('Početna', '/'), ('Blog', '/blog'), (t['name'], None)]
+    ld = {"@context": "https://schema.org", "@graph": [
+        C.ORG,
+        {"@type": "CollectionPage", "@id": C.SITE + path + "#page", "url": C.SITE + path, "name": t['name'],
+         "description": t['desc'], "inLanguage": "sr-Latn", "isPartOf": {"@id": C.SITE + "/blog#blog"},
+         "mainEntity": {"@type": "ItemList", "numberOfItems": len(items), "itemListElement": [
+             {"@type": "ListItem", "position": i + 1, "url": C.SITE + "/blog/" + p['slug'], "name": p['title']} for i, p in enumerate(items)]}},
+        C.bc_ld(bc, path),
+    ]}
+    others = ''.join(f'<a class="chip" href="{topic_path(q)}">{q["name"]} <small>{len(TOPIC_POSTS[q["slug"]])}</small></a>' for q in TOPICS if q is not t)
+    page = C.head(t['title'], t['desc'], path, og_title=t['name'] + ': Klasiko blog', ld=ld) + C.header('/blog') + f'''<main id="sadrzaj">
+<section class="hero">
+<div class="wrap hero-in">
+{C.crumbs(bc)}
+<span class="badge"><i></i>Članaka u temi: {len(items)}</span>
+<h1>{t['name']}<span class="dot">.</span></h1>
+<p class="lead">{C.e(t['intro'])}</p>
+</div>
+</section>
+<section class="sec alt" style="padding-top:clamp(40px,6vw,72px)">
+<div class="wrap">
+<div class="posts">{''.join(post_card(p) for p in items)}</div>
+<div class="sec-head" style="margin:56px 0 24px"><span class="eyebrow">Ostale teme</span></div>
+<nav class="chips" aria-label="Ostale teme bloga">{others}</nav>
+</div>
+</section>
+{C.cta('blog-tema-' + t['slug'])}
+</main>
+''' + C.footer()
+    open(os.path.join(OUT, 'blog', 'tema', t['slug'] + '.html'), 'w', encoding='utf-8').write(page)
+    print('ok', path, len(items))
+
 for p in POSTS:
     path = '/blog/' + p['slug']
     body = p['body']
@@ -193,7 +242,8 @@ for p in POSTS:
     inline = f'''<div class="inline-cta col"><p>Klasiko drži učenike, raspored, prisustvo i članarine na jednom mestu, sa IPS QR uplatama i uvozom iz Excel-a. Probaj ga 14 dana besplatno.</p>{C.demo_buttons(dark=True)}</div>\n'''
     body = body.replace(f'<h2 id="{mid}">', inline + f'<h2 id="{mid}">', 1)
     words = len(re.sub(r'<[^>]+>', ' ', p['body']).split())
-    bc = [('Početna', '/'), ('Blog', '/blog'), (p['short'], None)]
+    topic = TOPIC_BY_TAG[p['tag']]
+    bc = [('Početna', '/'), ('Blog', '/blog'), (topic['name'], topic_path(topic)), (p['short'], None)]
     ld = {"@context": "https://schema.org", "@graph": [
         C.ORG,
         {"@type": "BlogPosting", "@id": C.SITE + path + "#article", "headline": p['title'], "description": p['desc'],
@@ -356,9 +406,13 @@ open(ip, 'w', encoding='utf-8').write(idx)
 print('ok / (meni)')
 
 # ---------- Sitemap ----------
-urls = [('/', '1.0', 'weekly'), ('/cene', '0.9', 'monthly'), ('/demo', '0.8', 'monthly')] + [(n['path'], '0.9', 'monthly') for n in NICHE_PAGES] + [('/blog', '0.8', 'weekly')] + [('/blog/' + p['slug'], '0.7', 'monthly') for p in POSTS]
-sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+urls = [('/', '1.0', 'weekly'), ('/cene', '0.9', 'monthly'), ('/demo', '0.8', 'monthly')] + [(n['path'], '0.9', 'monthly') for n in NICHE_PAGES] + [('/blog', '0.8', 'weekly')] + [(topic_path(t), '0.7', 'weekly') for t in TOPICS] + [('/blog/' + p['slug'], '0.7', 'monthly') for p in POSTS]
+sm ='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
 post_dates = {'/blog/' + p['slug']: p.get('date', C.DATE) for p in POSTS}
+# Blog i teme su promenjeni kada i njihov najnoviji članak.
+post_dates['/blog'] = max(post_dates.values())
+for t in TOPICS:
+    post_dates[topic_path(t)] = max(p.get('date', C.DATE) for p in TOPIC_POSTS[t['slug']])
 for u, pr, cf in urls:
     img = f'\n    <image:image><image:loc>{C.SITE}/og-image.png</image:loc></image:image>' if u == '/' else ''
     sm += f'  <url>\n    <loc>{C.SITE}{u}</loc>\n    <lastmod>{post_dates.get(u, C.DATE)}</lastmod>\n    <changefreq>{cf}</changefreq>\n    <priority>{pr}</priority>{img}\n  </url>\n'

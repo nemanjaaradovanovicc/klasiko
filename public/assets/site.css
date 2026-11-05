@@ -410,4 +410,8 @@ h2{margin:0;font-size:clamp(30px,4.2vw,50px);line-height:1.05;font-weight:800;le
   @keyframes kPing{75%,100%{transform:scale(2.6);opacity:0}}
   @keyframes kBlob{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,24px) scale(1.05)}}
 }
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:#fff;border:1.5px solid var(--bd);color:var(--ink);font-size:15px;font-weight:800;text-decoration:none}
+.chip small{font-size:12px;font-weight:800;color:var(--mut)}
+@media (hover:hover){.chip:hover{border-color:var(--p);color:var(--p)}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}.progress{display:none}}
