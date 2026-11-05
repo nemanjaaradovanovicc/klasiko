@@ -268,6 +268,8 @@ POSTS_2B = [
 <p>Ne dozvoli da prvi priredbeni nastup u decembru zatekne školu bez pregleda ko je platio. Pred nastupe i kostime se troškovi gomilaju, a nejasna evidencija tada pravi najviše nesporazuma.</p>
 </div>
 
+<p>Kada škola stane na noge, sledeći veliki cilj je <a href="/blog/godisnji-koncert-plesne-skole">godišnji koncert</a>.</p>
+
 <h2 id="zakljucak">Zaključak</h2>
 <p>Plan za prvu godinu plesne škole staje u nekoliko odluka: jasna niša, prostor sa dobrim podom i razumnim zakupom, pismeni dogovori sa instruktorima, cena izračunata iz troškova, organizovan prvi upis i stalni marketing. Pravna pitanja reši sa knjigovođom pre prvog časa, a organizaciju postavi od prvog polaznika.</p>
 <p>Upravo zato pravimo Klasiko: da polaznici, grupe, raspored sala, prisustvo i članarine budu na jednom mestu od prvog dana, a da ti ostane vreme za ples. Pogledaj kako ga zamišljamo za <a href="/plesne-skole">plesne škole</a>.</p>
@@ -486,6 +488,8 @@ POSTS_2B = [
 <tr><td>2. nedelja septembra</td><td>Podešavanje uplata i prvi rok</td></tr>
 <tr><td>3. i 4. nedelja septembra</td><td>Praćenje novih polaznika, konačan raspored</td></tr>
 </tbody></table></div>
+
+<p>Priprema za septembar počinje još leti, a <a href="/blog/letnja-skola-i-kamp">letnja škola ili kamp</a> može da ti donese prve upise.</p>
 
 <h2 id="zakljucak">Zaključak</h2>
 <p>Uspešan upis u septembru počinje krajem jula. Prvo zadrži stare polaznike, zatim složi grupe i raspored uz smene, objavi cene na vreme, budi vidljiv krajem avgusta, pažljivo vodi probne časove i podesi uplate pre prvog roka. Prvi mesec posveti novim polaznicima, jer se tada odlučuje da li će ostati.</p>

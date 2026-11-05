@@ -78,6 +78,8 @@ POSTS_3 = [
 <p>Pred kraj prve godine pitaj roditelje i polaznike šta im se dopalo, a šta bi promenili. Kratka anketa od tri pitanja daje ti više od bilo kog plana napisanog pre otvaranja.</p>
 </div>
 
+<p>Ako planiraš individualnu nastavu ili muzički program, pogledaj i tekst o <a href="/blog/privatna-muzicka-skola-vodjenje">vođenju privatne muzičke škole</a>, jer su pravila za stalne termine i otkazivanja ista.</p>
+
 <h2 id="zakljucak">Zaključak</h2>
 <p>Škola stranih jezika počinje jasnom ponudom za jasnu grupu polaznika. Posle toga dolaze registracija uz knjigovođu, prostor po meri prve godine, dobri predavači, cena zasnovana na troškovima, promišljen prvi upis i uredna evidencija od prvog dana.</p>
 <p>Upravo zato pravimo Klasiko: da polaznici, grupe, raspored, prisustvo i članarine budu na jednom mestu od prve grupe. Pogledaj kako ga zamišljamo za <a href="/skole-jezika">škole jezika</a>, a ako tek počinješ, zakaži <a href="/demo">besplatan demo</a> i pokazaćemo ti kako da postaviš školu od početka.</p>

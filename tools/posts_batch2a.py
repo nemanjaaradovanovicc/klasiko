@@ -191,6 +191,8 @@ POSTS_2A = [
 <h2 id="posle">Posle prvog meseca</h2>
 <p>Na kraju prvog meseca zakaži kratak razgovor sa roditeljem. Pitaj kako dete priča o vrtiću kod kuće i podeli svoja zapažanja. Ovaj razgovor pokazuje da ti je stalo i otvara prostor da se mali problemi reše pre nego što postanu razlog za ispis. Ideje kako da zadržiš porodice dugoročno imaš u tekstu <a href="/blog/kako-zadrzati-polaznike">o zadržavanju polaznika</a>.</p>
 
+<p>Ako vrtić tek otvaraš, prvo pročitaj <a href="/blog/kako-otvoriti-privatni-vrtic">kako otvoriti privatni vrtić u Srbiji</a>.</p>
+
 <h2 id="zakljucak">Zaključak</h2>
 <p>Upis u privatni vrtić je niz malih koraka: brz odgovor na upit, dobro pripremljena poseta, jasna dokumentacija i ugovor, plan adaptacije i pažnja tokom prvih dana. Kada je proces uredan, roditelj ima poverenja, a ti manje haosa svakog septembra. Tačne zakonske obaveze i spisak dokumenata proveri sa knjigovođom, pravnikom i lokalnim propisima.</p>
 <p>Upravo zato pravimo Klasiko: da upite, podatke o deci, ovlašćene osobe i uplate vodiš na jednom mestu, od prvog poziva nadalje. Pogledaj kako ga zamišljamo za <a href="/vrtici">privatne vrtiće</a>.</p>
@@ -506,6 +508,8 @@ POSTS_2A = [
 <p>Evidencija časova koju vodiš treba da bude usklađena sa onim što piše u ugovoru sa predavačem. Ako ugovor kaže jedno, a obračun radiš drugačije, to može da napravi probleme i tebi i predavaču.</p>
 </div>
 <p>Izvoz evidencije u Excel na kraju meseca knjigovođi znatno olakšava posao, a tebi štedi vreme na objašnjavanju.</p>
+
+<p>Tačan obračun je i jedan od razloga zašto predavači ostaju, o čemu pišemo u tekstu o tome <a href="/blog/kako-naci-i-zadrzati-predavaca">kako naći i zadržati predavača</a>.</p>
 
 <h2 id="zakljucak">Zaključak</h2>
 <p>Pravedan obračun honorara predavača počiva na tri stvari: zapisanim pravilima šta je održan čas, evidenciji koja se vodi istog dana i fiksnom danu za mesečno zaključenje. Uz to, svaki predavač dobija svoj pregled i ima rok za primedbe. Tako nestaju prepirke, a predavači znaju da su plaćeni tačno i na vreme. Za poreze i ugovore uvek se oslanjaj na knjigovođu.</p>
