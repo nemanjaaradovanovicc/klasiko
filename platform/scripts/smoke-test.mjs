@@ -1,6 +1,12 @@
-// Test na pravoj bazi: pravi privremene škole i korisnike, proverava prava pristupa i stranice, pa sve briše.
-// Pokretanje: node --env-file=.env.local scripts/smoke-test.mjs [http://localhost:3000]
+// Test na testnoj bazi: pravi privremene škole i korisnike, proverava prava pristupa i stranice, pa sve briše.
+// Ne pokreći na produkciji. Radi samo uz SMOKE_TEST_OK=1, koji stoji u .env.test lokalne baze (scripts/local-supabase.mjs).
+// Pokretanje: node --env-file=.env.test scripts/smoke-test.mjs [http://localhost:3000]
 import { createClient } from '@supabase/supabase-js';
+
+if (process.env.SMOKE_TEST_OK !== '1') {
+  console.error('Test pravi i briše podatke, pa ne sme na produkcionu bazu. Pokreni ga sa testnom bazom i SMOKE_TEST_OK=1.');
+  process.exit(1);
+}
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -184,7 +190,7 @@ try {
     ok(!ckT, 'predavač beleži dolazak svog učenika');
     const { error: ckB } = await B.c.from('checkins').insert({ org_id: orgA.id, student_id: sts[0].id, kind: 'in' });
     ok(!!ckB, 'druga škola ne može da beleži dolazak');
-    for (const pth of ['/roditelji', '/uplate/izvod', '/dolasci', '/dolasci/kartice', `/ucenici/${sts[0].id}/diploma`, `/grupe/${g1.id}/diplome`, `/prisustvo?datum=${today}`, `/prisustvo/${g1.id}?datum=${today}&vreme=12:00`]) {
+    for (const pth of ['/roditelji', '/uplate/dugovanja', '/obavestenja', '/uplate/izvod', '/dolasci', '/dolasci/kartice', `/ucenici/${sts[0].id}/diploma`, `/grupe/${g1.id}/diplome`, `/prisustvo?datum=${today}`, `/prisustvo/${g1.id}?datum=${today}&vreme=12:00`]) {
       const r = await fetch(APP + pth, { headers: { cookie: cookieFor(A.s) }, redirect: 'manual' });
       const body = r.status === 200 ? await r.text() : '';
       ok(r.status === 200 && !/Application error/i.test(body), `owner ${pth} → ${r.status}`);

@@ -2,11 +2,14 @@ import Link from 'next/link';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Flash, Stat, Badge, Empty } from '@/components/ui';
-import { currentPeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr, todayISO } from '@/lib/format';
+import { currentPeriod, parsePeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr, todayISO } from '@/lib/format';
+import { fetchAll } from '@/lib/supabase/fetch-all';
+import { ConfirmButton } from '@/components/confirm';
+import { waUrl } from '@/lib/phone';
 import { ipsPayload, studentReference } from '@/lib/ips';
 import { parentUrl } from '@/lib/parent';
 import { QrButton } from './qr';
-import { generateCharges, recordPayment, deletePayment, addCharge, updateCharge } from './actions';
+import { generateCharges, recordPayment, deletePayment, addCharge, updateCharge, createInstallments } from './actions';
 
 export const metadata = { title: 'Uplate' };
 
@@ -15,21 +18,29 @@ const METHOD: Record<string, string> = { cash: 'Gotovina', bank: 'Račun', card:
 export default async function PaymentsPage({ searchParams }: { searchParams: Promise<{ mesec?: string; prikaz?: string; ok?: string; err?: string }> }) {
   const ctx = await requireOwner();
   const sp = await searchParams;
-  const period = sp.mesec && /^\d{4}-\d{2}$/.test(sp.mesec) ? sp.mesec : currentPeriod();
+  const period = parsePeriod(sp.mesec);
   const filter = sp.prikaz ?? 'sve';
   const supabase = await createClient();
-  const [{ data: charges }, { data: students }, { data: plinks }] = await Promise.all([
-    supabase
+  type C = { id: string; amount: number; due_date: string | null; description: string | null; student_id: string; students: { first_name: string; last_name: string; parent_name: string | null; parent_phone: string | null; phone: string | null; ref_no: number } | null; groups: { name: string } | null; payments: { id: string; amount: number; paid_at: string; method: string }[] };
+  const [charges, students, plinks, { data: groupList }] = await Promise.all([
+    fetchAll<C>((a, b) => supabase
       .from('charges')
       .select('id, amount, due_date, description, student_id, students(first_name, last_name, parent_name, parent_phone, phone, ref_no), groups(name), payments(id, amount, paid_at, method)')
       .eq('org_id', ctx.org.id)
-      .eq('period', period),
-    supabase.from('students').select('id, first_name, last_name').eq('org_id', ctx.org.id).eq('active', true).order('last_name'),
-    supabase.from('parent_links').select('student_id, token').eq('org_id', ctx.org.id).eq('revoked', false),
+      .eq('period', period)
+      .order('id')
+      .range(a, b)),
+    fetchAll<{ id: string; first_name: string; last_name: string; family_id: string | null }>((a, b) => supabase.from('students').select('id, first_name, last_name, family_id').eq('org_id', ctx.org.id).eq('active', true).order('last_name').order('id').range(a, b)),
+    fetchAll<{ student_id: string; token: string }>((a, b) => supabase.from('parent_links').select('student_id, token').eq('org_id', ctx.org.id).eq('revoked', false).order('token').range(a, b)),
+    supabase.from('groups').select('id, name').eq('org_id', ctx.org.id).eq('active', true).order('name'),
   ]);
-  const linkBy = new Map((plinks ?? []).map((l) => [l.student_id, l.token]));
-  type C = { id: string; amount: number; due_date: string | null; description: string | null; student_id: string; students: { first_name: string; last_name: string; parent_name: string | null; parent_phone: string | null; phone: string | null; ref_no: number } | null; groups: { name: string } | null; payments: { id: string; amount: number; paid_at: string; method: string }[] };
-  const all = ((charges ?? []) as unknown as C[]).filter((c) => c.students).sort((a, b) => fullName(a.students!).localeCompare(fullName(b.students!), 'sr'));
+  // Porodica deli jedan link, pa ga dobijaju i braća i sestre učenika na koga glasi.
+  const linkBy = new Map(plinks.map((l) => [l.student_id, l.token]));
+  const familyOf = new Map(students.map((x) => [x.id, x.family_id]));
+  const familyLink = new Map<string, string>();
+  for (const l of plinks) { const f = familyOf.get(l.student_id); if (f) familyLink.set(f, l.token); }
+  const tokenFor = (id: string) => { const f = familyOf.get(id); return linkBy.get(id) ?? (f ? familyLink.get(f) : undefined); };
+  const all = charges.filter((c) => c.students).sort((a, b) => fullName(a.students!).localeCompare(fullName(b.students!), 'sr'));
   const rows = all.map((c) => {
     const paid = c.payments.reduce((a, p) => a + Number(p.amount), 0);
     return { ...c, paid, remaining: Math.max(0, Number(c.amount) - paid), done: paid >= Number(c.amount) };
@@ -69,6 +80,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
           <button className="btn">Napravi zaduženja za {label.toLowerCase()}</button>
         </form>
         <Link href="/uplate/izvod" className="btn btn-soft">Uvezi izvod iz banke</Link>
+        <Link href="/uplate/dugovanja" className="btn btn-soft">Ko duguje</Link>
         <div className="ml-auto flex gap-1 rounded-full bg-white p-1 ring-1 ring-line">
           {[['sve', 'Sve'], ['neplaceno', 'Neplaćeno'], ['placeno', 'Plaćeno']].map(([v, l]) => (
             <Link key={v} href={`/uplate?mesec=${period}&prikaz=${v}`} className={`rounded-full px-3 py-1.5 text-[13px] font-extrabold ${filter === v ? 'bg-brand text-white' : 'text-mut hover:text-brand'}`}>{l}</Link>
@@ -85,8 +97,8 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
             const phone = s.parent_phone || s.phone;
             const purpose = `Clanarina ${label} ${fullName(s)}`;
             const ref = studentReference(s.ref_no, period);
-            const payload = ctx.org.bank_account && ctx.org.payee_name && r.remaining > 0 ? ipsPayload({ account: ctx.org.bank_account, payee: ctx.org.payee_name, amount: r.remaining, purpose, payer: s.parent_name ?? fullName(s), reference: ref }) : null;
-            const plink = linkBy.get(r.student_id);
+            const payload = ctx.org.bank_account && r.remaining > 0 ? ipsPayload({ account: ctx.org.bank_account, payee: ctx.org.payee_name || ctx.org.name, amount: r.remaining, purpose, payer: s.parent_name ?? fullName(s), reference: ref }) : null;
+            const plink = tokenFor(r.student_id);
             const reminder = [
               `Dobar dan! Podsećamo da članarina za ${label.toLowerCase()} za ${fullName(s)} iznosi ${rsd(r.remaining)}.`,
               ctx.org.bank_account ? `Račun: ${ctx.org.bank_account}, poziv na broj: ${ref}.` : '',
@@ -99,7 +111,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                   <div className="min-w-0 flex-1">
                     <Link href={`/ucenici/${r.student_id}`} className="font-extrabold text-ink hover:text-brand">{fullName(s)}</Link>
-                    <div className="truncate text-[13px] font-semibold text-mut">{r.groups?.name ?? r.description}</div>
+                    <div className="truncate text-[13px] font-semibold text-mut">{r.description ?? r.groups?.name}</div>
                   </div>
                   <div className="flex items-center justify-between gap-2 sm:block sm:text-right">
                     <div className="text-[16px] font-extrabold tabular-nums">{rsd(r.amount)}</div>
@@ -122,7 +134,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                     </form>
                     <QrButton payload={payload} title={fullName(s)} amount={rsd(r.remaining)} purpose={`Članarina ${label}`} />
                     {phone && (
-                      <a className="btn btn-sm btn-ghost" target="_blank" rel="noopener" href={`https://wa.me/${phone.replace(/\D/g, '').replace(/^0/, '381')}?text=${encodeURIComponent(reminder)}`}>Podseti na WhatsApp</a>
+                      <a className="btn btn-sm btn-ghost" target="_blank" rel="noopener" href={waUrl(phone, reminder)}>Podseti na WhatsApp</a>
                     )}
                   </div>
                 )}
@@ -136,7 +148,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                           <form action={deletePayment}>
                             <input type="hidden" name="period" value={period} />
                             <input type="hidden" name="id" value={p.id} />
-                            <button className="text-coral-dark hover:underline">obriši</button>
+                            <ConfirmButton message={`Obrisati uplatu od ${rsd(p.amount)}?`} className="text-coral-dark hover:underline">obriši</ConfirmButton>
                           </form>
                         </li>
                       ))}
@@ -146,7 +158,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                       <input type="hidden" name="id" value={r.id} />
                       <input name="amount" type="number" min={0} step="1" defaultValue={r.amount} className="input h-8 w-28 text-sm" />
                       <button className="btn btn-sm btn-soft h-8">Izmeni iznos</button>
-                      <button name="delete" value="1" className="btn btn-sm btn-ghost h-8 text-coral-dark">Obriši zaduženje</button>
+                      <ConfirmButton name="delete" value="1" message={`Obrisati zaduženje za ${fullName(s)}?`} className="btn btn-sm btn-ghost h-8 text-coral-dark">Obriši zaduženje</ConfirmButton>
                     </form>
                   </details>
                 )}
@@ -162,11 +174,31 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
           <input type="hidden" name="period" value={period} />
           <select name="student_id" className="input sm:col-span-2" required defaultValue="">
             <option value="">Izaberi učenika</option>
-            {(students ?? []).map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
+            {students.map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
           </select>
           <input name="amount" type="number" min={1} step="1" placeholder="Iznos" className="input" required />
           <input name="description" placeholder="Opis" className="input" />
           <div className="sm:col-span-4"><button className="btn btn-soft">Dodaj zaduženje</button></div>
+        </form>
+      </details>
+
+      <details className="card mt-3 p-5">
+        <summary className="cursor-pointer text-[15px] font-extrabold text-ink">+ Polugodište ili rate</summary>
+        <p className="mt-2 text-[13px] font-semibold text-mut">Ukupan iznos se deli na mesece, počev od meseca {label.toLowerCase()}. Grupe sa ovim načinom naplate podesi na „Polugodište ili rate”, da ne dobijaju i mesečnu članarinu. Pakete časova prodaješ na kartici učenika.</p>
+        <form action={createInstallments} className="mt-4 grid gap-3 sm:grid-cols-4">
+          <input type="hidden" name="period" value={period} />
+          <select name="group_id" className="input sm:col-span-2" defaultValue="">
+            <option value="">Cela grupa (izaberi)</option>
+            {(groupList ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+          <select name="student_id" className="input sm:col-span-2" defaultValue="">
+            <option value="">ili jedan učenik</option>
+            {students.map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
+          </select>
+          <input name="total" type="number" min={1} step="1" placeholder="Ukupan iznos po učeniku" className="input" required />
+          <input name="count" type="number" min={1} max={12} step="1" placeholder="Broj rata" className="input" required />
+          <input name="description" placeholder="Opis, npr. Polugodište" className="input sm:col-span-2" />
+          <div className="sm:col-span-4"><button className="btn btn-soft">Napravi rate</button></div>
         </form>
       </details>
     </>

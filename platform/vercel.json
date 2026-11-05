@@ -1,5 +1,6 @@
 {
   "framework": "nextjs",
   "regions": ["dub1"],
+  "crons": [{ "path": "/api/cron/dnevno", "schedule": "0 6 * * *" }],
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ."
 }

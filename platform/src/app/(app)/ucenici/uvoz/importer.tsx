@@ -5,9 +5,11 @@ import { readSheet } from 'read-excel-file/browser';
 import Link from 'next/link';
 import { importStudents, type ImportRow } from '../actions';
 import { downloadXlsx } from '@/lib/excel';
+import { isISODate } from '@/lib/format';
+import { fixImportedPhone } from '@/lib/phone';
 
 const FIELDS: { key: keyof ImportRow; label: string; match: RegExp }[] = [
-  { key: 'first_name', label: 'Ime', match: /^(ime|first|ime učenika|ime ucenika)$/i },
+  { key: 'first_name', label: 'Ime', match: /^(ime|first|ime učenika|ime ucenika|ime i prezime|učenik|ucenik|name)$/i },
   { key: 'last_name', label: 'Prezime', match: /^(prezime|last|surname)$/i },
   { key: 'birth_date', label: 'Datum rođenja', match: /rođ|rodj|birth/i },
   { key: 'phone', label: 'Telefon', match: /^(telefon|tel|mobilni|phone)$/i },
@@ -24,9 +26,10 @@ type Cell = string | number | boolean | Date | null;
 function toISO(v: Cell): string | null {
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   if (typeof v === 'string') {
-    const m = v.trim().match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})\.?$/);
-    if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(v.trim())) return v.trim();
+    const m = v.trim().match(/^(\d{1,2})[.\/-]\s*(\d{1,2})[.\/-]\s*(\d{4})\.?$/);
+    const iso = m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : v.trim();
+    // 31. 2. 2015. nije datum: polje ostaje prazno, a uvoz ostalih redova se nastavlja.
+    return isISODate(iso) ? iso : null;
   }
   return null;
 }
@@ -35,7 +38,7 @@ export function Importer() {
   const [header, setHeader] = useState<string[]>([]);
   const [rows, setRows] = useState<Cell[][]>([]);
   const [map, setMap] = useState<Record<string, number>>({});
-  const [result, setResult] = useState<{ ok?: number; groups?: number; error?: string } | null>(null);
+  const [result, setResult] = useState<{ ok?: number; groups?: number; duplicates?: number; error?: string } | null>(null);
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
 
@@ -48,9 +51,10 @@ export function Importer() {
       if (nonEmpty.length < 2) return setError('Tabela je prazna ili nema zaglavlje.');
       const h = nonEmpty[0].map((c) => String(c ?? '').trim());
       const m: Record<string, number> = {};
-      FIELDS.forEach((fl) => {
-        const i = h.findIndex((x) => fl.match.test(x));
-        if (i >= 0 && !Object.values(m).includes(i)) m[fl.key] = i;
+      // Prvo uža polja (telefon roditelja), da „Telefon roditelja” ne završi kao ime roditelja.
+      [...FIELDS].sort((a, b) => Number(b.key === 'parent_phone' || b.key === 'parent_email') - Number(a.key === 'parent_phone' || a.key === 'parent_email')).forEach((fl) => {
+        const i = h.findIndex((x, idx) => fl.match.test(x) && !Object.values(m).includes(idx));
+        if (i >= 0) m[fl.key] = i;
       });
       setHeader(h);
       setRows(nonEmpty.slice(1));
@@ -78,10 +82,10 @@ export function Importer() {
         first_name: first,
         last_name: last,
         birth_date: toISO(get('birth_date')),
-        phone: str('phone'),
+        phone: fixImportedPhone(str('phone')),
         email: str('email'),
         parent_name: str('parent_name'),
-        parent_phone: str('parent_phone'),
+        parent_phone: fixImportedPhone(str('parent_phone')),
         parent_email: str('parent_email'),
         group: str('group'),
         notes: str('notes'),
@@ -91,6 +95,7 @@ export function Importer() {
 
   const preview = rows.length ? build() : [];
   const valid = preview.filter((r) => r.first_name);
+  const badDates = map.birth_date === undefined ? 0 : rows.filter((r, i) => { const c = r[map.birth_date!]; return c !== null && c !== undefined && String(c).trim() !== '' && !preview[i].birth_date; }).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -114,7 +119,7 @@ export function Importer() {
         {error && <div className="mt-3 rounded-xl bg-coral-soft px-4 py-3 text-sm font-bold text-coral-dark">{error}</div>}
       </div>
 
-      {rows.length > 0 && !result?.ok && (
+      {rows.length > 0 && result?.ok === undefined && (
         <div className="card p-5">
           <h2 className="text-[17px] font-extrabold text-ink">Poveži kolone</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -145,15 +150,17 @@ export function Importer() {
             <button className="btn" disabled={pending || valid.length === 0 || map.first_name === undefined} onClick={() => start(async () => setResult(await importStudents(valid)))}>
               {pending ? 'Uvozim...' : `Uvezi ${valid.length} učenika`}
             </button>
-            <span className="text-[13px] font-semibold text-mut">Prikazano prvih {Math.min(8, preview.length)} od {preview.length} redova.</span>
+            <span className="text-[13px] font-semibold text-mut">Prikazano prvih {Math.min(8, preview.length)} od {preview.length} redova. Učenici koji već postoje se preskaču.</span>
+            {badDates > 0 && <span className="w-full text-[13px] font-bold text-coral-dark">Neispravan datum rođenja u {badDates} redova: ti redovi se uvoze bez datuma.</span>}
           </div>
         </div>
       )}
 
       {result?.error && <div className="rounded-xl bg-coral-soft px-4 py-3 text-sm font-bold text-coral-dark">{result.error}</div>}
-      {result?.ok && (
+      {result?.ok !== undefined && (
         <div className="card p-6 text-center">
           <div className="text-[22px] font-extrabold text-ok">Uvezeno {result.ok} učenika</div>
+          {result.duplicates ? <p className="mt-1 font-semibold text-mut">Preskočeno jer već postoje: {result.duplicates}.</p> : null}
           {result.groups ? <p className="mt-1 font-semibold text-mut">Napravljeno novih grupa: {result.groups}. Podesi im cenu i raspored.</p> : null}
           <div className="mt-4 flex justify-center gap-2">
             <Link href="/ucenici" className="btn">Pogledaj učenike</Link>

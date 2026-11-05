@@ -10,6 +10,7 @@ import { recordSubscriptionPayment, deleteSubscriptionPayment } from '../../bill
 import { planPrice } from '@/lib/billing';
 import { rsd, todayISO } from '@/lib/format';
 import Link from 'next/link';
+import { ConfirmButton } from '@/components/confirm';
 import type { Invoice, SubPayment } from '@/lib/types';
 
 export default async function OrgDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
@@ -91,7 +92,7 @@ export default async function OrgDetail({ params, searchParams }: { params: Prom
                   <form action={deleteSubscriptionPayment}>
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="org_id" value={org.id} />
-                    <button className="text-[12px] font-bold text-coral-dark hover:underline">obriši</button>
+                    <ConfirmButton message="Obrisati ovu uplatu? Ako je poslednja, „plaćeno do” se vraća na prethodni datum." className="text-[12px] font-bold text-coral-dark hover:underline">obriši</ConfirmButton>
                   </form>
                 </li>
               ))}
@@ -127,7 +128,7 @@ export default async function OrgDetail({ params, searchParams }: { params: Prom
                     <form action={setUserActive}>
                       <input type="hidden" name="user_id" value={u.id} />
                       <input type="hidden" name="active" value={u.active ? '0' : '1'} />
-                      <button className={`btn btn-sm ${u.active ? 'btn-danger' : 'btn-soft'}`}>{u.active ? 'Deaktiviraj' : 'Aktiviraj'}</button>
+                      <ConfirmButton message={u.active ? 'Deaktivirati ovaj nalog?' : 'Aktivirati ovaj nalog?'} className={`btn btn-sm ${u.active ? 'btn-danger' : 'btn-soft'}`}>{u.active ? 'Deaktiviraj' : 'Aktiviraj'}</ConfirmButton>
                     </form>
                   </div>
                 </li>

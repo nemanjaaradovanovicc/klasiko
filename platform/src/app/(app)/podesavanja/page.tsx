@@ -4,7 +4,10 @@ import { PageHeader, Card, Field, Flash, Badge, Select } from '@/components/ui';
 import { CredsForm, ResetButton } from '@/components/creds';
 import { PLANS, BILLING_LABEL, STATUS_LABEL, ROLE_LABEL, type Profile } from '@/lib/types';
 import { dateSr, rsd } from '@/lib/format';
-import { updateSchool, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember } from './actions';
+import { updateSchool, updateAutomation, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember } from './actions';
+import { ConfirmButton } from '@/components/confirm';
+import { AUDIT_LABEL } from '@/lib/audit';
+import { emailEnabled } from '@/lib/email';
 import Link from 'next/link';
 import { QrImage } from '@/components/qr-image';
 import { daysUntil, planPrice, planQr } from '@/lib/billing';
@@ -12,18 +15,19 @@ import type { Invoice, PlatformSettings } from '@/lib/types';
 
 export const metadata = { title: 'Podešavanja' };
 
-const OK: Record<string, string> = { '1': 'Podaci škole su sačuvani.', sala: 'Sala je dodata.', tim: 'Tim je ažuriran.' };
+const OK: Record<string, string> = { '1': 'Podaci škole su sačuvani.', sala: 'Sala je dodata.', tim: 'Tim je ažuriran.', auto: 'Automatska naplata je sačuvana.' };
 
 export default async function Settings({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   const ctx = await requireOwner();
   const sp = await searchParams;
   const org = ctx.org;
   const supabase = await createClient();
-  const [{ data: rooms }, { data: team }, { data: invs }, { data: st }] = await Promise.all([
+  const [{ data: rooms }, { data: team }, { data: invs }, { data: st }, { data: log }] = await Promise.all([
     supabase.from('rooms').select('id, name, capacity').eq('org_id', org.id).order('name'),
     supabase.from('profiles').select('*').eq('org_id', org.id).order('created_at'),
     supabase.from('invoices').select('*').eq('org_id', org.id).eq('status', 'issued').order('issue_date', { ascending: false }),
     supabase.from('platform_settings').select('*').eq('id', 1).maybeSingle<PlatformSettings>(),
+    supabase.from('audit_log').select('id, at, action, actor_email, target').eq('org_id', org.id).order('at', { ascending: false }).limit(15),
   ]);
   const openInv = (invs ?? []) as Invoice[];
   const left = org.status === 'active' && org.billing !== 'lifetime' ? daysUntil(org.paid_until) : null;
@@ -105,7 +109,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
                   <span className="font-bold text-ink">{r.name}{r.capacity ? <span className="font-semibold text-mut"> · {r.capacity} mesta</span> : null}</span>
                   <form action={deleteRoom}>
                     <input type="hidden" name="id" value={r.id} />
-                    <button className="text-[13px] font-bold text-coral-dark hover:underline">Obriši</button>
+                    <ConfirmButton message={`Obrisati salu ${r.name}?`} className="text-[13px] font-bold text-coral-dark hover:underline">Obriši</ConfirmButton>
                   </form>
                 </li>
               ))}
@@ -117,6 +121,52 @@ export default async function Settings({ searchParams }: { searchParams: Promise
             </form>
           </Card>
         </div>
+      </div>
+
+      <div id="automatika" className="mt-6 grid scroll-mt-24 gap-6 xl:grid-cols-2">
+        <Card title="Naplata i popusti">
+          <form action={updateAutomation} className="flex flex-col gap-4">
+            {process.env.CRON_SECRET ? (
+              <>
+                <label className="flex items-start gap-3">
+                  <input type="checkbox" name="auto_charges" defaultChecked={org.auto_charges} className="mt-1 h-5 w-5 accent-[#5B2A86]" />
+                  <span className="text-[14px] font-semibold text-ink-2"><b className="text-ink">Sama pravi mesečna zaduženja</b>. Svakog meseca, jednom, svim učenicima u grupama sa mesečnom članarinom.</span>
+                </label>
+                <Field label="Dan u mesecu za zaduženja" name="auto_charge_day" type="number" min={1} max={28} defaultValue={org.auto_charge_day} />
+              </>
+            ) : (
+              <p className="text-[14px] font-semibold text-ink-2">Mesečna zaduženja praviš dugmetom na stranici Uplate.</p>
+            )}
+            {emailEnabled() ? (
+              <>
+                <label className="flex items-start gap-3">
+                  <input type="checkbox" name="auto_reminders" defaultChecked={org.auto_reminders} className="mt-1 h-5 w-5 accent-[#5B2A86]" />
+                  <span className="text-[14px] font-semibold text-ink-2"><b className="text-ink">Sama šalje podsetnike na email roditelja</b>. Pre roka i 3 dana posle roka, samo za neplaćeno. WhatsApp poruke šalješ na stranici „Ko duguje”.</span>
+                </label>
+                <Field label="Koliko dana pre roka" name="reminder_days_before" type="number" min={0} max={14} defaultValue={org.reminder_days_before} />
+              </>
+            ) : (
+              <p className="text-[14px] font-semibold text-ink-2">Podsetnike šalješ na WhatsApp, na stranici „Ko duguje”.</p>
+            )}
+            <Field label="Popust za braću i sestre (%)" name="sibling_discount_pct" type="number" min={0} max={100} step="1" defaultValue={org.sibling_discount_pct} hint="Prvo upisano dete u porodici plaća punu cenu. Porodice se povezuju na kartici učenika." />
+            <div><button className="btn">Sačuvaj</button></div>
+          </form>
+        </Card>
+        <Card title="Podaci i privatnost">
+          <p className="text-[14px] font-semibold text-ink-2">Škola je rukovalac podacima učenika, a Klasiko obrađivač. Možeš u svakom trenutku da preuzmeš sve podatke škole ili podatke jednog učenika (na njegovoj kartici).</p>
+          <a className="btn btn-soft mt-3" href="/podesavanja/izvoz">Preuzmi sve podatke škole (JSON)</a>
+          <p className="mt-3 text-[13px] font-semibold text-mut">Za Excel izvoz učenika i uplata otvori Izveštaje. Pregled radnji ispod beleži brisanja, promene tima i ulaske podrške Klasika u tvoju školu.</p>
+          {(log ?? []).length > 0 && (
+            <ul className="mt-3 flex flex-col divide-y divide-line">
+              {(log ?? []).map((l) => (
+                <li key={l.id} className="py-2 text-[13px]">
+                  <div className="font-bold text-ink">{AUDIT_LABEL[l.action] ?? l.action}{l.target ? `: ${l.target}` : ''}</div>
+                  <div className="font-semibold text-mut">{dateSr(l.at.slice(0, 10))} · {l.actor_email ?? 'sistem'}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
 
       <div id="tim" className="mt-6 grid gap-6 xl:grid-cols-[1fr_400px]">
@@ -138,7 +188,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
                     <form action={toggleTeamMember}>
                       <input type="hidden" name="user_id" value={u.id} />
                       <input type="hidden" name="active" value={u.active ? '0' : '1'} />
-                      <button className={`btn btn-sm ${u.active ? 'btn-danger' : 'btn-soft'}`}>{u.active ? 'Deaktiviraj' : 'Aktiviraj'}</button>
+                      <ConfirmButton message={u.active ? `Deaktivirati nalog za ${u.full_name || u.email}?` : `Aktivirati nalog za ${u.full_name || u.email}?`} className={`btn btn-sm ${u.active ? 'btn-danger' : 'btn-soft'}`}>{u.active ? 'Deaktiviraj' : 'Aktiviraj'}</ConfirmButton>
                     </form>
                   </div>
                 )}

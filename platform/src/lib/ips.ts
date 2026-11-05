@@ -34,6 +34,11 @@ export function ipsPayload(opts: { account: string; payee: string; amount: numbe
   return parts.join('|');
 }
 
+// Poziv na broj za ukupan dug porodice ili učenika: broj učenika i nule umesto meseca. Iznos se raspoređuje na sva otvorena zaduženja.
+export function familyReference(refNo: number): string {
+  return `${refNo}-000000`;
+}
+
 // Poziv na broj za članarinu: broj učenika i mesec, npr. 1042-202611. Po njemu se uplata uparuje sa izvoda.
 export function studentReference(refNo: number, period: string): string {
   return `${refNo}-${period.replace('-', '')}`;

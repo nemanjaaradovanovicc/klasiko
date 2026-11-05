@@ -1,0 +1,58 @@
+# Klasiko aplikacija
+
+Next.js 16, React 19, Supabase (Postgres, Auth, RLS), Vercel.
+
+## Objava izmena
+
+1. U Supabase SQL Editoru pokreni `supabase/migrations/004_dorada.sql`. Migracija može bezbedno više puta. Prvo je pokreni, pa tek onda objavi kod.
+2. Opciono, u Vercelu dodaj `CRON_SECRET` (dugačak slučajan niz) ako želiš automatska mesečna zaduženja. Bez njega se opcija ne prikazuje, a zaduženja se prave dugmetom na stranici Uplate.
+3. Objavi kod. Dnevni posao je u `vercel.json` (svako jutro u 7 ili 8 po Beogradu).
+
+Migracija sadrži i jednu izmenu starih podataka: časovi upisani na vlasnika ili admina prebacuju se na predavača grupe, jer je ranije svaki čas išao na onoga ko je upisao prisustvo. Ako je vlasnik stvarno držao neki čas, izmeni predavača pri upisu prisustva.
+
+## Rad bez mejla
+
+Aplikacija radi bez naloga za slanje mejlova. Dok `RESEND_API_KEY` i `EMAIL_FROM` nisu upisani u Vercel:
+
+- nova lozinka ide kao i do sada: predavaču je resetuje vlasnik, a vlasniku admin, preko WhatsApp-a;
+- podsetnici se šalju na WhatsApp sa stranice „Ko duguje”, a obaveštenja se vide na linku za roditelje;
+- opcije za mejl se ne prikazuju, a novu registraciju vidiš u Admin > Dnevnik.
+
+Kad kasnije otvoriš Resend nalog i potvrdiš domen, upiši ove dve promenljive i ponovo objavi. Tada se pojavljuju reset lozinke mejlom, automatski podsetnici i slanje obaveštenja mejlom. Pre toga dopuni spisak servisa u politici privatnosti i ugovoru o obradi podataka.
+
+## Dvostepena prijava za admina
+
+Isključena je. Prijava ide samo emailom i lozinkom. Ako je kasnije poželiš, u Supabase-u uključi TOTP (Authentication > Multi-Factor), u Vercel dodaj `SUPERADMIN_MFA=on` i ponovo objavi. Admin tada pri prijavi podešava i unosi kod sa telefona.
+
+## Testovi
+
+```bash
+npm install
+npm test            # logika, obračun i sve migracije sa RLS-om na pravom Postgresu (PGlite), bez naloga i interneta
+npm run typecheck
+```
+
+Prolaz kroz celu aplikaciju, bez Dockera i bez diranja produkcije:
+
+```bash
+npm run local-db    # u prvom terminalu: lokalna baza i Auth, piše .env.test
+
+# u drugom terminalu
+set -a; . ./.env.test; set +a
+npm run build
+node --env-file=.env.test node_modules/next/dist/bin/next start -p 3100
+
+# u trećem terminalu
+npm run smoke -- http://localhost:3100
+npm run e2e -- http://localhost:3100
+```
+
+`scripts/local-supabase.mjs` je zamena za Supabase REST i Auth za pozive koje ova aplikacija koristi, sa pravim Postgresom i RLS-om. Nije pravi Supabase, pa veće izmene proveri i na testnom Supabase projektu. `smoke` i `e2e` odbijaju da rade bez `SMOKE_TEST_OK=1`, koji stoji samo u `.env.test`. Nikad ih ne pokreći na produkciji.
+
+## Šta ostaje ručno
+
+- **Privatnost:** popuni `[DATUM]`, `[NAZIV...]`, `[ADRESA]`, `[PIB]`, `[MB]` u `../tools/privatnost.py` i pokreni `python3 tools/build.py`.
+- **Ugovor sa školama:** `../docs/ugovor-o-obradi-podataka.md` je šablon. Neka ga pregleda pravnik.
+- **Naplata pretplate:** uplate idu na račun iz `platform_settings` uz napomenu „nije faktura”. Oblik poslovanja i izdavanje računa proveri sa knjigovođom.
+- **WhatsApp i Viber:** poruke se šalju ručno, jedna po klik, iz stranice „Ko duguje”. Potpuno automatsko slanje traži WhatsApp Business API ili Viber Business nalog.
+- **Škole za brisanje:** prikazane su u Admin > Dnevnik. Brisanje potvrđuje admin, ništa se ne briše samo.

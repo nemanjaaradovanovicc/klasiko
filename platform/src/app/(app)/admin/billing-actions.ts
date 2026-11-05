@@ -8,6 +8,7 @@ import { extendPaidUntil, planPrice, planLabel, defaultDue, needsBilling, nextPe
 import { normalizeAccount } from '@/lib/ips';
 import { todayISO } from '@/lib/format';
 import type { Billing, Organization, Plan, PlatformSettings } from '@/lib/types';
+import { audit } from '@/lib/audit';
 
 function s(fd: FormData, k: string): string | null {
   const v = String(fd.get(k) ?? '').trim();
@@ -105,43 +106,68 @@ export async function cancelInvoice(fd: FormData) {
 
 // Evidentira uplatu pretplate i produžava pristup školi.
 export async function recordSubscriptionPayment(fd: FormData) {
-  await requireSuper();
+  const ctx = await requireSuper();
   const orgId = String(fd.get('org_id'));
   const back = s(fd, 'back') ?? `/admin/skole/${orgId}`;
   const db = createAdminClient();
   const { data: org } = await db.from('organizations').select('*').eq('id', orgId).single<Organization>();
   if (!org) redirect(back);
+  const fail = (m: string) => redirect(`${back}${back.includes('?') ? '&' : '?'}err=` + encodeURIComponent(m));
+  const invoiceId = s(fd, 'invoice_id');
+  // Ista instrukcija se ne plaća dvaput, a dvostruki klik ne sme dvaput da produži pretplatu.
+  if (invoiceId) {
+    const { data: inv } = await db.from('invoices').select('status').eq('id', invoiceId).eq('org_id', orgId).maybeSingle();
+    if (!inv) fail('Instrukcija nije pronađena.');
+    if (inv?.status === 'paid') fail('Ova instrukcija je već plaćena.');
+  }
   const plan = (s(fd, 'plan') as Plan) ?? org.plan;
   const billing = (s(fd, 'billing') as Billing) ?? org.billing;
   const amount = money(s(fd, 'amount')) ?? planPrice(plan, billing);
   const extend = s(fd, 'extend') ?? (billing === 'yearly' ? 'year' : billing === 'lifetime' ? 'lifetime' : 'month');
   const before = org.paid_until;
   const after = extend === 'month' || extend === 'year' ? extendPaidUntil(before, extend) : before;
-  const invoiceId = s(fd, 'invoice_id');
   const paidAt = s(fd, 'paid_at') ?? todayISO();
+  const { data: recent } = await db.from('subscription_payments').select('id').eq('org_id', orgId).eq('amount', amount).eq('paid_at', paidAt).gte('created_at', new Date(Date.now() - 2 * 60000).toISOString()).limit(1);
+  if (recent?.length) fail('Ista uplata je upisana pre manje od 2 minuta. Proveri spisak uplata.');
 
   const { error } = await db.from('subscription_payments').insert({
     org_id: orgId, invoice_id: invoiceId, amount, paid_at: paidAt,
     method: ['bank', 'cash', 'card', 'other'].includes(String(fd.get('method'))) ? String(fd.get('method')) : 'bank',
     plan, billing, paid_until_before: before, paid_until_after: extend === 'lifetime' ? null : after, note: s(fd, 'note'),
   });
-  if (error) redirect(`${back}${back.includes('?') ? '&' : '?'}err=` + encodeURIComponent(error.message));
-  await db.from('organizations').update({
+  if (error) fail(error.message);
+  const { error: oErr } = await db.from('organizations').update({
     status: 'active', plan, billing: extend === 'lifetime' ? 'lifetime' : billing,
     paid_until: extend === 'lifetime' ? null : after,
   }).eq('id', orgId);
+  if (oErr) fail('Uplata je upisana, ali pristup nije produžen: ' + oErr.message);
   if (invoiceId) await db.from('invoices').update({ status: 'paid', paid_at: paidAt }).eq('id', invoiceId);
+  await audit({ userId: ctx.userId, email: ctx.email }, 'admin.subscription_payment', { orgId, details: { amount, before, after } });
   revalidatePath('/admin', 'layout');
   redirect(`${back}${back.includes('?') ? '&' : '?'}ok=uplata`);
 }
 
+// Brisanje uplate vraća „plaćeno do” na staro (ako je ovo poslednja uplata) i ponovo otvara instrukciju.
 export async function deleteSubscriptionPayment(fd: FormData) {
-  await requireSuper();
+  const ctx = await requireSuper();
   const db = createAdminClient();
   const orgId = String(fd.get('org_id'));
-  await db.from('subscription_payments').delete().eq('id', String(fd.get('id')));
+  const id = String(fd.get('id'));
+  const { data: pay } = await db.from('subscription_payments').select('*').eq('id', id).eq('org_id', orgId).maybeSingle();
+  if (!pay) redirect(`/admin/skole/${orgId}?err=` + encodeURIComponent('Uplata nije pronađena.'));
+  const { data: latest } = await db.from('subscription_payments').select('id').eq('org_id', orgId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  const { error } = await db.from('subscription_payments').delete().eq('id', id);
+  if (error) redirect(`/admin/skole/${orgId}?err=` + encodeURIComponent(error.message));
+  let note = 'ok=1';
+  if (latest?.id === id) {
+    await db.from('organizations').update({ paid_until: pay.paid_until_before }).eq('id', orgId);
+  } else {
+    note = 'err=' + encodeURIComponent('Uplata je obrisana, ali nije poslednja, pa „plaćeno do” proveri i izmeni ručno.');
+  }
+  if (pay.invoice_id) await db.from('invoices').update({ status: 'issued', paid_at: null }).eq('id', pay.invoice_id);
+  await audit({ userId: ctx.userId, email: ctx.email }, 'admin.subscription_payment_deleted', { orgId, details: { amount: pay.amount, restored: latest?.id === id ? pay.paid_until_before : null } });
   revalidatePath('/admin', 'layout');
-  redirect(`/admin/skole/${orgId}?ok=1`);
+  redirect(`/admin/skole/${orgId}?${note}`);
 }
 
 function buyerOf(org: Organization) {

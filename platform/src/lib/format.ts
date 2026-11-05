@@ -49,7 +49,38 @@ export function currentPeriod(): string {
 
 export function periodLabel(p: string): string {
   const [y, m] = p.split('-').map(Number);
-  return `${MONTHS[m - 1].charAt(0).toUpperCase() + MONTHS[m - 1].slice(1)} ${y}.`;
+  const name = MONTHS[m - 1];
+  if (!name) return p;
+  return `${name.charAt(0).toUpperCase() + name.slice(1)} ${y}.`;
+}
+
+export function isPeriod(v: unknown): v is string {
+  return typeof v === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(v);
+}
+
+// Mesec iz adrese stranice: neispravan (npr. 2026-13) postaje tekući mesec.
+export function parsePeriod(v: string | null | undefined): string {
+  return isPeriod(v) ? v : currentPeriod();
+}
+
+export function isISODate(v: unknown): v is string {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(v + 'T12:00:00Z');
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+}
+
+// Datum iz adrese stranice: neispravan postaje današnji dan.
+export function parseDate(v: string | null | undefined): string {
+  return isISODate(v) ? v : todayISO();
+}
+
+// Jedno pravilo za procenat prisustva svuda u aplikaciji: opravdani izostanci se ne računaju.
+export function attendanceStats(rows: { status: string }[]): { present: number; absent: number; excused: number; counted: number; pct: number | null } {
+  const present = rows.filter((r) => r.status === 'present').length;
+  const absent = rows.filter((r) => r.status === 'absent').length;
+  const excused = rows.filter((r) => r.status === 'excused').length;
+  const counted = present + absent;
+  return { present, absent, excused, counted, pct: counted ? Math.round((present / counted) * 100) : null };
 }
 
 export function shiftPeriod(p: string, delta: number): string {

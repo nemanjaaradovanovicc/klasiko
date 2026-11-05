@@ -7,6 +7,7 @@ import { requireSuper, ORG_COOKIE } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { addDays, todayISO } from '@/lib/format';
 import { createOrgUser, resetUserPassword, setActive, tempPassword, type Creds } from '@/lib/users';
+import { audit } from '@/lib/audit';
 
 
 function str(fd: FormData, k: string): string | null {
@@ -14,9 +15,12 @@ function str(fd: FormData, k: string): string | null {
   return v === '' ? null : v;
 }
 
+const who = (ctx: { userId: string; email: string }) => ({ userId: ctx.userId, email: ctx.email });
+
 export async function enterOrg(formData: FormData) {
-  await requireSuper();
+  const ctx = await requireSuper();
   const id = String(formData.get('org_id') || '');
+  await audit(who(ctx), 'admin.enter_org', { orgId: id });
   (await cookies()).set(ORG_COOKIE, id, { httpOnly: true, sameSite: 'lax', secure: true, path: '/', maxAge: 60 * 60 * 8 });
   redirect('/');
 }
@@ -29,13 +33,13 @@ export async function exitOrg() {
 
 // Nova škola + nalog vlasnika sa privremenom lozinkom.
 export async function createOrg(_: Creds | undefined, fd: FormData): Promise<Creds> {
-  await requireSuper();
+  const ctx = await requireSuper();
   const name = str(fd, 'name');
   const ownerName = str(fd, 'owner_name');
   const email = str(fd, 'owner_email')?.toLowerCase();
   if (!name || !ownerName || !email) return { error: 'Popuni naziv škole, ime i email vlasnika.' };
   const db = createAdminClient();
-  const trialDays = Number(fd.get('trial_days') || 14);
+  const trialDays = Math.max(0, Number(fd.get('trial_days') || 14) || 14);
 
   const { data: org, error: orgErr } = await db
     .from('organizations')
@@ -59,7 +63,13 @@ export async function createOrg(_: Creds | undefined, fd: FormData): Promise<Cre
     await db.from('organizations').delete().eq('id', org.id);
     return { error: userErr?.message?.includes('already') ? 'Korisnik sa tim emailom već postoji.' : 'Nalog nije napravljen: ' + (userErr?.message ?? '') };
   }
-  await db.from('profiles').upsert({ id: created.user.id, org_id: org.id, role: 'owner', full_name: ownerName, email, phone: str(fd, 'phone'), must_change_password: true });
+  const { error: profErr } = await db.from('profiles').upsert({ id: created.user.id, org_id: org.id, role: 'owner', full_name: ownerName, email, phone: str(fd, 'phone'), must_change_password: true });
+  if (profErr) {
+    await db.auth.admin.deleteUser(created.user.id);
+    await db.from('organizations').delete().eq('id', org.id);
+    return { error: 'Profil vlasnika nije sačuvan: ' + profErr.message };
+  }
+  await audit(who(ctx), 'admin.create_org', { orgId: org.id, target: name });
 
   const demoId = str(fd, 'demo_id');
   if (demoId) await db.from('demo_requests').update({ status: 'trial', org_id: org.id }).eq('id', demoId);
@@ -69,8 +79,9 @@ export async function createOrg(_: Creds | undefined, fd: FormData): Promise<Cre
 }
 
 export async function updateOrg(fd: FormData) {
-  await requireSuper();
+  const ctx = await requireSuper();
   const id = String(fd.get('id'));
+  await audit(who(ctx), 'admin.update_org', { orgId: id, details: { plan: str(fd, 'plan'), status: str(fd, 'status'), paid_until: str(fd, 'paid_until') } });
   const db = createAdminClient();
   const { error } = await db
     .from('organizations')
@@ -95,10 +106,12 @@ export async function updateOrg(fd: FormData) {
 }
 
 export async function deleteOrg(fd: FormData) {
-  await requireSuper();
+  const ctx = await requireSuper();
   const id = String(fd.get('id'));
   if (String(fd.get('confirm') || '') !== 'OBRIŠI') redirect(`/admin/skole/${id}?err=${encodeURIComponent('Za brisanje upiši OBRIŠI.')}`);
   const db = createAdminClient();
+  const { data: gone } = await db.from('organizations').select('name').eq('id', id).maybeSingle();
+  await audit(who(ctx), 'admin.delete_org', { orgId: id, target: gone?.name ?? id });
   const { data: users } = await db.from('profiles').select('id').eq('org_id', id);
   for (const u of users ?? []) await db.auth.admin.deleteUser(u.id);
   await db.from('organizations').delete().eq('id', id);
@@ -120,12 +133,14 @@ export async function adminAddUser(_: Creds | undefined, fd: FormData): Promise<
 }
 
 export async function resetPassword(_: Creds | undefined, fd: FormData): Promise<Creds> {
-  await requireSuper();
+  const ctx = await requireSuper();
+  await audit(who(ctx), 'admin.reset_password', { target: String(fd.get('user_id')) });
   return resetUserPassword(String(fd.get('user_id')));
 }
 
 export async function setUserActive(fd: FormData) {
-  await requireSuper();
+  const ctx = await requireSuper();
+  await audit(who(ctx), 'admin.set_user_active', { target: String(fd.get('user_id')), details: { active: fd.get('active') === '1' } });
   await setActive(String(fd.get('user_id')), fd.get('active') === '1');
   revalidatePath('/admin', 'layout');
 }

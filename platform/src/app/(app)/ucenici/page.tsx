@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Empty, Badge, Flash, Table } from '@/components/ui';
 import { fullName, dateSr } from '@/lib/format';
 import { PLANS } from '@/lib/types';
+import { fetchAll } from '@/lib/supabase/fetch-all';
+import { matchesSearch } from '@/lib/match';
 
 export const metadata = { title: 'Učenici' };
 
@@ -12,24 +14,22 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const supabase = await createClient();
   const showInactive = sp.status === 'ispisani';
-  let query = supabase
-    .from('students')
-    .select('id, first_name, last_name, parent_name, parent_phone, phone, joined_at, active, group_members(group_id, groups(name, color))')
-    .eq('org_id', ctx.org.id)
-    .eq('active', !showInactive)
-    .order('last_name')
-    .order('first_name')
-    .limit(1000);
-  if (sp.q) {
-    const q = sp.q.replace(/[%,()]/g, ' ').trim();
-    query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,parent_name.ilike.%${q}%,phone.ilike.%${q}%,parent_phone.ilike.%${q}%`);
-  }
-  const [{ data: students }, { data: groups }] = await Promise.all([
-    query,
+  type Row = { id: string; first_name: string; last_name: string; parent_name: string | null; parent_phone: string | null; phone: string | null; joined_at: string; group_members: { group_id: string; groups: { name: string; color: string } | null }[] };
+  const [students, { data: groups }] = await Promise.all([
+    fetchAll<Row>((a, b) => supabase
+      .from('students')
+      .select('id, first_name, last_name, parent_name, parent_phone, phone, joined_at, active, group_members(group_id, groups(name, color))')
+      .eq('org_id', ctx.org.id)
+      .eq('active', !showInactive)
+      .order('last_name')
+      .order('first_name')
+      .order('id')
+      .range(a, b)),
     supabase.from('groups').select('id,name').eq('org_id', ctx.org.id).eq('active', true).order('name'),
   ]);
-  type Row = { id: string; first_name: string; last_name: string; parent_name: string | null; parent_phone: string | null; phone: string | null; joined_at: string; group_members: { group_id: string; groups: { name: string; color: string } | null }[] };
-  let list = (students ?? []) as unknown as Row[];
+  let list = students;
+  // Pretraga bez obzira na kvačice: „Petrovic” nalazi „Petrović”.
+  if (sp.q?.trim()) list = list.filter((s) => matchesSearch(`${s.first_name} ${s.last_name} ${s.parent_name ?? ''} ${s.phone ?? ''} ${s.parent_phone ?? ''}`, sp.q!));
   if (sp.grupa) list = list.filter((s) => s.group_members.some((m) => m.group_id === sp.grupa));
   const limit = PLANS[ctx.org.plan].students;
 

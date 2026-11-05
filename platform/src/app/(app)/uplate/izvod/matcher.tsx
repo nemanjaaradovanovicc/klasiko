@@ -4,49 +4,9 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { readSheet } from 'read-excel-file/browser';
 import { matchStatement, applyMatches, type StatementRow, type MatchResult, type OpenCharge } from '../actions';
+import { STATEMENT_FIELDS as FIELDS, mapStatementColumns, parseCsv, toAmount, toDate, type Cell, type StatementKey as Key } from '@/lib/statement';
+import type { Allocation } from '@/lib/match';
 
-type Cell = string | number | boolean | Date | null;
-const FIELDS = [
-  { key: 'date', label: 'Datum', re: /datum|date|valut/i },
-  { key: 'amount', label: 'Iznos uplate', re: /potra[zž]|uplat|priliv|odobren|credit|iznos/i },
-  { key: 'payer', label: 'Uplatilac', re: /nalogodav|uplatil|platil|naziv|partner|ime/i },
-  { key: 'purpose', label: 'Svrha', re: /svrh|opis|descr|namen/i },
-  { key: 'reference', label: 'Poziv na broj', re: /poziv|refer|model/i },
-] as const;
-type Key = (typeof FIELDS)[number]['key'];
-
-function parseCsv(text: string): string[][] {
-  const first = text.split(/\r?\n/).find((l) => l.trim()) ?? '';
-  const delim = [';', '\t', ','].sort((a, b) => first.split(b).length - first.split(a).length)[0];
-  const rows: string[][] = [];
-  let row: string[] = [], cur = '', q = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
-    else if (ch === '"') q = true;
-    else if (ch === delim) { row.push(cur); cur = ''; }
-    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; }
-    else cur += ch;
-  }
-  if (cur || row.length) { row.push(cur); rows.push(row); }
-  return rows;
-}
-
-function toAmount(v: Cell): number {
-  if (typeof v === 'number') return v;
-  const s = String(v ?? '').replace(/[^\d,.-]/g, '');
-  if (!s) return 0;
-  const n = s.includes(',') && s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
-  return Number(n) || 0;
-}
-function toDate(v: Cell): string | null {
-  if (v instanceof Date) return v.toISOString().slice(0, 10);
-  const s = String(v ?? '').trim();
-  let m = s.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
-  if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
-  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? `${m[1]}-${m[2]}-${m[3]}` : null;
-}
 const rsd = (n: number) => new Intl.NumberFormat('sr-Latn-RS', { maximumFractionDigits: 0 }).format(n) + ' RSD';
 
 export function Matcher() {
@@ -55,7 +15,8 @@ export function Matcher() {
   const [map, setMap] = useState<Partial<Record<Key, number>>>({});
   const [results, setResults] = useState<MatchResult[] | null>(null);
   const [open, setOpen] = useState<OpenCharge[]>([]);
-  const [pick, setPick] = useState<Record<number, string>>({});
+  const [allocs, setAllocs] = useState<Record<number, Allocation[]>>({});
+  const [info, setInfo] = useState<{ already: number; truncated: number }>({ already: 0, truncated: 0 });
   const [checked, setChecked] = useState<Record<number, boolean>>({});
   const [msg, setMsg] = useState<{ ok?: string; error?: string } | null>(null);
   const [pending, start] = useTransition();
@@ -75,12 +36,7 @@ export function Matcher() {
       const hIdx = nonEmpty.findIndex((r) => r.some((c) => /datum|iznos|naziv|svrh|uplat/i.test(String(c ?? ''))));
       if (hIdx < 0) return setMsg({ error: 'Nisam pronašao zaglavlje tabele (kolone kao Datum, Iznos, Naziv, Svrha).' });
       const h = nonEmpty[hIdx].map((c) => String(c ?? '').trim());
-      const m: Partial<Record<Key, number>> = {};
-      for (const fl of FIELDS) {
-        const i = h.findIndex((x, idx) => fl.re.test(x) && !Object.values(m).includes(idx));
-        if (i >= 0) m[fl.key] = i;
-      }
-      setHeader(h); setRows(nonEmpty.slice(hIdx + 1)); setMap(m);
+      setHeader(h); setRows(nonEmpty.slice(hIdx + 1)); setMap(mapStatementColumns(h));
     } catch {
       setMsg({ error: 'Fajl nije moguće pročitati. Preuzmi izvod kao Excel (.xlsx) ili CSV.' });
     }
@@ -92,21 +48,37 @@ export function Matcher() {
   }
 
   const run = () => start(async () => {
-    const res = await matchStatement(build());
-    setResults(res.results); setOpen(res.open);
-    const p: Record<number, string> = {}, c: Record<number, boolean> = {};
-    res.results.forEach((r, i) => { if (r.chargeId) { p[i] = r.chargeId; c[i] = r.score >= 55; } });
-    setPick(p); setChecked(c);
+    try {
+      const res = await matchStatement(build());
+      setResults(res.results); setOpen(res.open);
+      setInfo({ already: res.alreadyImported, truncated: res.truncated });
+      const p: Record<number, Allocation[]> = {}, c: Record<number, boolean> = {};
+      res.results.forEach((r, i) => { p[i] = r.allocations; if (r.chargeId) c[i] = r.score >= 55; });
+      setAllocs(p); setChecked(c);
+    } catch {
+      setMsg({ error: 'Nema veze sa serverom. Pokušaj ponovo.' });
+    }
   });
 
   const apply = () => start(async () => {
-    const items = (results ?? []).map((r, i) => ({ r, i })).filter(({ i }) => checked[i] && pick[i]).map(({ r, i }) => ({ chargeId: pick[i], amount: r.row.amount, date: r.row.date, note: r.row.payer || r.row.purpose }));
-    const res = await applyMatches(items);
-    setMsg(res.ok ? { ok: `Evidentirano ${res.ok} uplata.` } : { error: res.error });
-    if (res.ok) setResults(null);
+    const items = (results ?? []).map((r, i) => ({ r, i })).filter(({ i }) => checked[i] && (allocs[i] ?? []).some((a) => a.chargeId && a.amount > 0)).map(({ r, i }) => ({
+      hash: r.row.hash!, total: r.row.amount, date: r.row.date, note: r.row.payer || r.row.purpose, allocations: allocs[i].filter((a) => a.chargeId && a.amount > 0),
+    }));
+    try {
+      const res = await applyMatches(items);
+      setMsg(res.ok ? { ok: `Evidentirano ${res.ok} uplata.${res.advance ? ` Kao avans upisano ${rsd(res.advance)}.` : ''}${res.skipped ? ` Preskočeno jer su već upisane: ${res.skipped}.` : ''}` } : { error: res.error });
+      if (res.ok) { setResults(null); setRows([]); }
+    } catch {
+      setMsg({ error: 'Nema veze sa serverom. Ništa nije upisano, pokušaj ponovo.' });
+    }
   });
 
-  const selected = Object.entries(checked).filter(([i, v]) => v && pick[Number(i)]).length;
+  const setAlloc = (i: number, idx: number, patch: Partial<Allocation>) => setAllocs((all) => {
+    const list = [...(all[i] ?? [])];
+    list[idx] = { ...(list[idx] ?? { chargeId: '', amount: 0 }), ...patch };
+    return { ...all, [i]: list };
+  });
+  const selected = Object.entries(checked).filter(([i, v]) => v && (allocs[Number(i)] ?? []).some((a) => a.chargeId)).length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -139,20 +111,52 @@ export function Matcher() {
       {results && (
         <div className="flex flex-col gap-2">
           <div className="text-[14px] font-bold text-mut">Prepoznato {results.filter((r) => r.chargeId).length} od {results.length}. Proveri predloge, označi tačne i potvrdi.</div>
+          {info.already > 0 && <div className="rounded-xl bg-ok-soft px-4 py-3 text-sm font-bold text-ok">Preskočeno {info.already} redova koji su već uvezeni ranije, pa se uplate neće duplirati.</div>}
+          {info.truncated > 0 && <div className="rounded-xl bg-coral-soft px-4 py-3 text-sm font-bold text-coral-dark">Obrađeno je prvih 1000 uplata. Preostalih {info.truncated} uvezi u sledećem koraku istim fajlom.</div>}
           {results.map((r, i) => (
             <div key={i} className={`card p-3.5 ${checked[i] ? 'ring-2 ring-ok/40' : ''}`}>
               <div className="flex items-start gap-3">
-                <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-[#1F7A4D]" checked={!!checked[i]} disabled={!pick[i]} onChange={(e) => setChecked((c) => ({ ...c, [i]: e.target.checked }))} aria-label="Potvrdi uplatu" />
+                <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-[#1F7A4D]" checked={!!checked[i]} disabled={!(allocs[i] ?? []).some((a) => a.chargeId)} onChange={(e) => setChecked((c) => ({ ...c, [i]: e.target.checked }))} aria-label="Potvrdi uplatu" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <span className="min-w-0 truncate font-extrabold text-ink">{r.row.payer || 'Nepoznat uplatilac'}</span>
                     <span className="shrink-0 font-extrabold tabular-nums text-ok">{rsd(r.row.amount)}</span>
                   </div>
                   <div className="truncate text-[12px] font-semibold text-mut">{[r.row.date, r.row.purpose, r.row.reference].filter(Boolean).join(' · ')}</div>
-                  <select className="input mt-2 h-10" value={pick[i] ?? ''} onChange={(e) => { const v = e.target.value; setPick((p) => ({ ...p, [i]: v })); setChecked((c) => ({ ...c, [i]: !!v })); }}>
-                    <option value="">Ne uparuj</option>
-                    {open.map((o) => <option key={o.id} value={o.id}>{o.student} · {o.period} · {rsd(o.remaining)}</option>)}
-                  </select>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {(allocs[i]?.length ? allocs[i] : [{ chargeId: '', amount: r.row.amount }]).map((a, idx) => (
+                      <div key={idx} className="flex flex-wrap items-center gap-2">
+                        <select className="input h-10 min-w-0 flex-1 basis-56" value={a.chargeId} onChange={(e) => {
+                          const v = e.target.value;
+                          const rem = open.find((o) => o.id === v)?.remaining ?? 0;
+                          setAllocs((all) => {
+                            const list = all[i]?.length ? [...all[i]] : [{ chargeId: '', amount: r.row.amount }];
+                            const others = list.reduce((x, y, j) => (j === idx ? x : x + Number(y.amount || 0)), 0);
+                            const free = Math.max(0, r.row.amount - others);
+                            list[idx] = { chargeId: v, amount: v ? Math.min(free, rem) || free : free };
+                            return { ...all, [i]: list };
+                          });
+                          setChecked((c) => ({ ...c, [i]: !!v }));
+                        }}>
+                          <option value="">Ne uparuj</option>
+                          {open.map((o) => <option key={o.id} value={o.id}>{o.student} · {o.period}{o.description ? ` · ${o.description}` : ''} · {rsd(o.remaining)}</option>)}
+                        </select>
+                        <input type="number" min={0} step="0.01" className="input h-10 w-28" aria-label="Iznos za ovo zaduženje" value={a.amount} onChange={(e) => setAlloc(i, idx, { amount: Number(e.target.value) })} />
+                        {idx > 0 && <button type="button" className="text-[13px] font-bold text-coral-dark" onClick={() => setAllocs((all) => ({ ...all, [i]: all[i].filter((_, j) => j !== idx) }))}>ukloni</button>}
+                      </div>
+                    ))}
+                    {(() => {
+                      const used = (allocs[i] ?? []).filter((a) => a.chargeId).reduce((x, a) => x + Number(a.amount || 0), 0);
+                      const rest = Math.round((r.row.amount - used) * 100) / 100;
+                      return (
+                        <div className="flex flex-wrap items-center gap-3 text-[12px] font-bold">
+                          <button type="button" className="text-brand hover:underline" onClick={() => setAllocs((all) => ({ ...all, [i]: [...(all[i] ?? []), { chargeId: '', amount: Math.max(0, rest) }] }))}>+ Podeli na još jedno zaduženje</button>
+                          {used > 0 && rest > 0 && <span className="text-coral-dark">Ostatak {rsd(rest)} ide kao avans učeniku.</span>}
+                          {rest < 0 && <span className="text-coral-dark">Raspoređeno je više od uplate za {rsd(-rest)}. Višak se ne upisuje.</span>}
+                        </div>
+                      );
+                    })()}
+                  </div>
                   <div className={`mt-1 text-[12px] font-bold ${r.chargeId ? (r.score >= 70 ? 'text-ok' : 'text-coral-dark') : 'text-mut'}`}>{r.chargeId ? `Predlog: ${r.reason}${r.score >= 70 ? ' (sigurno)' : ' (proveri)'}` : r.reason}</div>
                 </div>
               </div>
