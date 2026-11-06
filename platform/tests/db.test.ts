@@ -148,13 +148,21 @@ describe('ograničenje pokušaja', () => {
   });
 });
 
+describe('samostalna registracija', () => {
+  it('vlasnik ne može sam da menja poreklo škole ni administrativne oznake', async () => {
+    await as(OWN_A, `update organizations set source = 'self', admin_seen_at = '2020-01-01', trial_reminder_key = 'x' where id = '${ORG_A}'`);
+    const { rows } = await db.query<{ source: string; admin_seen_at: string | null; trial_reminder_key: string | null }>(`select source, admin_seen_at, trial_reminder_key from organizations where id = '${ORG_A}'`);
+    expect(rows[0]).toEqual({ source: 'admin', admin_seen_at: null, trial_reminder_key: null });
+  });
+});
+
 describe('stari podaci', () => {
   it('migracija vraća časove na predavača grupe i briše upise na tuđu školu', async () => {
     await db.exec(`
       insert into sessions (org_id, group_id, date, start_time, teacher_id) values ('${ORG_A}', '${G_A}', '2026-02-01', '10:00', '${OWN_A}');
       insert into sessions (org_id, group_id, date, start_time, teacher_id) values ('${ORG_A}', '${G_A2}', '2026-02-02', '10:00', '${SUP}');
     `);
-    await db.exec(migrations[migrations.length - 1]);
+    await db.exec(migrations[4]); // 004_dorada
     const { rows } = await db.query<{ date: string; teacher_id: string | null }>(`select to_char(date, 'YYYY-MM-DD') as date, teacher_id from sessions where date in ('2026-02-01', '2026-02-02') order by date`);
     expect(rows).toEqual([{ date: '2026-02-01', teacher_id: TEA_A }, { date: '2026-02-02', teacher_id: null }]);
   });

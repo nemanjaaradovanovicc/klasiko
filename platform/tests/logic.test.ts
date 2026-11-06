@@ -8,6 +8,7 @@ import { packageBalance } from '@/lib/packages';
 import { familySuggestions } from '@/lib/families';
 import { slotConflicts } from '@/lib/groups';
 import { familyReference, ipsPayload, studentReference } from '@/lib/ips';
+import { trialReminderDue } from '@/lib/billing';
 
 const charges: MatchCharge[] = [
   { id: 'ana-10', period: '2026-10', remaining: 4000, first_name: 'Ana', last_name: 'Petrović', parent_name: 'Marija Petrović', ref_no: 1042 },
@@ -168,5 +169,27 @@ describe('IPS QR', () => {
   });
   it('poziv za ceo dug prepoznaje uparivanje', () => {
     expect(familyReference(1042)).toBe('1042-000000');
+  });
+});
+
+describe('podsetnik za probni period', () => {
+  const due = (trial_ends_at: string | null, trial_reminder_key: string | null = null, status: 'trial' | 'active' = 'trial') => trialReminderDue({ status, trial_ends_at, trial_reminder_key }, '2026-06-15');
+  it('javlja se 3 dana pre isteka i posle isteka', () => {
+    expect(due('2026-06-19')).toBeNull();
+    expect(due('2026-06-18')).toMatchObject({ kind: 'soon', days: 3, key: '2026-06-18:soon' });
+    expect(due('2026-06-15')).toMatchObject({ kind: 'soon', days: 0 });
+    expect(due('2026-06-14')).toMatchObject({ kind: 'ended', days: -1, key: '2026-06-14:ended' });
+    expect(due('2026-06-12')).toMatchObject({ kind: 'ended' });
+    expect(due('2026-06-11')).toBeNull();
+  });
+  it('isti podsetnik ide samo jednom, a produžen period ga dobija ponovo', () => {
+    expect(due('2026-06-16', '2026-06-16:soon')).toBeNull();
+    expect(due('2026-06-14', '2026-06-14:ended')).toBeNull();
+    expect(due('2026-06-14', '2026-06-14:soon')).toMatchObject({ kind: 'ended' });
+    expect(due('2026-06-17', '2026-06-16:ended')).toMatchObject({ kind: 'soon' });
+  });
+  it('samo za škole u probnom periodu', () => {
+    expect(due('2026-06-16', null, 'active')).toBeNull();
+    expect(due(null)).toBeNull();
   });
 });

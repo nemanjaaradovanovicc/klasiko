@@ -4,10 +4,11 @@ import { useActionState } from 'react';
 import { register } from './actions';
 import { KINDS } from '@/lib/types';
 
-export function RegisterForm() {
+export function RegisterForm({ plan }: { plan: string }) {
   const [state, action, pending] = useActionState(register, undefined);
   return (
     <form action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="plan" value={plan} />
       <label className="block"><span className="label">Naziv škole</span><input className="input" name="school" required autoFocus /></label>
       <label className="block"><span className="label">Vrsta</span>
         <select className="input" name="kind" defaultValue="skola_jezika">{Object.entries(KINDS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>

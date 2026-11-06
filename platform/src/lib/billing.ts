@@ -36,6 +36,17 @@ export function daysUntil(iso: string | null): number | null {
   return Math.round((new Date(iso + 'T12:00:00Z').getTime() - new Date(todayISO() + 'T12:00:00Z').getTime()) / 86400000);
 }
 
+// Koji podsetnik o probnom periodu treba poslati: 3 dana pre isteka i posle isteka, po jednom za svaki datum.
+// Ključ sadrži datum, pa produženi probni period ponovo dobija podsetnike. Davno istekli se ne javljaju.
+export function trialReminderDue(org: Pick<Organization, 'status' | 'trial_ends_at' | 'trial_reminder_key'>, today: string = todayISO()): { kind: 'soon' | 'ended'; key: string; days: number } | null {
+  if (org.status !== 'trial' || !org.trial_ends_at) return null;
+  const days = Math.round((new Date(org.trial_ends_at + 'T12:00:00Z').getTime() - new Date(today + 'T12:00:00Z').getTime()) / 86400000);
+  const soon = `${org.trial_ends_at}:soon`, ended = `${org.trial_ends_at}:ended`;
+  if (days >= 0 && days <= 3) return org.trial_reminder_key === soon || org.trial_reminder_key === ended ? null : { kind: 'soon', key: soon, days };
+  if (days < 0 && days >= -3) return org.trial_reminder_key === ended ? null : { kind: 'ended', key: ended, days };
+  return null;
+}
+
 // Kada školi ističe pristup (probni period ili plaćeno do); null = ne ističe.
 export function accessEnds(org: Organization): string | null {
   if (org.status === 'trial') return org.trial_ends_at;

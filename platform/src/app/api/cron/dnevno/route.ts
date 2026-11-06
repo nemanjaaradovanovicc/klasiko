@@ -7,7 +7,8 @@ import { createChargesForPeriod } from '@/lib/charges';
 import { emailEnabled, sendEmail } from '@/lib/email';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { pruneAttempts } from '@/lib/throttle';
-import { parentUrl } from '@/lib/parent';
+import { APP_URL, parentUrl } from '@/lib/parent';
+import { trialReminderDue } from '@/lib/billing';
 import type { Organization } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -52,8 +53,39 @@ export async function GET(request: NextRequest) {
       summary.errors.push(`${org.id}: ${e instanceof Error ? e.message : 'greška'}`);
     }
   }
+  let trialReminders = 0;
+  if (emailEnabled()) {
+    try {
+      trialReminders = await sendTrialReminders(db, today);
+    } catch (e) {
+      summary.errors.push(`probni period: ${e instanceof Error ? e.message : 'greška'}`);
+    }
+  }
   if (summary.errors.length) console.error('Cron greške', summary.errors);
-  return NextResponse.json(summary);
+  return NextResponse.json({ ...summary, trialReminders });
+}
+
+async function sendTrialReminders(db: ReturnType<typeof createAdminClient>, today: string): Promise<number> {
+  const { data: orgs } = await db.from('organizations').select('id, name, status, trial_ends_at, trial_reminder_key').eq('status', 'trial').gte('trial_ends_at', addDays(today, -3)).lte('trial_ends_at', addDays(today, 3));
+  let sent = 0;
+  for (const org of orgs ?? []) {
+    const due = trialReminderDue(org, today);
+    if (!due) continue;
+    const { data: owner } = await db.from('profiles').select('id, email').eq('org_id', org.id).eq('role', 'owner').eq('active', true).order('created_at').limit(1).maybeSingle();
+    if (!owner?.email) continue;
+    // Nepotvrđena adresa možda nije njihova, pa joj ne šaljemo ništa dalje.
+    const { data: auth } = await db.auth.admin.getUserById(owner.id);
+    if (!auth?.user?.email_confirmed_at) continue;
+    // Upis pre slanja: ponovljen dnevni posao ne šalje isti podsetnik dvaput.
+    await db.from('organizations').update({ trial_reminder_key: due.key }).eq('id', org.id);
+    const when = due.days === 0 ? 'danas' : `za ${due.days} ${due.days === 1 ? 'dan' : 'dana'}`;
+    const res = await sendEmail(due.kind === 'soon'
+      ? { to: owner.email, subject: `Probni period za „${org.name}” ističe ${when}`, text: `Dobar dan!\n\nProbni period za školu „${org.name}” ističe ${when}. Da bi nastavio/la bez prekida, aktiviraj pretplatu:\n\n${APP_URL}/podesavanja#pretplata\n\nAko ti treba pomoć ili više vremena, samo odgovori na ovaj mejl.\n\nKlasiko` }
+      : { to: owner.email, subject: `Probni period za „${org.name}” je istekao`, text: `Dobar dan!\n\nProbni period za školu „${org.name}” je istekao. Svi podaci su sačuvani. Kada aktiviraš pretplatu, nastavljaš tačno tamo gde si stao/la:\n\n${APP_URL}\n\nAko ti treba pomoć, samo odgovori na ovaj mejl.\n\nKlasiko` });
+    if (res.ok) sent++;
+    else console.error('Podsetnik o probnom periodu nije poslat', org.id, res.error);
+  }
+  return sent;
 }
 
 async function sendAutoReminders(db: ReturnType<typeof createAdminClient>, org: Organization, today: string): Promise<number> {
