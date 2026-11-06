@@ -32,6 +32,7 @@ Klasiko se obavezuje da:
 | --- | --- | --- |
 | Supabase | baza podataka i prijava | [region projekta] |
 | Vercel | hosting aplikacije | Dablin, Irska |
+| Resend | slanje mejlova iz aplikacije | Irska |
 
 ## 5. Mere zaštite
 Odvojeni podaci svake škole na nivou baze (Row Level Security), šifrovana veza (HTTPS), uloge sa ograničenim pravima, ograničenje pokušaja prijave, dnevnik važnih radnji i ulazaka podrške, koji Škola može da vidi u podešavanjima.

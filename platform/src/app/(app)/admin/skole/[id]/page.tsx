@@ -28,12 +28,14 @@ export default async function OrgDetail({ params, searchParams }: { params: Prom
   ]);
   if (!org) notFound();
   const acc = orgAccess(org);
+  // Otvaranjem škole u adminu nestaje oznaka „Novo”.
+  if (!org.admin_seen_at) await db.from('organizations').update({ admin_seen_at: new Date().toISOString() }).eq('id', id);
 
   return (
     <>
       <PageHeader
         title={org.name}
-        subtitle={<>{KINDS[org.kind] ?? org.kind} · napravljena {dateSr(org.created_at)}</>}
+        subtitle={<>{KINDS[org.kind] ?? org.kind} · {org.source === 'self' ? 'sama se registrovala' : 'napravio admin'} {dateSr(org.created_at)}</>}
         back={{ href: '/admin', label: 'Sve škole' }}
         actions={
           <form action={enterOrg}>

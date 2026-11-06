@@ -4,7 +4,7 @@ Next.js 16, React 19, Supabase (Postgres, Auth, RLS), Vercel.
 
 ## Objava izmena
 
-1. U Supabase SQL Editoru pokreni `supabase/migrations/004_dorada.sql`. Migracija može bezbedno više puta. Prvo je pokreni, pa tek onda objavi kod.
+1. U Supabase SQL Editoru redom pokreni migracije koje još nisu pokrenute (poslednja je `supabase/migrations/005_samostalna_registracija.sql`). Mogu bezbedno više puta. Prvo ih pokreni, pa tek onda objavi kod.
 2. Opciono, u Vercelu dodaj `CRON_SECRET` (dugačak slučajan niz) ako želiš automatska mesečna zaduženja. Bez njega se opcija ne prikazuje, a zaduženja se prave dugmetom na stranici Uplate.
 3. Objavi kod. Dnevni posao je u `vercel.json` (svako jutro u 7 ili 8 po Beogradu).
 
@@ -16,9 +16,16 @@ Aplikacija radi bez naloga za slanje mejlova. Dok `RESEND_API_KEY` i `EMAIL_FROM
 
 - nova lozinka ide kao i do sada: predavaču je resetuje vlasnik, a vlasniku admin, preko WhatsApp-a;
 - podsetnici se šalju na WhatsApp sa stranice „Ko duguje”, a obaveštenja se vide na linku za roditelje;
-- opcije za mejl se ne prikazuju, a novu registraciju vidiš u Admin > Dnevnik.
+- nova škola kreće odmah, bez potvrde adrese, a registraciju vidiš u Adminu;
+- opcije za mejl se ne prikazuju.
 
-Kad kasnije otvoriš Resend nalog i potvrdiš domen, upiši ove dve promenljive i ponovo objavi. Tada se pojavljuju reset lozinke mejlom, automatski podsetnici i slanje obaveštenja mejlom. Pre toga dopuni spisak servisa u politici privatnosti i ugovoru o obradi podataka.
+Kad upišeš ove dve promenljive i ponovo objaviš, pojavljuju se potvrda adrese pri registraciji, reset lozinke mejlom, podsetnici da probni period ističe, automatski podsetnici za uplate i slanje obaveštenja mejlom. Podsetnici stižu iz dnevnog posla, pa je potreban i `CRON_SECRET`.
+
+## Samostalna registracija
+
+Dugmad „Probaj 14 dana” na sajtu vode na `app.klasiko.rs/registracija?paket=...`. Škola dobija 14 dana probe na izabranom paketu.
+
+Sa uključenim mejlom nalog ne može da se koristi dok vlasnik ne otvori link iz mejla. Nepotvrđena škola stoji u Adminu sa oznakom „Email nije potvrđen” i ne ulazi u brojke. Nova registracija na istu adresu zamenjuje nepotvrđen nalog. Ako mejl ne stigne, resetuj vlasniku lozinku u Adminu: to potvrđuje nalog, a privremenu lozinku pošalješ na WhatsApp.
 
 ## Dvostepena prijava za admina
 

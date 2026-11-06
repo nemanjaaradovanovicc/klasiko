@@ -46,7 +46,7 @@ def card(p):
 <div class="pl-bill"><span class="m">uz mesečnu naplatu</span><span class="y">{n(p['y'])} RSD godišnje, 2 meseca gratis</span></div>
 <ul>{feats}</ul>
 {life}
-<a class="btn{'' if p.get('top') else ' soft'}" href="/demo?paket={p['id']}">Probaj 14 dana besplatno</a>
+<a class="btn{'' if p.get('top') else ' soft'}" href="https://app.klasiko.rs/registracija?paket={p['id']}">Probaj 14 dana besplatno</a>
 </div>'''
 
 

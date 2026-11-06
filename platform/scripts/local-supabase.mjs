@@ -261,7 +261,7 @@ const refreshTokens = new Map();
 const recovery = new Map();
 const emails = [];
 
-const publicUser = (u) => ({ id: u.id, aud: 'authenticated', role: 'authenticated', email: u.email, email_confirmed_at: new Date().toISOString(), app_metadata: {}, user_metadata: u.metadata ?? {}, factors: u.factors, created_at: new Date().toISOString() });
+const publicUser = (u) => ({ id: u.id, aud: 'authenticated', role: 'authenticated', email: u.email, email_confirmed_at: u.confirmed ? new Date().toISOString() : null, last_sign_in_at: u.lastSignIn ?? null, app_metadata: {}, user_metadata: u.metadata ?? {}, factors: u.factors, created_at: new Date().toISOString() });
 function session(u, aal = 'aal1') {
   const exp = Math.floor(Date.now() / 1000) + 3600;
   const access_token = sign({ sub: u.id, email: u.email, role: 'authenticated', aal, exp, session_id: randomUUID() });
@@ -277,10 +277,14 @@ async function authRoute(req, res, url, body, token) {
   const me = claims?.sub ? users.get(claims.sub) : null;
   if (p === '/admin/users' && req.method === 'POST') {
     if ([...users.values()].some((u) => u.email === body.email)) return fail(422, 'email_exists', 'A user with this email address has already been registered');
-    const u = { id: randomUUID(), email: body.email, password: body.password, metadata: body.user_metadata, factors: [] };
+    const u = { id: randomUUID(), email: body.email, password: body.password, metadata: body.user_metadata, factors: [], confirmed: body.email_confirm === true };
     users.set(u.id, u);
     await db.query('insert into auth.users (id) values ($1)', [u.id]);
     return json(200, publicUser(u));
+  }
+  if (p === '/admin/users' && req.method === 'GET') {
+    const page = Number(url.searchParams.get('page') ?? 1), perPage = Number(url.searchParams.get('per_page') ?? 50);
+    return json(200, { aud: 'authenticated', users: [...users.values()].slice((page - 1) * perPage, page * perPage).map(publicUser) });
   }
   const adminUser = p.match(/^\/admin\/users\/([\w-]+)$/);
   if (adminUser) {
@@ -288,6 +292,7 @@ async function authRoute(req, res, url, body, token) {
     if (!u) return fail(404, 'user_not_found', 'User not found');
     if (req.method === 'DELETE') { users.delete(u.id); await db.query('delete from auth.users where id = $1', [u.id]); return json(200, {}); }
     if (body.password) u.password = body.password;
+    if (body.email_confirm) u.confirmed = true;
     if (body.ban_duration) u.banned = body.ban_duration !== 'none';
     return json(200, publicUser(u));
   }
@@ -302,6 +307,8 @@ async function authRoute(req, res, url, body, token) {
     const u = users.get(recovery.get(body.token_hash));
     if (!u) return fail(403, 'otp_expired', 'Token has expired or is invalid');
     recovery.delete(body.token_hash);
+    u.confirmed = true;
+    u.lastSignIn = new Date().toISOString();
     return json(200, session(u));
   }
   if (p === '/token') {
@@ -309,6 +316,7 @@ async function authRoute(req, res, url, body, token) {
       const u = [...users.values()].find((x) => x.email === body.email);
       if (!u || u.password !== body.password) return fail(400, 'invalid_credentials', 'Invalid login credentials');
       if (u.banned) return fail(400, 'user_banned', 'User is banned');
+      u.lastSignIn = new Date().toISOString();
       return json(200, session(u));
     }
     const r = refreshTokens.get(body.refresh_token);
@@ -349,6 +357,7 @@ createServer(async (req, res) => {
   const token = (req.headers.authorization ?? '').replace(/^Bearer /, '') || req.headers.apikey;
   try {
     if (url.pathname === '/__emails') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(emails)); }
+    if (url.pathname === '/emails' && body.to?.[0]?.startsWith('odbijen')) { res.writeHead(422, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ message: 'Adresa je odbijena' })); }
     if (url.pathname === '/emails') { emails.push(body); res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ id: randomUUID() })); }
     if (url.pathname.startsWith('/auth/v1')) return await authRoute(req, res, url, body, token);
     const m = url.pathname.match(/^\/rest\/v1\/([\w]+)$/);

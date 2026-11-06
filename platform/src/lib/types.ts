@@ -31,6 +31,9 @@ export interface Organization {
   reminder_days_before: number;
   sibling_discount_pct: number;
   terms_accepted_at: string | null;
+  source: 'admin' | 'self';
+  admin_seen_at: string | null;
+  trial_reminder_key: string | null;
   created_at: string;
 }
 

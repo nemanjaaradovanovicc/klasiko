@@ -52,6 +52,8 @@ export async function createOrg(_: Creds | undefined, fd: FormData): Promise<Cre
       plan: str(fd, 'plan') ?? 'start',
       status: 'trial',
       trial_ends_at: addDays(todayISO(), trialDays),
+      source: 'admin',
+      admin_seen_at: new Date().toISOString(),
     })
     .select('id')
     .single();

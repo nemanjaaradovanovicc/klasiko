@@ -27,7 +27,7 @@ async function rest(pathQuery, init = {}) {
 const emails = async () => (await fetch(`${SB}/__emails`)).json();
 
 // Akcije bez prijave idu na svoju javnu stranicu; ostale na početnu.
-const PAGES = { login: '/login', register: '/registracija', requestReset: '/zaboravljena-lozinka', changePassword: '/lozinka', startEnroll: '/mfa', verifyCode: '/mfa' };
+const PAGES = { login: '/login', register: '/registracija', resendConfirmation: '/registracija/potvrda', requestReset: '/zaboravljena-lozinka', changePassword: '/lozinka', startEnroll: '/mfa', verifyCode: '/mfa' };
 
 // ---------- Korisnik sa kolačićima ----------
 class Browser {
@@ -89,6 +89,19 @@ class Browser {
   }
 }
 const form = (o) => ({ __form: o });
+// Otvara link iz mejla za potvrdu i klikne dugme, kao pregledač.
+async function confirmEmail(browser, text) {
+  const hash = decodeURIComponent(text.match(/token_hash=([^\s]+)/)[1]);
+  const page = await browser.get(`/auth/potvrda-mejla?token_hash=${encodeURIComponent(hash)}`);
+  const act = page.text.match(/\$ACTION_ID_([0-9a-f]+)/)?.[1];
+  if (!act) return { page, location: null };
+  const body = new FormData();
+  body.append(`$ACTION_ID_${act}`, '');
+  body.append('token_hash', hash);
+  const res = await fetch(`${browser.app}/auth/potvrda-mejla`, { method: 'POST', headers: { cookie: browser.header() }, body, redirect: 'manual' });
+  browser.absorb(res);
+  return { page, location: res.headers.get('location') };
+}
 const q = (s) => decodeURIComponent(String(s ?? '').replace(/\+/g, ' '));
 
 // ---------- Tokovi ----------
@@ -99,8 +112,44 @@ const owner = new Browser();
 
 section('Registracija i prijava');
 {
-  const r = await owner.call('register', undefined, form({ school: `Škola ${tag}`, kind: 'skola_jezika', name: 'Vesna Vlasnik', phone: '0641112222', email: ownerEmail, password: 'Sifra-12345', terms: 'on' }));
-  ok(r.redirect === '/', 'nova škola se registruje i odmah je prijavljena', r);
+  const mailsBefore = (await emails()).length;
+  const reg = { school: `Škola ${tag}`, kind: 'skola_jezika', name: 'Vesna Vlasnik', phone: '0641112222', email: ownerEmail, password: 'Sifra-12345', terms: 'on', plan: 'start' };
+  const r = await owner.call('register', undefined, form(reg));
+  ok(r.redirect === '/registracija/potvrda', 'posle registracije traži potvrdu emaila', r.redirect);
+  const waiting = await owner.get('/registracija/potvrda');
+  ok(waiting.status === 200 && waiting.text.includes('Proveri email'), 'stranica za potvrdu je javna');
+  const [pending] = await rest(`organizations?email=eq.${encodeURIComponent(ownerEmail)}&select=*`);
+  ok(pending.source === 'self' && pending.admin_seen_at === null, 'škola je označena kao samostalna i nova', pending);
+  ok(pending.plan === 'start', 'pamti paket izabran na sajtu', pending.plan);
+  const blocked = await new Browser().call('login', undefined, form({ email: ownerEmail, password: 'Sifra-12345' }));
+  ok(blocked.value?.unconfirmed && !blocked.redirect, 'bez potvrde nema prijave', blocked.value);
+  const inside = await owner.follow('/');
+  ok(inside.path.startsWith('/login'), 'bez potvrde nema ulaska u aplikaciju', inside.path);
+  const redo = await new Browser().call('register', undefined, form({ ...reg, school: `Škola ${tag}`, password: 'Sifra-12345' }));
+  ok(redo.redirect === '/registracija/potvrda', 'ponovna registracija zamenjuje nepotvrđen nalog', redo);
+  const after = await rest(`organizations?email=eq.${encodeURIComponent(ownerEmail)}&select=id`);
+  ok(after.length === 1 && after[0].id !== pending.id, 'ostaje samo nova nepotvrđena škola', after);
+  const sent = (await emails()).slice(mailsBefore).filter((m) => m.to[0] === ownerEmail);
+  ok(sent.length === 2 && sent[1].subject.includes('Potvrdi email') && sent[1].reply_to === 'klasiko.rs@gmail.com', 'stiže mejl za potvrdu, a odgovori idu na podršku', sent.map((m) => [m.subject, m.reply_to]));
+  const dead = await confirmEmail(new Browser(), sent[0].text);
+  ok(dead.page.text.includes('Link ne važi') || !dead.location?.endsWith('/'), 'link zamenjenog naloga više ne važi', dead.location);
+  const again1 = await new Browser().call('resendConfirmation', undefined, form({ email: ownerEmail }));
+  const unknownResend = await new Browser().call('resendConfirmation', undefined, form({ email: `nema${tag}@klasiko.test` }));
+  const allSent = (await emails()).slice(mailsBefore).filter((m) => m.to[0] === ownerEmail);
+  ok(again1.value?.ok && unknownResend.value?.ok && allSent.length === 3, 'novi link stiže, a odgovor ne otkriva ko ima nalog', allSent.length);
+  const conf = await confirmEmail(owner, allSent[2].text);
+  ok(conf.page.status === 200 && conf.page.text.includes('Potvrdi i otvori'), 'otvaranje linka ne troši token');
+  ok(conf.location === '/' || conf.location?.endsWith('/'), 'potvrda vodi u aplikaciju', conf.location);
+  const used = await confirmEmail(new Browser(), allSent[2].text);
+  ok(!used.location?.endsWith(`${APP}/`) && used.location !== '/', 'isti link ne radi dvaput', used.location);
+  const noFromName = await new Browser().call('register', undefined, form({ school: 'Odbijena', name: 'X', email: `odbijen${tag}@klasiko.test`, password: 'Sifra-12345', terms: 'on' }));
+  ok(String(noFromName.value?.error).includes('mejl za potvrdu'), 'ako mejl ne ode, javlja grešku', noFromName.value);
+  const rolled = await rest(`organizations?email=eq.${encodeURIComponent(`odbijen${tag}@klasiko.test`)}&select=id`);
+  ok(rolled.length === 0, 'i ne ostavlja školu bez vlasnika', rolled);
+  const badPlan = await new Browser().call('register', undefined, form({ school: `Paket ${tag}`, name: 'X', email: `paket${tag}@klasiko.test`, password: 'Sifra-12345', terms: 'on', plan: 'constructor' }));
+  const [badPlanOrg] = await rest(`organizations?email=eq.${encodeURIComponent(`paket${tag}@klasiko.test`)}&select=plan`);
+  ok(badPlan.redirect === '/registracija/potvrda' && badPlanOrg.plan === 'rast', 'nepoznat paket postaje Rast', badPlanOrg);
+  await rest('auth_throttle?key=like.*', { method: 'DELETE' });
   const dash = await owner.follow('/');
   ok(dash.status === 200 && dash.text.includes('Prvi koraci'), 'vidi prve korake', dash.path);
   const again = await new Browser().call('register', undefined, form({ school: 'Duplikat', name: 'X', email: ownerEmail, password: 'Sifra-12345', terms: 'on' }));
@@ -491,7 +540,48 @@ section('Naplata pretplate');
   ok(log.length === 1, 'ulazak admina je u dnevniku školi');
   const d = await sup.follow('/admin/dnevnik');
   ok(d.status === 200 && d.text.includes('ušao u školu'), 'admin vidi dnevnik', d.path);
+  await sup.call('exitOrg');
+  const list = await sup.follow('/admin');
+  ok(list.status === 200 && list.text.includes(ownerEmail) && list.text.includes('Sama se registrovala') && list.text.includes('Poslednja prijava'), 'admin u listi vidi vlasnika, poreklo i prijavu', list.path);
+  ok(list.text.includes('Email nije potvrđen'), 'admin vidi nepotvrđen nalog');
+  const fresh = await sup.follow('/admin?filter=nove');
+  const unseen = await rest(`organizations?admin_seen_at=is.null&id=neq.${org.id}&select=name`);
+  ok(fresh.text.includes('Novo') && unseen.every((o) => fresh.text.includes(o.name)), 'filter Nove prikazuje nove škole', unseen.length);
+  const onlyAdmin = await sup.follow('/admin?filter=admin');
+  ok(!onlyAdmin.text.includes(ownerEmail), 'filter po poreklu sklanja samostalne škole');
+  await rest(`organizations?id=eq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ admin_seen_at: null }) });
+  await sup.follow(`/admin/skole/${org.id}`);
+  const [seen] = await rest(`organizations?id=eq.${org.id}&select=admin_seen_at`);
+  ok(seen.admin_seen_at !== null, 'otvaranje škole skida oznaku Novo', seen);
   await rest(`organizations?id=eq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'trial' }) });
+}
+
+section('Podsetnik da probni period ističe');
+{
+  const iso = (d) => new Date(Date.now() + d * 86400000).toISOString().slice(0, 10);
+  const cron = () => fetch(`${APP}/api/cron/dnevno`, { headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` } }).then((r) => r.json());
+  await rest(`organizations?id=neq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ trial_ends_at: iso(30) }) });
+  await rest(`organizations?id=eq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'trial', trial_ends_at: iso(2), trial_reminder_key: null }) });
+  const [{ email: ownerMail }] = await rest(`profiles?org_id=eq.${org.id}&role=eq.owner&select=email&limit=1`);
+  const n0 = (await emails()).length;
+  const c1 = await cron();
+  const m1 = (await emails()).slice(n0).filter((m) => m.subject.includes('Probni period'));
+  ok(c1.trialReminders === 1 && m1.length === 1 && m1[0].to[0] === ownerMail && m1[0].subject.includes('za 2 dana'), 'vlasnik dobija podsetnik pre isteka', [c1, m1.map((m) => m.subject)]);
+  const c2 = await cron();
+  ok(c2.trialReminders === 0, 'drugo pokretanje ne šalje isti podsetnik', c2);
+  await rest(`organizations?id=eq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ trial_ends_at: iso(3) }) });
+  ok((await cron()).trialReminders === 1, 'produžen probni period dobija nov podsetnik');
+  await rest(`organizations?id=eq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ trial_ends_at: iso(-1) }) });
+  const n1 = (await emails()).length;
+  ok((await cron()).trialReminders === 1 && (await emails()).slice(n1).some((m) => m.subject.includes('je istekao')), 'posle isteka stiže poruka da su podaci sačuvani');
+  await rest(`organizations?id=eq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ trial_ends_at: iso(-20), trial_reminder_key: null }) });
+  ok((await cron()).trialReminders === 0, 'davno istekli se ne javljaju');
+  const [pendingOrg] = await rest(`organizations?email=eq.${encodeURIComponent(`paket${tag}@klasiko.test`)}&select=id`);
+  await rest(`organizations?id=eq.${pendingOrg.id}`, { method: 'PATCH', body: JSON.stringify({ trial_ends_at: iso(1) }) });
+  ok((await cron()).trialReminders === 0, 'nepotvrđena adresa ne dobija podsetnik');
+  const [pendingOwner] = await rest(`profiles?org_id=eq.${pendingOrg.id}&select=id`);
+  await fetch(`${SB}/auth/v1/admin/users/${pendingOwner.id}`, { method: 'PUT', headers: { Authorization: `Bearer ${SERVICE}`, apikey: SERVICE, 'Content-Type': 'application/json' }, body: JSON.stringify({ email_confirm: true }) });
+  await rest(`organizations?id=eq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'active', paid_until: '2030-01-01', trial_ends_at: iso(30) }) });
 }
 
 if (MFA_APP) {
