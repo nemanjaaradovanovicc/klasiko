@@ -19,13 +19,14 @@ export default async function TakeAttendance({ params, searchParams }: { params:
   const date = parseDate(sp.datum);
   const startTime = sp.vreme && /^\d{2}:\d{2}$/.test(sp.vreme) ? sp.vreme : '00:00';
   const supabase = await createClient();
-  const { data: g } = await supabase.from('groups').select('id, name, color, teacher_id').eq('id', groupId).eq('org_id', ctx.org.id).single();
+  const { data: g } = await supabase.from('groups').select('id, name, color, teacher_id, drop_in').eq('id', groupId).eq('org_id', ctx.org.id).single();
   if (!g) notFound();
-  const [{ data: members }, { data: session }, { data: notices }, { data: teachers }] = await Promise.all([
+  const [{ data: members }, { data: session }, { data: notices }, { data: teachers }, { data: rosterRows }] = await Promise.all([
     supabase.from('group_members').select('students(id, first_name, last_name, active)').eq('group_id', groupId),
     supabase.from('sessions').select('id, status, note, makeup_for, teacher_id, attendance(student_id, status)').eq('group_id', groupId).eq('date', date).eq('start_time', startTime + ':00').maybeSingle(),
     supabase.from('absence_notices').select('student_id, note').eq('org_id', ctx.org.id).eq('date', date),
     ctx.isOwner ? supabase.from('profiles').select('id, full_name').eq('org_id', ctx.org.id).eq('active', true).order('full_name') : Promise.resolve({ data: null }),
+    g.drop_in ? supabase.from('students').select('id, first_name, last_name').eq('org_id', ctx.org.id).eq('active', true).order('last_name') : Promise.resolve({ data: [] as { id: string; first_name: string; last_name: string }[] }),
   ]);
   const { data: makeups } = session ? await supabase.from('sessions').select('id, date, start_time, status').eq('makeup_for', session.id) : { data: [] };
   const { data: slot } = await supabase.from('schedule_slots').select('end_time').eq('group_id', groupId).eq('start_time', startTime + ':00').limit(1).maybeSingle();
@@ -56,6 +57,8 @@ export default async function TakeAttendance({ params, searchParams }: { params:
         initialStatus={session?.status === 'cancelled' ? 'cancelled' : 'held'}
         initialNote={session?.note ?? ''}
         saved={!!session && session.status !== 'planned'}
+        dropIn={!!g.drop_in}
+        roster={(rosterRows ?? []).map((s) => ({ id: s.id, name: fullName(s) }))}
         absences={Object.fromEntries((notices ?? []).map((n) => [n.student_id, n.note ?? '']))}
         teachers={teachers ?? undefined}
         initialTeacher={session?.teacher_id ?? g.teacher_id ?? ''}
@@ -81,6 +84,7 @@ export default async function TakeAttendance({ params, searchParams }: { params:
               <label className="block"><span className="label">Od</span><input className="input" type="time" name="start_time" defaultValue={startTime !== '00:00' ? startTime : '17:00'} required /></label>
               <label className="block"><span className="label">Do</span><input className="input" type="time" name="end_time" defaultValue={slot?.end_time ? time(slot.end_time) : ''} /></label>
               <button className="btn">Zakaži nadoknadu</button>
+              <p className="sm:col-span-4 text-[12px] font-semibold text-mut">Nadoknada je unutar roka paketa. Ako je ne zakažeš, otkazani čas produžava važenje paketa za nedelju dana.</p>
             </form>
           )}
         </Card>

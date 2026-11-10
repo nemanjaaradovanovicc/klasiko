@@ -4,7 +4,8 @@ import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Flash, Select, Badge } from '@/components/ui';
 import { GroupFields } from '@/components/group-form';
-import { WEEKDAYS, time, fullName, todayISO, isoWeekday } from '@/lib/format';
+import { WEEKDAYS, time, fullName, todayISO } from '@/lib/format';
+import { slotOccursOn } from '@/lib/schedule';
 import type { Group } from '@/lib/types';
 import { updateGroup, setGroupActive, deleteGroup, addSlot, deleteSlot, addMembers } from '../actions';
 import { removeFromGroup } from '../../ucenici/actions';
@@ -26,7 +27,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const period = parsePeriod(sp.mesec);
   const [{ data: members }, { data: slots }, { data: teachers }, { data: rooms }, all, { data: monthSessions }, { data: waiting }] = await Promise.all([
     supabase.from('group_members').select('student_id, students(id, first_name, last_name, parent_phone, phone, active)').eq('group_id', id),
-    supabase.from('schedule_slots').select('id, weekday, start_time, end_time, rooms(name)').eq('group_id', id).order('weekday').order('start_time'),
+    supabase.from('schedule_slots').select('id, weekday, start_time, end_time, recurrence, anchor_date, rooms(name)').eq('group_id', id).order('weekday').order('start_time'),
     supabase.from('profiles').select('id, full_name').eq('org_id', ctx.org.id).eq('active', true).order('full_name'),
     supabase.from('rooms').select('id, name').eq('org_id', ctx.org.id).order('name'),
     ctx.isOwner ? fetchAll<{ id: string; first_name: string; last_name: string }>((a, b) => supabase.from('students').select('id, first_name, last_name').eq('org_id', ctx.org.id).eq('active', true).order('last_name').order('id').range(a, b)) : Promise.resolve([]),
@@ -41,18 +42,18 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const onWait = new Set(waitList.map((w) => w.student_id));
   const candidates = all.filter((s) => !inGroup.has(s.id) && !onWait.has(s.id));
   const seatsLeft = g.capacity ? Math.max(0, g.capacity - mem.length) : null;
-  type S = { id: string; weekday: number; start_time: string; end_time: string; rooms: { name: string } | null };
+  type S = { id: string; weekday: number; start_time: string; end_time: string; recurrence: string | null; anchor_date: string | null; rooms: { name: string } | null };
   const sl = (slots ?? []) as unknown as S[];
   const today = todayISO();
-  const todaySlot = sl.find((x) => x.weekday === isoWeekday(today));
+  const todaySlot = sl.find((x) => slotOccursOn(today, x));
 
   return (
     <>
       <PageHeader
         title={g.name}
-        subtitle={<span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />{mem.length} učenika{g.capacity ? ` od ${g.capacity}` : ''}{!g.active ? ' · u arhivi' : ''}</span>}
+        subtitle={<span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />{g.drop_in ? 'Otvorena grupa, prijava po času' : `${mem.length} učenika${g.capacity ? ` od ${g.capacity}` : ''}`}{!g.active ? ' · u arhivi' : ''}</span>}
         back={{ href: '/grupe', label: ctx.isOwner ? 'Grupe' : 'Moje grupe' }}
-        actions={<>{todaySlot && <Link href={`/prisustvo/${g.id}?datum=${today}&vreme=${time(todaySlot.start_time)}`} className="btn">Prisustvo danas</Link>}{ctx.isOwner && <Link href={`/grupe/${g.id}/diplome`} className="btn btn-soft">Diplome</Link>}</>}
+        actions={<>{todaySlot && <Link href={`/prisustvo/${g.id}?datum=${today}&vreme=${time(todaySlot.start_time)}`} className="btn">Prisustvo danas</Link>}<Link href={`/paketi?grupa=${g.id}`} className="btn btn-soft">Paketi</Link>{ctx.isOwner && <Link href={`/grupe/${g.id}/diplome`} className="btn btn-soft">Diplome</Link>}</>}
       />
       <Flash ok={sp.ok ? OK[sp.ok] : undefined} err={sp.err} />
 
@@ -146,7 +147,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
                 {sl.map((x) => (
                   <li key={x.id} className="flex items-center justify-between gap-2 rounded-xl bg-soft px-3 py-2.5">
                     <div>
-                      <div className="font-extrabold text-ink">{WEEKDAYS[x.weekday]}</div>
+                      <div className="font-extrabold text-ink">{WEEKDAYS[x.weekday]}{x.recurrence === 'biweekly' ? ' · svake druge nedelje' : ''}</div>
                       <div className="text-[13px] font-semibold text-mut">{time(x.start_time)} do {time(x.end_time)}{x.rooms ? ` · ${x.rooms.name}` : ''}</div>
                     </div>
                     {ctx.isOwner && (
@@ -164,6 +165,8 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               <form action={addSlot} className="mt-4 grid gap-3 border-t border-line pt-4">
                 <input type="hidden" name="group_id" value={g.id} />
                 <Select label="Dan" name="weekday" required options={WEEKDAYS.slice(1).map((d, i) => ({ value: String(i + 1), label: d }))} />
+                <Select label="Ponavljanje" name="recurrence" defaultValue="weekly" options={[{ value: 'weekly', label: 'Svake nedelje' }, { value: 'biweekly', label: 'Svake druge nedelje' }]} />
+                <label className="block"><span className="label">Datum jednog časa</span><input className="input" type="date" name="anchor_date" /><span className="mt-1 block text-[12px] font-semibold text-mut">Samo za svaku drugu nedelju: izaberi nedelju kad čas jeste, i to baš taj dan.</span></label>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block"><span className="label">Od</span><input className="input" type="time" name="start_time" required /></label>
                   <label className="block"><span className="label">Do</span><input className="input" type="time" name="end_time" required /></label>

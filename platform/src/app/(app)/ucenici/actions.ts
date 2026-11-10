@@ -338,38 +338,3 @@ export async function linkAllSuggestedFamilies() {
   redirect('/roditelji?ok=' + encodeURIComponent(linked ? `Povezano porodica: ${linked}.` : 'Nema novih porodica za povezivanje.'));
 }
 
-// ---------- Paketi časova ----------
-
-export async function buyPackage(fd: FormData) {
-  const ctx = await requireOwner();
-  const studentId = String(fd.get('student_id'));
-  const groupId = String(fd.get('group_id'));
-  const classes = Number(fd.get('classes'));
-  const price = Number(String(fd.get('price') ?? '').replace(',', '.'));
-  const expiresRaw = s(fd, 'expires_at');
-  const back = `/ucenici/${studentId}`;
-  if (!groupId || !Number.isInteger(classes) || classes < 1 || !Number.isFinite(price) || price < 0) redirect(`${back}?err=` + encodeURIComponent('Izaberi grupu, broj časova i cenu paketa.'));
-  const supabase = await createClient();
-  const today = todayISO();
-  const { data: group } = await supabase.from('groups').select('name').eq('id', groupId).eq('org_id', ctx.org.id).maybeSingle();
-  if (!group) redirect(`${back}?err=` + encodeURIComponent('Grupa nije pronađena.'));
-  let chargeId: string | null = null;
-  if (price > 0) {
-    const { data: ch, error } = await supabase.from('charges').insert({ org_id: ctx.org.id, student_id: studentId, group_id: groupId, period: today.slice(0, 7), amount: price, kind: 'package', description: `Paket ${classes} časova, ${group.name}`, due_date: today }).select('id').single();
-    if (error || !ch) redirect(`${back}?err=` + encodeURIComponent(error?.message ?? 'Zaduženje nije napravljeno.'));
-    chargeId = ch.id;
-  }
-  const { error } = await supabase.from('class_packages').insert({ org_id: ctx.org.id, student_id: studentId, group_id: groupId, classes_total: classes, price, purchased_at: today, expires_at: isISODate(expiresRaw) ? expiresRaw : null, charge_id: chargeId });
-  if (error) redirect(`${back}?err=` + encodeURIComponent(error.message));
-  revalidatePath(back);
-  redirect(`${back}?ok=paket`);
-}
-
-export async function deletePackage(fd: FormData) {
-  const ctx = await requireOwner();
-  const studentId = String(fd.get('student_id'));
-  const supabase = await createClient();
-  const { error } = await supabase.from('class_packages').delete().eq('id', String(fd.get('id'))).eq('org_id', ctx.org.id);
-  revalidatePath(`/ucenici/${studentId}`);
-  redirect(`/ucenici/${studentId}?` + (error ? 'err=' + encodeURIComponent(error.message) : 'ok=1'));
-}

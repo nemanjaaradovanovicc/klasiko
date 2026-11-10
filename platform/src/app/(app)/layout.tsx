@@ -20,6 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/prisustvo', label: 'Prisustvo', icon: 'CheckSquare', mobile: true },
       { href: '/ucenici', label: 'Učenici', icon: 'Users', mobile: true },
       { href: '/uplate', label: 'Uplate', icon: 'Wallet', mobile: true },
+      { href: '/paketi', label: 'Paketi', icon: 'Package' },
       { href: '/grupe', label: 'Grupe', icon: 'UsersRound' },
       { href: '/raspored', label: 'Raspored', icon: 'CalendarDays' },
       { href: '/roditelji', label: 'Roditelji', icon: 'HeartHandshake' },
@@ -32,7 +33,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     items = [
       { href: '/', label: 'Pregled', icon: 'LayoutDashboard', mobile: true },
       { href: '/prisustvo', label: 'Prisustvo', icon: 'CheckSquare', mobile: true },
-      { href: '/raspored', label: 'Raspored', icon: 'CalendarDays', mobile: true },
+      { href: '/paketi', label: 'Paketi', icon: 'Package', mobile: true },
+      { href: '/raspored', label: 'Raspored', icon: 'CalendarDays' },
       { href: '/grupe', label: 'Moje grupe', icon: 'UsersRound', mobile: true },
       { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
       { href: '/obavestenja', label: 'Obaveštenja', icon: 'Megaphone' },
@@ -51,9 +53,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/ucenici/novi', label: 'Novi učenik', hint: 'Upis sa grupom i kontaktom roditelja', icon: 'UserPlus' },
       { href: '/uplate/dugovanja', label: 'Ko duguje', hint: 'Ukupan dug po roditelju i podsetnici', icon: 'Wallet' },
       { href: '/grupe/nova', label: 'Nova grupa', hint: 'Naziv, predavač, cena i termin', icon: 'UsersRound' },
+      { href: '/paketi', label: 'Paketi časova', hint: 'Katalog, kupovina i datumi uplate', icon: 'Package' },
     ];
   } else if (ctx.org) {
-    quick = [{ href: '/prisustvo', label: 'Upiši prisustvo', hint: 'Današnji časovi', icon: 'CheckSquare' }];
+    quick = [
+      { href: '/prisustvo', label: 'Upiši prisustvo', hint: 'Današnji časovi', icon: 'CheckSquare' },
+      { href: '/paketi', label: 'Paketi časova', hint: 'Datum uplate i rok za svoje učenike', icon: 'Package' },
+    ];
   } else if (ctx.isSuper) {
     quick = [
       { href: '/admin#nova-skola', label: 'Nova škola', hint: 'Škola i nalog vlasnika sa probom', icon: 'Building2' },

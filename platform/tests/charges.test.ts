@@ -71,6 +71,26 @@ describe('mesečna zaduženja', () => {
     const rows = log.find((l) => l.op === 'insert')!.rows as { student_id: string; amount: number }[];
     expect(Object.fromEntries(rows.map((r) => [r.student_id, r.amount]))).toEqual({ s1: 1000, s2: 900, s3: 500, s4: 1000 });
   });
+  it('drugo dete 20%, treće 50%', async () => {
+    const { db, log } = fakeDb({
+      groups: [{ id: 'g', name: 'A', monthly_fee: 1000, group_members: [st('s1', 1, { family_id: 'f' }), st('s2', 2, { family_id: 'f' }), st('s3', 3, { family_id: 'f' })] }],
+      charges: [],
+      payments: [],
+    });
+    await createChargesForPeriod(db, { ...org, sibling_discount_pct: 20, sibling_discount_3_pct: 50 }, '2026-11');
+    const rows = log.find((l) => l.op === 'insert')!.rows as { student_id: string; amount: number }[];
+    expect(Object.fromEntries(rows.map((r) => [r.student_id, r.amount]))).toEqual({ s1: 1000, s2: 800, s3: 500 });
+  });
+  it('ako procenat za treće dete nije upisan, važi procenat za drugo', async () => {
+    const { db, log } = fakeDb({
+      groups: [{ id: 'g', name: 'A', monthly_fee: 1000, group_members: [st('s1', 1, { family_id: 'f' }), st('s2', 2, { family_id: 'f' }), st('s3', 3, { family_id: 'f' })] }],
+      charges: [],
+      payments: [],
+    });
+    await createChargesForPeriod(db, { ...org, sibling_discount_pct: 10, sibling_discount_3_pct: 0 }, '2026-11');
+    const rows = log.find((l) => l.op === 'insert')!.rows as { student_id: string; amount: number }[];
+    expect(Object.fromEntries(rows.map((r) => [r.student_id, r.amount]))).toEqual({ s1: 1000, s2: 900, s3: 900 });
+  });
 });
 
 describe('avans', () => {

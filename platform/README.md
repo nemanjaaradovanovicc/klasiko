@@ -4,7 +4,7 @@ Next.js 16, React 19, Supabase (Postgres, Auth, RLS), Vercel.
 
 ## Objava izmena
 
-1. U Supabase SQL Editoru redom pokreni migracije koje još nisu pokrenute (poslednja je `supabase/migrations/005_samostalna_registracija.sql`). Mogu bezbedno više puta. Prvo ih pokreni, pa tek onda objavi kod.
+1. U Supabase SQL Editoru redom pokreni migracije koje još nisu pokrenute (poslednja je `supabase/migrations/006_paketi_porodice.sql`). Mogu bezbedno više puta. Prvo ih pokreni, pa tek onda objavi kod. Nove promenljive okruženja nisu potrebne: dnevni cron i mejl ostaju kako jesu.
 2. Opciono, u Vercelu dodaj `CRON_SECRET` (dugačak slučajan niz) ako želiš automatska mesečna zaduženja. Bez njega se opcija ne prikazuje, a zaduženja se prave dugmetom na stranici Uplate.
 3. Objavi kod. Dnevni posao je u `vercel.json` (svako jutro u 7 ili 8 po Beogradu).
 

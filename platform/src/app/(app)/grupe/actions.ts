@@ -6,6 +6,7 @@ import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { freeSeats, slotConflicts, type SlotLike } from '@/lib/groups';
 import { audit } from '@/lib/audit';
+import { isISODate, isoWeekday } from '@/lib/format';
 
 function s(fd: FormData, k: string): string | null {
   const v = String(fd.get(k) ?? '').trim();
@@ -29,17 +30,27 @@ function groupData(fd: FormData) {
     color: s(fd, 'color') ?? '#5B2A86',
     fee_type: fee === 'package' || fee === 'manual' ? fee : 'monthly',
     package_classes: fee === 'package' ? n(fd, 'package_classes') : null,
+    drop_in: fd.get('drop_in') === 'on',
   };
 }
 
+function slotMeta(fd: FormData, weekday: number): { recurrence: 'weekly' | 'biweekly'; anchor_date: string | null; error?: string } {
+  const recurrence = s(fd, 'recurrence') === 'biweekly' ? 'biweekly' : 'weekly';
+  const anchor = s(fd, 'anchor_date');
+  if (recurrence === 'weekly') return { recurrence, anchor_date: null };
+  if (!anchor || !isISODate(anchor)) return { recurrence, anchor_date: null, error: 'Za čas svake druge nedelje izaberi datum jednog časa (dan kad čas jeste).' };
+  if (isoWeekday(anchor) !== weekday) return { recurrence, anchor_date: null, error: 'Datum primera mora da padne na izabrani dan u nedelji.' };
+  return { recurrence, anchor_date: anchor };
+}
+
 // Upozorenje ako se novi termin preklapa sa drugim terminom iste sale ili predavača.
-async function conflictsFor(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string, groupId: string, slot: { weekday: number; start_time: string; end_time: string; room_id: string | null }): Promise<string[]> {
+async function conflictsFor(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string, groupId: string, slot: { weekday: number; start_time: string; end_time: string; room_id: string | null; recurrence?: string | null; anchor_date?: string | null }): Promise<string[]> {
   const [{ data: rows }, { data: me }] = await Promise.all([
-    supabase.from('schedule_slots').select('weekday, start_time, end_time, room_id, group_id, groups!inner(name, teacher_id, room_id, active)').eq('org_id', orgId).eq('weekday', slot.weekday).eq('groups.active', true).neq('group_id', groupId),
+    supabase.from('schedule_slots').select('weekday, start_time, end_time, room_id, recurrence, anchor_date, group_id, groups!inner(name, teacher_id, room_id, active)').eq('org_id', orgId).eq('weekday', slot.weekday).eq('groups.active', true).neq('group_id', groupId),
     supabase.from('groups').select('teacher_id, room_id').eq('id', groupId).eq('org_id', orgId).maybeSingle(),
   ]);
-  type R = { weekday: number; start_time: string; end_time: string; room_id: string | null; groups: { name: string; teacher_id: string | null; room_id: string | null } };
-  const others: SlotLike[] = ((rows ?? []) as unknown as R[]).map((r) => ({ weekday: r.weekday, start_time: r.start_time, end_time: r.end_time, room_id: r.room_id ?? r.groups.room_id, teacher_id: r.groups.teacher_id, group_name: r.groups.name }));
+  type R = { weekday: number; start_time: string; end_time: string; room_id: string | null; recurrence: string | null; anchor_date: string | null; groups: { name: string; teacher_id: string | null; room_id: string | null } };
+  const others: SlotLike[] = ((rows ?? []) as unknown as R[]).map((r) => ({ weekday: r.weekday, start_time: r.start_time, end_time: r.end_time, room_id: r.room_id ?? r.groups.room_id, teacher_id: r.groups.teacher_id, group_name: r.groups.name, recurrence: r.recurrence, anchor_date: r.anchor_date }));
   return slotConflicts({ ...slot, room_id: slot.room_id ?? me?.room_id ?? null, teacher_id: me?.teacher_id ?? null }, others);
 }
 
@@ -55,9 +66,13 @@ export async function createGroup(fd: FormData) {
   const et = s(fd, 'end_time');
   let warn = '';
   if (wd && st && et && et > st) {
-    await supabase.from('schedule_slots').insert({ org_id: ctx.org.id, group_id: g.id, weekday: wd, start_time: st, end_time: et, room_id: data.room_id });
-    const c = await conflictsFor(supabase, ctx.org.id, g.id, { weekday: wd, start_time: st, end_time: et, room_id: data.room_id });
-    if (c.length) warn = '&err=' + encodeURIComponent('Grupa je napravljena, ali se termin preklapa: ' + c.join('; ') + '.');
+    const meta = slotMeta(fd, wd);
+    if (meta.error) warn = '&err=' + encodeURIComponent('Grupa je napravljena, ali termin nije: ' + meta.error);
+    else {
+      await supabase.from('schedule_slots').insert({ org_id: ctx.org.id, group_id: g.id, weekday: wd, start_time: st, end_time: et, room_id: data.room_id, recurrence: meta.recurrence, anchor_date: meta.anchor_date });
+      const c = await conflictsFor(supabase, ctx.org.id, g.id, { weekday: wd, start_time: st, end_time: et, room_id: data.room_id, recurrence: meta.recurrence, anchor_date: meta.anchor_date });
+      if (c.length) warn = '&err=' + encodeURIComponent('Grupa je napravljena, ali se termin preklapa: ' + c.join('; ') + '.');
+    }
   }
   revalidatePath('/grupe');
   redirect(`/grupe/${g.id}?ok=nova${warn}`);
@@ -101,11 +116,13 @@ export async function addSlot(fd: FormData) {
   const st = s(fd, 'start_time');
   const et = s(fd, 'end_time');
   if (!wd || !st || !et || et <= st) redirect(`/grupe/${groupId}?err=` + encodeURIComponent('Proveri dan i vreme (kraj mora biti posle početka).'));
+  const meta = slotMeta(fd, wd);
+  if (meta.error) redirect(`/grupe/${groupId}?err=` + encodeURIComponent(meta.error));
   const supabase = await createClient();
   const roomId = s(fd, 'room_id');
-  const { error } = await supabase.from('schedule_slots').insert({ org_id: ctx.org.id, group_id: groupId, weekday: wd, start_time: st, end_time: et, room_id: roomId });
+  const { error } = await supabase.from('schedule_slots').insert({ org_id: ctx.org.id, group_id: groupId, weekday: wd, start_time: st, end_time: et, room_id: roomId, recurrence: meta.recurrence, anchor_date: meta.anchor_date });
   if (error) redirect(`/grupe/${groupId}?err=` + encodeURIComponent(error.message));
-  const c = await conflictsFor(supabase, ctx.org.id, groupId, { weekday: wd, start_time: st, end_time: et, room_id: roomId });
+  const c = await conflictsFor(supabase, ctx.org.id, groupId, { weekday: wd, start_time: st, end_time: et, room_id: roomId, recurrence: meta.recurrence, anchor_date: meta.anchor_date });
   revalidatePath(`/grupe/${groupId}`);
   redirect(`/grupe/${groupId}?` + (c.length ? 'err=' + encodeURIComponent('Termin je dodat, ali se preklapa: ' + c.join('; ') + '.') : 'ok=termin'));
 }

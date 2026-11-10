@@ -54,6 +54,19 @@ export async function authInfoByUser(): Promise<Map<string, { lastSignIn: string
   }
 }
 
+// Menja adresu za prijavu bez mejla i bez pozivnice. email_confirm odmah potvrđuje novu adresu.
+export async function changeUserEmail(userId: string, email: string): Promise<{ error?: string }> {
+  const db = createAdminClient();
+  const { error } = await db.auth.admin.updateUserById(userId, { email, email_confirm: true });
+  if (error) {
+    const msg = error.message ?? '';
+    return { error: /already|registered|exists/i.test(msg) ? 'Korisnik sa tim emailom već postoji.' : 'Email nije sačuvan.' };
+  }
+  const { error: pErr } = await db.from('profiles').update({ email }).eq('id', userId);
+  if (pErr) return { error: 'Prijava je promenjena, ali kartica tima nije sačuvana. Sačuvaj istu adresu još jednom.' };
+  return {};
+}
+
 export async function setActive(userId: string, active: boolean) {
   const db = createAdminClient();
   await db.from('profiles').update({ active }).eq('id', userId);

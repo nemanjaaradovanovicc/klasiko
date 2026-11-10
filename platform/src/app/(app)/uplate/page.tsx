@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Flash, Stat, Badge, Empty } from '@/components/ui';
-import { currentPeriod, parsePeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr, todayISO } from '@/lib/format';
+import { currentPeriod, formatMoney, formatTotals, parsePeriod, periodLabel, shiftPeriod, fullName, dateSr, todayISO } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ConfirmButton } from '@/components/confirm';
 import { waUrl } from '@/lib/phone';
@@ -21,11 +21,11 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
   const period = parsePeriod(sp.mesec);
   const filter = sp.prikaz ?? 'sve';
   const supabase = await createClient();
-  type C = { id: string; amount: number; due_date: string | null; description: string | null; student_id: string; students: { first_name: string; last_name: string; parent_name: string | null; parent_phone: string | null; phone: string | null; ref_no: number } | null; groups: { name: string } | null; payments: { id: string; amount: number; paid_at: string; method: string }[] };
+  type C = { id: string; amount: number; currency: string | null; due_date: string | null; description: string | null; student_id: string; students: { first_name: string; last_name: string; parent_name: string | null; parent_phone: string | null; phone: string | null; ref_no: number } | null; groups: { name: string } | null; payments: { id: string; amount: number; paid_at: string; method: string }[] };
   const [charges, students, plinks, { data: groupList }] = await Promise.all([
     fetchAll<C>((a, b) => supabase
       .from('charges')
-      .select('id, amount, due_date, description, student_id, students(first_name, last_name, parent_name, parent_phone, phone, ref_no), groups(name), payments(id, amount, paid_at, method)')
+      .select('id, amount, currency, due_date, description, student_id, students(first_name, last_name, parent_name, parent_phone, phone, ref_no), groups(name), payments(id, amount, paid_at, method)')
       .eq('org_id', ctx.org.id)
       .eq('period', period)
       .order('id')
@@ -45,6 +45,8 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
     const paid = c.payments.reduce((a, p) => a + Number(p.amount), 0);
     return { ...c, paid, remaining: Math.max(0, Number(c.amount) - paid), done: paid >= Number(c.amount) };
   });
+  const currencies = new Set(rows.map((r) => r.currency || 'RSD'));
+  const oneCurrency = currencies.size <= 1;
   const expected = rows.reduce((a, r) => a + Number(r.amount), 0);
   const collected = rows.reduce((a, r) => a + Math.min(r.paid, Number(r.amount)), 0);
   const today = todayISO();
@@ -68,9 +70,9 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
       <Flash ok={sp.ok} err={sp.err} />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Očekivano" value={rsd(expected)} hint={`${rows.length} zaduženja`} />
-        <Stat label="Naplaćeno" value={rsd(collected)} tone="ok" hint={expected ? `${Math.round((collected / expected) * 100)}%` : undefined} />
-        <Stat label="Preostalo" value={rsd(expected - collected)} tone={expected - collected > 0 ? 'coral' : 'default'} />
+        <Stat label="Očekivano" value={formatTotals(rows.map((r) => ({ amount: Number(r.amount), currency: r.currency })))} hint={`${rows.length} zaduženja`} />
+        <Stat label="Naplaćeno" value={formatTotals(rows.map((r) => ({ amount: Math.min(r.paid, Number(r.amount)), currency: r.currency })))} tone="ok" hint={oneCurrency && expected ? `${Math.round((collected / expected) * 100)}%` : undefined} />
+        <Stat label="Preostalo" value={formatTotals(rows.map((r) => ({ amount: r.remaining, currency: r.currency })))} tone={rows.some((r) => r.remaining > 0) ? 'coral' : 'default'} />
         <Stat label="Kasni sa uplatom" value={late.length} tone={late.length ? 'coral' : 'default'} hint={`rok ${ctx.org.fee_due_day}. u mesecu`} />
       </div>
 
@@ -97,11 +99,13 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
             const phone = s.parent_phone || s.phone;
             const purpose = `Clanarina ${label} ${fullName(s)}`;
             const ref = studentReference(s.ref_no, period);
-            const payload = ctx.org.bank_account && r.remaining > 0 ? ipsPayload({ account: ctx.org.bank_account, payee: ctx.org.payee_name || ctx.org.name, amount: r.remaining, purpose, payer: s.parent_name ?? fullName(s), reference: ref }) : null;
+            const dinar = (r.currency || 'RSD') === 'RSD';
+            const payload = dinar && ctx.org.bank_account && r.remaining > 0 ? ipsPayload({ account: ctx.org.bank_account, payee: ctx.org.payee_name || ctx.org.name, amount: r.remaining, purpose, payer: s.parent_name ?? fullName(s), reference: ref }) : null;
             const plink = tokenFor(r.student_id);
             const reminder = [
-              `Dobar dan! Podsećamo da članarina za ${label.toLowerCase()} za ${fullName(s)} iznosi ${rsd(r.remaining)}.`,
-              ctx.org.bank_account ? `Račun: ${ctx.org.bank_account}, poziv na broj: ${ref}.` : '',
+              `Dobar dan! Podsećamo da članarina za ${label.toLowerCase()} za ${fullName(s)} iznosi ${formatMoney(r.remaining, r.currency)}.`,
+              ctx.org.payment_instructions?.trim() ?? '',
+              dinar && ctx.org.bank_account ? `Račun: ${ctx.org.bank_account}, poziv na broj: ${ref}.` : '',
               plink ? `QR kod za uplatu i detalji: ${parentUrl(plink)}` : '',
               `Ako ste već uplatili, zanemarite poruku. Hvala! ${ctx.org.name}`,
             ].filter(Boolean).join('\n');
@@ -114,8 +118,8 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                     <div className="truncate text-[13px] font-semibold text-mut">{r.description ?? r.groups?.name}</div>
                   </div>
                   <div className="flex items-center justify-between gap-2 sm:block sm:text-right">
-                    <div className="text-[16px] font-extrabold tabular-nums">{rsd(r.amount)}</div>
-                    {r.done ? <Badge tone="ok">Plaćeno</Badge> : r.paid > 0 ? <Badge>Uplaćeno {rsd(r.paid)}</Badge> : <Badge tone={isLate ? 'coral' : 'gray'}>{isLate ? 'Kasni' : 'Čeka uplatu'}</Badge>}
+                    <div className="text-[16px] font-extrabold tabular-nums">{formatMoney(r.amount, r.currency)}</div>
+                    {r.done ? <Badge tone="ok">Plaćeno</Badge> : r.paid > 0 ? <Badge>Uplaćeno {formatMoney(r.paid, r.currency)}</Badge> : <Badge tone={isLate ? 'coral' : 'gray'}>{isLate ? 'Kasni' : 'Čeka uplatu'}</Badge>}
                   </div>
                 </div>
                 {!r.done && (
@@ -132,7 +136,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                       <input name="amount" type="number" min={1} step="1" placeholder={String(r.remaining)} className="input h-9 w-28 text-sm" aria-label="Iznos (prazno = ceo iznos)" />
                       <button className="btn btn-sm">Evidentiraj uplatu</button>
                     </form>
-                    <QrButton payload={payload} title={fullName(s)} amount={rsd(r.remaining)} purpose={`Članarina ${label}`} />
+                    <QrButton payload={payload} title={fullName(s)} amount={formatMoney(r.remaining, r.currency)} purpose={`Članarina ${label}`} />
                     {phone && (
                       <a className="btn btn-sm btn-ghost" target="_blank" rel="noopener" href={waUrl(phone, reminder)}>Podseti na WhatsApp</a>
                     )}
@@ -144,11 +148,11 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
                     <ul className="mt-2 flex flex-col gap-1">
                       {r.payments.map((p) => (
                         <li key={p.id} className="flex items-center justify-between gap-2 text-[13px] font-semibold text-ink-2">
-                          <span>{dateSr(p.paid_at)} · {METHOD[p.method]} · {rsd(p.amount)}</span>
+                          <span>{dateSr(p.paid_at)} · {METHOD[p.method]} · {formatMoney(p.amount, r.currency)}</span>
                           <form action={deletePayment}>
                             <input type="hidden" name="period" value={period} />
                             <input type="hidden" name="id" value={p.id} />
-                            <ConfirmButton message={`Obrisati uplatu od ${rsd(p.amount)}?`} className="text-coral-dark hover:underline">obriši</ConfirmButton>
+                            <ConfirmButton message={`Obrisati uplatu od ${formatMoney(p.amount, r.currency)}?`} className="text-coral-dark hover:underline">obriši</ConfirmButton>
                           </form>
                         </li>
                       ))}
@@ -176,7 +180,8 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
             <option value="">Izaberi učenika</option>
             {students.map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
           </select>
-          <input name="amount" type="number" min={1} step="1" placeholder="Iznos" className="input" required />
+          <input name="amount" type="number" min={1} step="0.01" placeholder="Iznos" className="input" required />
+          <select name="currency" className="input" defaultValue="RSD"><option value="RSD">RSD</option><option value="EUR">EUR</option></select>
           <input name="description" placeholder="Opis" className="input" />
           <div className="sm:col-span-4"><button className="btn btn-soft">Dodaj zaduženje</button></div>
         </form>
@@ -184,7 +189,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
 
       <details className="card mt-3 p-5">
         <summary className="cursor-pointer text-[15px] font-extrabold text-ink">+ Polugodište ili rate</summary>
-        <p className="mt-2 text-[13px] font-semibold text-mut">Ukupan iznos se deli na mesece, počev od meseca {label.toLowerCase()}. Grupe sa ovim načinom naplate podesi na „Polugodište ili rate”, da ne dobijaju i mesečnu članarinu. Pakete časova prodaješ na kartici učenika.</p>
+        <p className="mt-2 text-[13px] font-semibold text-mut">Ukupan iznos se deli na mesece, počev od meseca {label.toLowerCase()}. Grupe sa ovim načinom naplate podesi na „Polugodište ili rate”, da ne dobijaju i mesečnu članarinu. Pakete časova dodaješ na stranici Paketi. IPS QR važi samo za dinare.</p>
         <form action={createInstallments} className="mt-4 grid gap-3 sm:grid-cols-4">
           <input type="hidden" name="period" value={period} />
           <select name="group_id" className="input sm:col-span-2" defaultValue="">
@@ -195,7 +200,8 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
             <option value="">ili jedan učenik</option>
             {students.map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
           </select>
-          <input name="total" type="number" min={1} step="1" placeholder="Ukupan iznos po učeniku" className="input" required />
+          <input name="total" type="number" min={1} step="0.01" placeholder="Ukupan iznos po učeniku" className="input" required />
+          <select name="currency" className="input" defaultValue="RSD"><option value="RSD">RSD</option><option value="EUR">EUR</option></select>
           <input name="count" type="number" min={1} max={12} step="1" placeholder="Broj rata" className="input" required />
           <input name="description" placeholder="Opis, npr. Polugodište" className="input sm:col-span-2" />
           <div className="sm:col-span-4"><button className="btn btn-soft">Napravi rate</button></div>

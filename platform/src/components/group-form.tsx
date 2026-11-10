@@ -11,8 +11,12 @@ export function GroupFields({ g, teachers, rooms }: { g?: Partial<Group>; teache
       <Select label="Predavač" name="teacher_id" defaultValue={g?.teacher_id ?? ''} placeholder="Bez predavača" options={teachers.map((t) => ({ value: t.id, label: t.full_name }))} />
       <Select label="Sala" name="room_id" defaultValue={g?.room_id ?? ''} placeholder="Bez sale" options={rooms.map((r) => ({ value: r.id, label: r.name }))} />
       <Select label="Način naplate" name="fee_type" defaultValue={g?.fee_type ?? 'monthly'} options={Object.entries(FEE_TYPE_LABEL).map(([value, label]) => ({ value, label }))} />
-      <Field label="Cena (RSD)" name="monthly_fee" type="number" min={0} step="1" defaultValue={g?.monthly_fee} hint="Mesečna članarina ili cena paketa" />
-      <Field label="Časova u paketu" name="package_classes" type="number" min={1} step="1" defaultValue={g?.package_classes} hint="Samo za paket časova" />
+      <Field label="Cena (RSD)" name="monthly_fee" type="number" min={0} step="1" defaultValue={g?.monthly_fee} hint="Mesečna članarina u dinarima. Pakete u evrima definišeš na stranici Paketi." />
+      <Field label="Časova u paketu" name="package_classes" type="number" min={1} step="1" defaultValue={g?.package_classes} hint="Podrazumevani broj kad grupa ide na paket. Pravi paketi su na stranici Paketi." />
+      <label className="flex items-start gap-3 sm:col-span-2">
+        <input type="checkbox" name="drop_in" defaultChecked={!!g?.drop_in} className="mt-1 h-5 w-5 accent-[#5B2A86]" />
+        <span className="text-[14px] font-semibold text-ink-2"><b className="text-ink">Otvorena grupa</b>. Nema stalnih članova: na čas se dodaju deca samo za taj termin (radionica, prijava pred čas).</span>
+      </label>
       <Field label="Maksimalan broj učenika" name="capacity" type="number" min={1} defaultValue={g?.capacity} />
       <div>
         <span className="label">Boja u rasporedu</span>

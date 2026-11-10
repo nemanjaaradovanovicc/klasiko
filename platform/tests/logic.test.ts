@@ -4,7 +4,8 @@ import { mapStatementColumns, toAmount, toDate } from '@/lib/statement';
 import { attendanceStats, isISODate, parsePeriod, periodLabel, currentPeriod, absenceStreaks } from '@/lib/format';
 import { fixImportedPhone, intlPhone, phoneKey, waUrl } from '@/lib/phone';
 import { installmentPlan } from '@/lib/charges';
-import { packageBalance } from '@/lib/packages';
+import { allocateUsage, expiryAfterCancellations, packageBalance, packageReminderText, shouldRemindPackage, suggestedExpiry } from '@/lib/packages';
+import { slotOccursOn } from '@/lib/schedule';
 import { familySuggestions } from '@/lib/families';
 import { slotConflicts } from '@/lib/groups';
 import { familyReference, ipsPayload, studentReference } from '@/lib/ips';
@@ -157,6 +158,55 @@ describe('porodice i termini', () => {
     expect(slotConflicts({ weekday: 1, start_time: '17:30', end_time: '18:30', room_id: 'r2', teacher_id: 't1' }, [other])[0]).toContain('predavač');
     expect(slotConflicts({ weekday: 1, start_time: '18:00', end_time: '19:00', room_id: 'r1', teacher_id: 't1' }, [other])).toEqual([]);
     expect(slotConflicts({ weekday: 2, start_time: '17:00', end_time: '18:00', room_id: 'r1', teacher_id: 't1' }, [other])).toEqual([]);
+  });
+  const bi = { weekday: 7, start_time: '18:00', end_time: '19:00', room_id: 'r1', teacher_id: 't1', group_name: 'Radionica', recurrence: 'biweekly' as const };
+  it('dva termina svake druge nedelje se ne preklapaju ako padaju u suprotne nedelje', () => {
+    expect(slotConflicts({ ...bi, anchor_date: '2026-11-08' }, [{ ...bi, anchor_date: '2026-11-15', group_name: 'Stariji' }])).toEqual([]);
+    expect(slotConflicts({ ...bi, anchor_date: '2026-11-08' }, [{ ...bi, anchor_date: '2026-11-22', group_name: 'Stariji' }])[0]).toContain('sala');
+  });
+});
+
+describe('paketi časova', () => {
+  it('rok je 10 nedelja za jedan čas nedeljno, 5 za dva, 8 za radionicu svake druge nedelje', () => {
+    expect(suggestedExpiry('2026-01-05', 10, 1)).toBe('2026-03-16');
+    expect(suggestedExpiry('2026-01-05', 10, 2)).toBe('2026-02-09');
+    expect(suggestedExpiry('2026-01-05', 4, 0.5)).toBe('2026-03-02');
+  });
+  it('otkazan čas bez nadoknade produžava rok za nedelju dana', () => {
+    expect(expiryAfterCancellations('2026-01-05', 10, 1, ['2026-01-12', '2026-04-01'])).toBe('2026-03-23');
+  });
+  it('stariji paket prvi troši održane časove', () => {
+    const used = allocateUsage(
+      [
+        { id: 'a', classes_total: 2, purchased_at: '2026-01-01', expires_at: '2026-03-01' },
+        { id: 'b', classes_total: 2, purchased_at: '2026-02-01', expires_at: '2026-04-01' },
+      ],
+      [
+        { session_id: '1', date: '2026-01-10' },
+        { session_id: '2', date: '2026-01-17' },
+        { session_id: '3', date: '2026-02-10' },
+      ],
+    );
+    expect(used.get('a')).toBe(2);
+    expect(used.get('b')).toBe(1);
+  });
+  it('podsetnik ide kad je ostao tačno jedan čas', () => {
+    expect(shouldRemindPackage(9, 10, false)).toBe(true);
+    expect(shouldRemindPackage(8, 10, false)).toBe(false);
+    expect(shouldRemindPackage(1, 1, false)).toBe(false);
+    expect(shouldRemindPackage(9, 10, true)).toBe(false);
+  });
+  it('čas svake druge nedelje pada samo u parnim nedeljama od primera', () => {
+    const slot = { weekday: 7, recurrence: 'biweekly', anchor_date: '2026-11-08' };
+    expect(slotOccursOn('2026-11-08', slot)).toBe(true);
+    expect(slotOccursOn('2026-11-15', slot)).toBe(false);
+    expect(slotOccursOn('2026-11-22', slot)).toBe(true);
+    expect(slotOccursOn('2026-11-09', slot)).toBe(false);
+  });
+  it('tekst podsetnika sadrži uputstvo za uplatu', () => {
+    const text = packageReminderText({ school: 'Škola', student: 'Ana', used: 9, total: 10, price: 250, currency: 'EUR', instructions: 'PayPal: skola@example.com', bankAccount: null, link: null });
+    expect(text).toContain('PayPal: skola@example.com');
+    expect(text).toContain('250 EUR');
   });
 });
 

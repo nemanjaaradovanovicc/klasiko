@@ -30,6 +30,9 @@ export interface Organization {
   auto_reminders: boolean;
   reminder_days_before: number;
   sibling_discount_pct: number;
+  sibling_discount_3_pct: number;
+  payment_instructions: string | null;
+  package_reminders: boolean;
   terms_accepted_at: string | null;
   source: 'admin' | 'self';
   admin_seen_at: string | null;
@@ -83,6 +86,7 @@ export interface Group {
   active: boolean;
   fee_type: FeeType;
   package_classes: number | null;
+  drop_in: boolean;
 }
 
 export type FeeType = 'monthly' | 'package' | 'manual';
@@ -107,6 +111,8 @@ export interface Slot {
   start_time: string;
   end_time: string;
   room_id: string | null;
+  recurrence: 'weekly' | 'biweekly';
+  anchor_date: string | null;
 }
 
 export const KINDS: Record<string, string> = {

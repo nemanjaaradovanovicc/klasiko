@@ -167,3 +167,41 @@ describe('stari podaci', () => {
     expect(rows).toEqual([{ date: '2026-02-01', teacher_id: TEA_A }, { date: '2026-02-02', teacher_id: null }]);
   });
 });
+
+describe('paketi i porodice', () => {
+  // Test „stari podaci” ponovo pokreće 004 i vraća staru funkciju provere škole. 006 je vraća.
+  beforeAll(async () => {
+    await db.exec(migrations.at(-1)!);
+  });
+  it('predavač ne pravi katalog, a vlasnik pravi', async () => {
+    expect(await fails(TEA_A, `insert into lesson_packages (org_id, name, lessons, price, currency) values ('${ORG_A}', '10 časova', 10, 250, 'EUR')`)).toBe(true);
+    expect(await fails(OWN_A, `insert into lesson_packages (org_id, name, lessons, price, currency) values ('${ORG_A}', '10 časova', 10, 250, 'EUR')`)).toBe(false);
+  });
+  it('predavač upisuje paket samo svojoj grupi i vidi samo zaduženja paketa', async () => {
+    expect(await fails(TEA_A, `insert into class_packages (org_id, group_id, student_id, classes_total, price, currency) values ('${ORG_A}', '${G_A}', '${ST_A}', 10, 250, 'EUR')`)).toBe(false);
+    expect(await fails(TEA_A, `insert into class_packages (org_id, group_id, student_id, classes_total) values ('${ORG_A}', '${G_A2}', '${ST_A2}', 8)`)).toBe(true);
+    expect(await fails(TEA_A, `insert into charges (org_id, student_id, group_id, period, amount, kind) values ('${ORG_A}', '${ST_A}', '${G_A}', '2026-08', 100, 'monthly')`)).toBe(true);
+    expect(await fails(TEA_A, `insert into charges (org_id, student_id, group_id, period, amount, currency, kind) values ('${ORG_A}', '${ST_A}', '${G_A}', '2026-08', 250, 'EUR', 'package')`)).toBe(false);
+    const kinds = await as<{ kind: string }>(TEA_A, 'select kind from charges');
+    expect(kinds.length).toBeGreaterThan(0);
+    expect(kinds.every((r) => r.kind === 'package')).toBe(true);
+  });
+  it('izmena tuđeg paketa ne prolazi, a paket druge škole ne može da se poveže', async () => {
+    const [{ id: other }] = await as<{ id: string }>(OWN_A, `insert into class_packages (org_id, group_id, student_id, classes_total) values ('${ORG_A}', '${G_A2}', '${ST_A2}', 4) returning id`);
+    expect(await as(TEA_A, `update class_packages set price = 1 where id = '${other}' returning id`)).toEqual([]);
+    const [{ id: foreign }] = await as<{ id: string }>(OWN_B, `insert into lesson_packages (org_id, name, lessons, price) values ('${ORG_B}', 'Tuđi', 4, 10) returning id`);
+    expect(await fails(OWN_A, `insert into class_packages (org_id, group_id, student_id, classes_total, package_id) values ('${ORG_A}', '${G_A}', '${ST_A}', 4, '${foreign}')`)).toBe(true);
+  });
+  it('otvorena grupa daje predavaču spisak dece škole, pa se to gasi', async () => {
+    expect(await as<{ id: string }>(TEA_A, `select id from students where id = '${ST_A2}'`)).toEqual([]);
+    await db.exec(`update groups set drop_in = true where id = '${G_A}'`);
+    expect((await as<{ id: string }>(TEA_A, `select id from students where id = '${ST_A2}'`)).length).toBe(1);
+    await db.exec(`update groups set drop_in = false where id = '${G_A}'`);
+    expect(await as<{ id: string }>(TEA_A, `select id from students where id = '${ST_A2}'`)).toEqual([]);
+  });
+  it('više podsetnika bez paketa i dalje može da se upiše', async () => {
+    const ins = `insert into reminders (org_id, student_id, channel, kind) values ('${ORG_A}', '${ST_A}', 'whatsapp', 'manual')`;
+    expect(await fails(OWN_A, ins)).toBe(false);
+    expect(await fails(OWN_A, ins)).toBe(false);
+  });
+});

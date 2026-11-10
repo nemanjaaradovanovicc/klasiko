@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createOrgUser, resetUserPassword, setActive, type Creds } from '@/lib/users';
+import { changeUserEmail, createOrgUser, resetUserPassword, setActive, type Creds } from '@/lib/users';
 import { normalizeAccount } from '@/lib/ips';
 import { teacherLimitError } from '@/lib/plan';
 import { audit } from '@/lib/audit';
@@ -34,6 +34,7 @@ export async function updateSchool(fd: FormData) {
       mb: s(fd, 'mb'),
       bank_account: account,
       payee_name: s(fd, 'payee_name'),
+      payment_instructions: s(fd, 'payment_instructions'),
       default_fee: fee ? Number(fee) : null,
       fee_due_day: Math.min(28, Math.max(1, day || 10)),
     })
@@ -110,6 +111,22 @@ export async function toggleTeamMember(fd: FormData) {
   redirect('/podesavanja?ok=tim#tim');
 }
 
+// Menja email za prijavu člana tima. Ne šalje mejl ni pozivnicu.
+export async function updateTeamEmail(fd: FormData) {
+  const ctx = await requireOwner();
+  const userId = String(fd.get('user_id') || '');
+  const email = s(fd, 'email')?.toLowerCase() ?? '';
+  if (!userId || userId === ctx.userId) redirect('/podesavanja?err=' + encodeURIComponent('Email drugog člana tima menja vlasnik. Svoju adresu ne menjamo ovde.') + '#tim');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect('/podesavanja?err=' + encodeURIComponent('Unesi ispravnu email adresu.') + '#tim');
+  const member = await assertMember(ctx.org.id, userId);
+  if (!member) redirect('/podesavanja?err=' + encodeURIComponent('Korisnik nije iz tvoje škole.') + '#tim');
+  const res = await changeUserEmail(userId, email);
+  if (res.error) redirect('/podesavanja?err=' + encodeURIComponent(res.error) + '#tim');
+  await audit({ userId: ctx.userId, email: ctx.email }, 'team.email', { orgId: ctx.org.id, target: email, details: { userId } });
+  revalidatePath('/podesavanja');
+  redirect('/podesavanja?ok=email#tim');
+}
+
 // Automatska naplata i popust za braću i sestre.
 export async function updateAutomation(fd: FormData) {
   const ctx = await requireOwner();
@@ -123,7 +140,9 @@ export async function updateAutomation(fd: FormData) {
     auto_charge_day: Math.round(num('auto_charge_day', 1, 28, 1)),
     auto_reminders: fd.get('auto_reminders') === 'on',
     reminder_days_before: Math.round(num('reminder_days_before', 0, 14, 3)),
+    package_reminders: fd.get('package_reminders') === 'on',
     sibling_discount_pct: num('sibling_discount_pct', 0, 100, 0),
+    sibling_discount_3_pct: num('sibling_discount_3_pct', 0, 100, 0),
   }).eq('id', ctx.org.id);
   revalidatePath('/', 'layout');
   redirect('/podesavanja?' + (error ? 'err=' + encodeURIComponent(error.message) : 'ok=auto') + '#automatika');

@@ -6,7 +6,8 @@ import { InstallCard } from '@/components/pwa';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { lowPackages } from '@/lib/packages-db';
 import { waUrl } from '@/lib/phone';
-import { currentPeriod, dateLong, isoWeekday, rsd, time, todayISO, fullName, periodLabel, addDays, absenceStreaks } from '@/lib/format';
+import { currentPeriod, dateLong, isoWeekday, formatMoney, formatTotals, time, todayISO, fullName, periodLabel, addDays, absenceStreaks } from '@/lib/format';
+import { slotOccursOn } from '@/lib/schedule';
 
 export const metadata = { title: 'Pregled' };
 
@@ -18,11 +19,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const period = currentPeriod();
 
   type AR = { student_id: string; session_id: string; status: string; students: { first_name: string; last_name: string; parent_phone: string | null; phone: string | null; active: boolean } | null; sessions: { date: string; group_id: string; groups: { name: string } | null } };
-  type C = { id: string; period: string; amount: number; due_date: string | null; student_id: string; students: { first_name: string; last_name: string } | null; payments: { amount: number }[] };
+  type C = { id: string; period: string; amount: number; currency: string | null; due_date: string | null; student_id: string; students: { first_name: string; last_name: string } | null; payments: { amount: number }[] };
   const [{ data: slots }, { data: sessions }, studentsRes, groupsRes, roomsRes, overdueOrCurrent, myHeldRes, recentAtt, { data: notices }, low] = await Promise.all([
     supabase
       .from('schedule_slots')
-      .select('start_time, end_time, rooms(name), groups!inner(id, name, color, active, group_members(student_id))')
+      .select('start_time, end_time, recurrence, anchor_date, rooms(name), groups!inner(id, name, color, active, group_members(student_id))')
       .eq('org_id', ctx.org.id)
       .eq('weekday', isoWeekday(today))
       .eq('groups.active', true)
@@ -33,12 +34,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     ctx.isOwner ? supabase.from('rooms').select('id', { count: 'exact', head: true }).eq('org_id', ctx.org.id) : Promise.resolve({ count: 0 }),
     // Tekući mesec i sva ranija dugovanja, ne samo ovaj mesec.
     ctx.isOwner
-      ? fetchAll<C>((a, b) => supabase.from('charges').select('id, period, amount, due_date, student_id, students(first_name, last_name), payments(amount)').eq('org_id', ctx.org.id).lte('period', period).order('id').range(a, b))
+      ? fetchAll<C>((a, b) => supabase.from('charges').select('id, period, amount, currency, due_date, student_id, students(first_name, last_name), payments(amount)').eq('org_id', ctx.org.id).lte('period', period).order('id').range(a, b))
       : Promise.resolve([] as C[]),
     !ctx.isOwner ? supabase.from('sessions').select('id', { count: 'exact', head: true }).eq('teacher_id', ctx.userId).eq('status', 'held').gte('date', `${period}-01`) : Promise.resolve({ count: 0 }),
     fetchAll<AR>((a, b) => supabase.from('attendance').select('student_id, session_id, status, students(first_name, last_name, parent_phone, phone, active), sessions!inner(date, group_id, groups(name))').eq('org_id', ctx.org.id).gte('sessions.date', addDays(today, -60)).order('session_id').order('student_id').range(a, b)),
     supabase.from('absence_notices').select('id, date, note, student_id, students(first_name, last_name)').eq('org_id', ctx.org.id).gte('date', today).lte('date', addDays(today, 7)).order('date'),
-    ctx.isOwner ? lowPackages(supabase, ctx.org.id, today) : Promise.resolve([]),
+    lowPackages(supabase, ctx.org.id, today),
   ]);
   const attRows = recentAtt.filter((r) => r.students?.active).map((r) => ({ ...r, date: r.sessions.date }));
   const streaks = absenceStreaks(attRows).slice(0, 8);
@@ -50,12 +51,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const needMakeup = mkList.filter((m) => m.status === 'cancelled' && !covered.has(m.id));
   const plannedMakeups = mkList.filter((m) => m.status === 'planned');
 
-  type S = { start_time: string; end_time: string; rooms: { name: string } | null; groups: { id: string; name: string; color: string; group_members: { student_id: string }[] } };
-  const todays = (slots ?? []) as unknown as S[];
+  type S = { start_time: string; end_time: string; recurrence: string | null; anchor_date: string | null; rooms: { name: string } | null; groups: { id: string; name: string; color: string; group_members: { student_id: string }[] } };
+  const todays = ((slots ?? []) as unknown as S[]).filter((s) => slotOccursOn(today, { ...s, weekday: isoWeekday(today) }));
   const done = new Set((sessions ?? []).filter((s) => s.status !== 'planned').map((s) => `${s.group_id}:${s.start_time.slice(0, 5)}`));
   const charges = overdueOrCurrent.filter((c) => c.period === period);
   const expected = charges.reduce((a, c) => a + Number(c.amount), 0);
-  const collected = charges.reduce((a, c) => a + Math.min(Number(c.amount), c.payments.reduce((x, p) => x + Number(p.amount), 0)), 0);
   const late = overdueOrCurrent.filter((c) => c.due_date && c.due_date < today && c.payments.reduce((x, p) => x + Number(p.amount), 0) < Number(c.amount));
   const studentCount = (studentsRes as { count: number | null }).count ?? 0;
   const groupCount = groupsRes.count ?? 0;
@@ -81,7 +81,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
           <Stat label="Časovi danas" value={todays.length} tone="brand" hint={`${todays.filter((s) => done.has(`${s.groups.id}:${time(s.start_time)}`)).length} upisano`} />
           <Stat label="Aktivni učenici" value={studentCount} hint={`${groupCount} grupa`} />
-          <Stat label={`Naplaćeno, ${periodLabel(period).toLowerCase()}`} value={rsd(collected)} hint={expected ? `od ${rsd(expected)}` : 'nema zaduženja'} tone="ok" />
+          <Stat label={`Naplaćeno, ${periodLabel(period).toLowerCase()}`} value={formatTotals(charges.map((c) => ({ amount: Math.min(Number(c.amount), c.payments.reduce((x, p) => x + Number(p.amount), 0)), currency: c.currency })))} hint={expected ? `od ${formatTotals(charges.map((c) => ({ amount: Number(c.amount), currency: c.currency })))}` : 'nema zaduženja'} tone="ok" />
           <Stat label="Kasni sa uplatom" value={late.length} tone={late.length ? 'coral' : 'default'} hint={late.length ? 'svi meseci' : undefined} />
         </div>
       )}
@@ -119,8 +119,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <Card title="Paket časova je pri kraju" className="mb-6">
           <ul className="flex flex-col divide-y divide-line">
             {low.slice(0, 8).map((p) => (
-              <li key={`${p.student_id}:${p.group_id}`} className="flex items-center justify-between gap-2 py-2.5">
-                <Link href={`/ucenici/${p.student_id}`} className="min-w-0 truncate font-bold text-ink hover:text-brand">{p.name} · {p.group}</Link>
+              <li key={`${p.id}:${p.student_id}`} className="flex items-center justify-between gap-2 py-2.5">
+                <Link href={ctx.isOwner ? `/ucenici/${p.student_id}` : '/paketi'} className="min-w-0 truncate font-bold text-ink hover:text-brand">{p.name} · {p.group}</Link>
                 <Badge tone="coral">{p.remaining === 0 ? 'nema časova' : `još ${p.remaining}`}</Badge>
               </li>
             ))}
@@ -201,7 +201,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 {late.slice(0, 8).map((c) => (
                   <li key={c.id} className="flex items-center justify-between py-2">
                     <Link href={`/ucenici/${c.student_id}`} className="min-w-0 truncate font-bold text-ink hover:text-brand">{c.students ? fullName(c.students) : ''}{c.period !== period ? <span className="font-semibold text-mut"> · {periodLabel(c.period)}</span> : null}</Link>
-                    <span className="text-[14px] font-extrabold tabular-nums text-coral-dark">{rsd(Number(c.amount) - c.payments.reduce((x, p) => x + Number(p.amount), 0))}</span>
+                    <span className="text-[14px] font-extrabold tabular-nums text-coral-dark">{formatMoney(Number(c.amount) - c.payments.reduce((x, p) => x + Number(p.amount), 0), c.currency)}</span>
                   </li>
                 ))}
               </ul>
@@ -210,7 +210,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         ) : (
           <Card title="Moje grupe">
             <p className="text-[15px] font-semibold text-mut">Imaš {groupCount} {groupCount === 1 ? 'grupu' : 'grupa'}. Ovog meseca si održao/la <b className="text-ink">{(myHeldRes as { count: number | null }).count ?? 0}</b> {((myHeldRes as { count: number | null }).count ?? 0) === 1 ? 'čas' : 'časova'}.</p>
-            <Link href="/grupe" className="btn btn-soft mt-3">Pogledaj grupe</Link>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link href="/grupe" className="btn btn-soft">Pogledaj grupe</Link>
+              <Link href="/paketi" className="btn btn-soft">Paketi časova</Link>
+            </div>
           </Card>
         )}
       </div>

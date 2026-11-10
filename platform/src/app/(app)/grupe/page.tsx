@@ -12,11 +12,11 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
   const supabase = await createClient();
   const { data } = await supabase
     .from('groups')
-    .select('id, name, level, color, monthly_fee, capacity, active, profiles(full_name), rooms(name), group_members(student_id), schedule_slots(weekday, start_time, end_time)')
+    .select('id, name, level, color, monthly_fee, fee_type, capacity, active, profiles(full_name), rooms(name), group_members(student_id), schedule_slots(weekday, start_time, end_time, recurrence)')
     .eq('org_id', ctx.org.id)
     .eq('active', !sp.arhiva)
     .order('name');
-  type G = { id: string; name: string; level: string | null; color: string; monthly_fee: number | null; capacity: number | null; profiles: { full_name: string } | null; rooms: { name: string } | null; group_members: { student_id: string }[]; schedule_slots: { weekday: number; start_time: string; end_time: string }[] };
+  type G = { id: string; name: string; level: string | null; color: string; monthly_fee: number | null; fee_type: string; capacity: number | null; profiles: { full_name: string } | null; rooms: { name: string } | null; group_members: { student_id: string }[]; schedule_slots: { weekday: number; start_time: string; end_time: string; recurrence: string | null }[] };
   const groups = (data ?? []) as unknown as G[];
   return (
     <>
@@ -52,10 +52,10 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
                 </div>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {slots.length === 0 ? <span className="text-[13px] font-semibold text-coral-dark">Nema termina u rasporedu</span> : slots.map((sl, i) => (
-                    <span key={i} className="rounded-lg bg-soft px-2 py-1 text-[12px] font-bold text-ink-2">{WEEKDAYS_SHORT[sl.weekday]} {time(sl.start_time)}</span>
+                    <span key={i} className="rounded-lg bg-soft px-2 py-1 text-[12px] font-bold text-ink-2">{WEEKDAYS_SHORT[sl.weekday]} {time(sl.start_time)}{sl.recurrence === 'biweekly' ? ' · svake 2.' : ''}</span>
                   ))}
                 </div>
-                {ctx.isOwner && g.monthly_fee !== null && <div className="mt-3 text-[13px] font-bold text-brand">{rsd(g.monthly_fee)} mesečno</div>}
+                {ctx.isOwner && g.monthly_fee !== null && <div className="mt-3 text-[13px] font-bold text-brand">{rsd(g.monthly_fee)} {g.fee_type === 'package' ? 'paket' : 'mesečno'}</div>}
               </Link>
             );
           })}
