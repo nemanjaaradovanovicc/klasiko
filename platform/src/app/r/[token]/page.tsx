@@ -48,7 +48,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
     // Sva zaduženja, da nijedan stariji dug ne ostane skriven.
     fetchAll<C>((a, b) => db.from('charges').select('id, period, amount, currency, description, student_id, payments(amount, paid_at)').in('student_id', ids).eq('org_id', link.org_id).order('period', { ascending: false }).order('id').range(a, b)),
     db.from('absence_notices').select('id, date, note, student_id').in('student_id', ids).gte('date', today).order('date'),
-    packageBalances(db, link.org_id, today, [child.id]),
+    packageBalances(db, link.org_id, today, [child.id]).catch((e) => { console.error(e); return []; }),
   ]);
   const groups = ((members ?? []) as unknown as { groups: G | null }[]).map((m) => m.groups).filter((g): g is G => !!g && g.active);
   const groupIds = groups.map((g) => g.id);

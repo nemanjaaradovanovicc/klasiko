@@ -45,7 +45,11 @@ type PkgRow = {
   groups: { name: string } | null;
 };
 
-const PKG_SELECT = 'id, student_id, group_id, classes_total, purchased_at, expires_at, paid_at, price, currency, bundle_id, shared, auto_expires, students(first_name, last_name, active, parent_email, email, parent_phone, phone, family_id), groups(name)';
+// class_package_students vezuje isti paket i za učenika i za grupu, pa PostgREST vidi dve veze.
+// Bez imena spoljnog ključa upit puca i pre nego što vrati prazan katalog (PGRST201).
+export const CLASS_PACKAGE_STUDENT_EMBED = 'students!class_packages_student_id_fkey(first_name, last_name, active, parent_email, email, parent_phone, phone, family_id)';
+export const CLASS_PACKAGE_GROUP_EMBED = 'groups!class_packages_group_id_fkey(name)';
+const PKG_SELECT = `id, student_id, group_id, classes_total, purchased_at, expires_at, paid_at, price, currency, bundle_id, shared, auto_expires, ${CLASS_PACKAGE_STUDENT_EMBED}, ${CLASS_PACKAGE_GROUP_EMBED}`;
 
 // Stanje svakog paketa: održani časovi (učenik prisutan) troše paket, stariji prvi.
 export async function packageBalances(db: SupabaseClient, orgId: string, today: string, studentIds?: string[]): Promise<Balance[]> {

@@ -7,7 +7,7 @@ import { StudentFields } from '@/components/student-form';
 import { attendanceStats, formatMoney, formatTotals, fullName, dateSr, periodLabel, todayISO } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ConfirmButton, TypedConfirm } from '@/components/confirm';
-import { packageBalances } from '@/lib/packages-db';
+import { CLASS_PACKAGE_GROUP_EMBED, packageBalances } from '@/lib/packages-db';
 import { phoneKey, waUrl } from '@/lib/phone';
 import { distributeAdvance } from '../../uplate/actions';
 import type { Student } from '@/lib/types';
@@ -39,9 +39,9 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
     fetchAll<P>((a, b) => supabase.from('payments').select('id, amount, currency, paid_at, method, charge_id, note').eq('student_id', id).eq('org_id', ctx.org.id).order('paid_at', { ascending: false }).order('id').range(a, b)),
     supabase.from('parent_links').select('token, last_seen_at, student_id').eq('org_id', ctx.org.id).eq('revoked', false).order('created_at', { ascending: false }),
     fetchAll<Sib>((a, b) => supabase.from('students').select('id, first_name, last_name, parent_phone, family_id').eq('org_id', ctx.org.id).eq('active', true).order('last_name').order('id').range(a, b)),
-    packageBalances(supabase, ctx.org.id, today, [id]),
-    supabase.from('class_packages').select('id, classes_total, price, currency, purchased_at, expires_at, paid_at, group_id, groups(name)').eq('student_id', id).eq('org_id', ctx.org.id).order('purchased_at', { ascending: false }),
-    supabase.from('class_package_students').select('class_packages(id, classes_total, price, currency, purchased_at, expires_at, paid_at, group_id, groups(name))').eq('student_id', id).eq('org_id', ctx.org.id),
+    packageBalances(supabase, ctx.org.id, today, [id]).catch((e) => { console.error(e); return []; }),
+    supabase.from('class_packages').select(`id, classes_total, price, currency, purchased_at, expires_at, paid_at, group_id, ${CLASS_PACKAGE_GROUP_EMBED}`).eq('student_id', id).eq('org_id', ctx.org.id).order('purchased_at', { ascending: false }),
+    supabase.from('class_package_students').select(`class_packages(id, classes_total, price, currency, purchased_at, expires_at, paid_at, group_id, ${CLASS_PACKAGE_GROUP_EMBED})`).eq('student_id', id).eq('org_id', ctx.org.id),
     supabase.from('lesson_packages').select('id, name, lessons, price, currency').eq('org_id', ctx.org.id).eq('active', true).order('name'),
     supabase.from('group_waitlist').select('group_id, groups(name)').eq('student_id', id),
   ]);

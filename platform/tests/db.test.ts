@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { CLASS_PACKAGE_GROUP_EMBED, CLASS_PACKAGE_STUDENT_EMBED } from '@/lib/packages-db';
 import { PGlite } from '@electric-sql/pglite';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -198,6 +199,14 @@ describe('paketi i porodice', () => {
     expect((await as<{ id: string }>(TEA_A, `select id from students where id = '${ST_A2}'`)).length).toBe(1);
     await db.exec(`update groups set drop_in = false where id = '${G_A}'`);
     expect(await as<{ id: string }>(TEA_A, `select id from students where id = '${ST_A2}'`)).toEqual([]);
+  });
+  it('ugnježdeni učenik i grupa idu direktnom vezom, ne kroz class_package_students', async () => {
+    const { rows } = await db.query<{ conname: string }>(`select c.conname from pg_constraint c join pg_class t on t.oid = c.conrelid where t.relname = 'class_packages' and c.contype = 'f'`);
+    const names = rows.map((r) => r.conname);
+    expect(names).toContain('class_packages_student_id_fkey');
+    expect(names).toContain('class_packages_group_id_fkey');
+    expect(CLASS_PACKAGE_STUDENT_EMBED.startsWith('students!class_packages_student_id_fkey(')).toBe(true);
+    expect(CLASS_PACKAGE_GROUP_EMBED.startsWith('groups!class_packages_group_id_fkey(')).toBe(true);
   });
   it('više podsetnika bez paketa i dalje može da se upiše', async () => {
     const ins = `insert into reminders (org_id, student_id, channel, kind) values ('${ORG_A}', '${ST_A}', 'whatsapp', 'manual')`;
