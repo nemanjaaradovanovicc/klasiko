@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { isISODate } from '@/lib/format';
+import { dateSr, isISODate } from '@/lib/format';
+import { syncPackageExtension } from '@/lib/packages-db';
 
 export type AttStatus = 'present' | 'absent' | 'excused';
 
@@ -21,13 +22,20 @@ export async function saveAttendance(input: {
   if (!isISODate(input.date) || !/^\d{2}:\d{2}$/.test(input.startTime)) return { error: 'Neispravan datum ili vreme.' };
   if (input.status !== 'held' && input.status !== 'cancelled') return { error: 'Neispravan status časa.' };
   const supabase = await createClient();
-  const { data: group } = await supabase.from('groups').select('id, teacher_id').eq('id', input.groupId).eq('org_id', ctx.org.id).maybeSingle();
+  const { data: group } = await supabase.from('groups').select('id, teacher_id, drop_in').eq('id', input.groupId).eq('org_id', ctx.org.id).maybeSingle();
   if (!group) return { error: 'Grupa nije pronađena.' };
   const [{ data: members }, { data: existing }] = await Promise.all([
     supabase.from('group_members').select('student_id').eq('group_id', input.groupId),
     supabase.from('sessions').select('teacher_id').eq('group_id', input.groupId).eq('date', input.date).eq('start_time', input.startTime + ':00').maybeSingle(),
   ]);
-  const allowed = new Set((members ?? []).map((m) => m.student_id));
+  const markIds = Object.keys(input.marks);
+  let allowed: Set<string>;
+  if (group.drop_in && markIds.length) {
+    const { data: kids } = await supabase.from('students').select('id').eq('org_id', ctx.org.id).eq('active', true).in('id', markIds);
+    allowed = new Set((kids ?? []).map((k) => k.id));
+  } else {
+    allowed = new Set((members ?? []).map((m) => m.student_id));
+  }
 
   // Čas se vodi na onoga ko ga je držao: predavač na sebe, a vlasnik bira predavača (podrazumevano predavač grupe).
   let teacherId: string | null;
@@ -61,7 +69,9 @@ export async function saveAttendance(input: {
       if (aErr) return { error: 'Prisustvo nije sačuvano: ' + aErr.message };
     }
   }
+  await syncPackageExtension(supabase, ctx.org.id, session.id);
   revalidatePath('/prisustvo');
+  revalidatePath('/paketi');
   revalidatePath('/');
   return { ok: true };
 }
@@ -80,14 +90,24 @@ export async function scheduleMakeup(fd: FormData) {
   const end = String(fd.get('end_time') || '') || null;
   const back = safeBack(fd.get('back'));
   const supabase = await createClient();
-  const { data: orig } = await supabase.from('sessions').select('id, group_id, status, teacher_id, groups(teacher_id)').eq('id', from).eq('org_id', ctx.org.id).maybeSingle();
+  const { data: orig } = await supabase.from('sessions').select('id, group_id, date, status, teacher_id, groups(teacher_id)').eq('id', from).eq('org_id', ctx.org.id).maybeSingle();
   if (!orig || orig.status !== 'cancelled' || !isISODate(date) || !/^\d{2}:\d{2}$/.test(start) || (end && end <= start)) {
     redirect(`${back}${back.includes('?') ? '&' : '?'}err=` + encodeURIComponent('Proveri datum i vreme nadoknade.'));
+  }
+  const { data: pkgs } = await supabase.from('class_packages').select('expires_at, purchased_at, auto_expires').eq('group_id', orig.group_id).eq('org_id', ctx.org.id);
+  const limits = (pkgs ?? [])
+    .filter((p) => p.auto_expires && p.expires_at && p.purchased_at <= orig.date && p.expires_at >= orig.date)
+    .map((p) => p.expires_at as string)
+    .sort();
+  if (limits[0] && date > limits[0]) {
+    redirect(`${back}${back.includes('?') ? '&' : '?'}err=` + encodeURIComponent(`Nadoknada mora da bude do ${dateSr(limits[0])}, dok traje paket. Produži paket na stranici Paketi, pa zakaži nadoknadu.`));
   }
   const groupTeacher = (orig.groups as unknown as { teacher_id: string | null } | null)?.teacher_id ?? null;
   const teacherId = ctx.isOwner ? orig.teacher_id ?? groupTeacher : ctx.userId;
   const { error } = await supabase.from('sessions').insert({ org_id: ctx.org.id, group_id: orig.group_id, date, start_time: start, end_time: end, status: 'planned', makeup_for: orig.id, teacher_id: teacherId, note: 'Nadoknada' });
+  if (!error) await syncPackageExtension(supabase, ctx.org.id, orig.id);
   revalidatePath('/prisustvo');
+  revalidatePath('/paketi');
   revalidatePath('/');
   redirect(`${back}${back.includes('?') ? '&' : '?'}` + (error ? 'err=' + encodeURIComponent(error.message.includes('duplicate') ? 'U tom terminu već postoji čas ove grupe.' : error.message) : 'ok=nadoknada'));
 }
@@ -95,8 +115,12 @@ export async function scheduleMakeup(fd: FormData) {
 export async function cancelMakeup(fd: FormData) {
   const ctx = await requireOrg();
   const supabase = await createClient();
-  await supabase.from('sessions').delete().eq('id', String(fd.get('id'))).eq('org_id', ctx.org.id).eq('status', 'planned');
+  const id = String(fd.get('id'));
+  const { data: row } = await supabase.from('sessions').select('makeup_for').eq('id', id).eq('org_id', ctx.org.id).eq('status', 'planned').maybeSingle();
+  await supabase.from('sessions').delete().eq('id', id).eq('org_id', ctx.org.id).eq('status', 'planned');
+  if (row?.makeup_for) await syncPackageExtension(supabase, ctx.org.id, row.makeup_for);
   revalidatePath('/prisustvo');
+  revalidatePath('/paketi');
   revalidatePath('/');
   redirect(safeBack(fd.get('back')));
 }

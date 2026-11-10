@@ -11,11 +11,11 @@ export default async function SchedulePage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from('schedule_slots')
-    .select('id, weekday, start_time, end_time, rooms(name), groups!inner(id, name, color, active, profiles(full_name), rooms(name))')
+    .select('id, weekday, start_time, end_time, recurrence, rooms(name), groups!inner(id, name, color, active, profiles(full_name), rooms(name))')
     .eq('org_id', ctx.org.id)
     .eq('groups.active', true)
     .order('start_time');
-  type S = { id: string; weekday: number; start_time: string; end_time: string; rooms: { name: string } | null; groups: { id: string; name: string; color: string; profiles: { full_name: string } | null; rooms: { name: string } | null } };
+  type S = { id: string; weekday: number; start_time: string; end_time: string; recurrence: string | null; rooms: { name: string } | null; groups: { id: string; name: string; color: string; profiles: { full_name: string } | null; rooms: { name: string } | null } };
   const slots = (data ?? []) as unknown as S[];
   const today = isoWeekday(todayISO());
   const days = [1, 2, 3, 4, 5, 6, 7].filter((d) => d <= 5 || slots.some((s) => s.weekday === d));
@@ -39,7 +39,7 @@ export default async function SchedulePage() {
                   {list.length === 0 && <div className="px-1 py-2 text-[13px] font-semibold text-mut/70">Nema termina</div>}
                   {list.map((s) => (
                     <Link key={s.id} href={`/grupe/${s.groups.id}`} className="block rounded-xl bg-white p-2.5 shadow-sm ring-1 ring-line transition hover:ring-brand/40" style={{ borderLeft: `4px solid ${s.groups.color}` }}>
-                      <div className="text-[12px] font-extrabold tabular-nums text-mut">{time(s.start_time)}–{time(s.end_time)}</div>
+                      <div className="text-[12px] font-extrabold tabular-nums text-mut">{time(s.start_time)}–{time(s.end_time)}{s.recurrence === 'biweekly' ? ' · svake 2. nedelje' : ''}</div>
                       <div className="text-[14px] font-extrabold leading-tight text-ink">{s.groups.name}</div>
                       <div className="mt-0.5 text-[12px] font-semibold text-mut">{[s.rooms?.name ?? s.groups.rooms?.name, s.groups.profiles?.full_name].filter(Boolean).join(' · ')}</div>
                     </Link>

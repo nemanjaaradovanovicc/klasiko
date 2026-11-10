@@ -23,6 +23,7 @@ export const AUDIT_LABEL: Record<string, string> = {
   'team.reset_password': 'Resetovana lozinka člana tima',
   'team.set_active': 'Promenjen status člana tima',
   'team.add': 'Dodat član tima',
+  'team.email': 'Promenjen email za prijavu',
   'student.delete': 'Učenik je trajno obrisan',
   'group.delete': 'Grupa je trajno obrisana',
   'org.export': 'Izvezeni svi podaci škole',

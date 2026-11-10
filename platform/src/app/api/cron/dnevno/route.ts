@@ -9,6 +9,7 @@ import { fetchAll } from '@/lib/supabase/fetch-all';
 import { pruneAttempts } from '@/lib/throttle';
 import { APP_URL, parentUrl } from '@/lib/parent';
 import { trialReminderDue } from '@/lib/billing';
+import { sendPackageReminders } from '@/lib/package-reminders';
 import type { Organization } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -33,8 +34,8 @@ export async function GET(request: NextRequest) {
   const day = Number(today.slice(8, 10));
   await pruneAttempts();
 
-  const orgs = await fetchAll<Organization & { last_auto_period: string | null }>((a, b) => db.from('organizations').select('*').or('auto_charges.eq.true,auto_reminders.eq.true').order('id').range(a, b));
-  const summary = { orgs: orgs.length, charges: 0, emails: 0, errors: [] as string[] };
+  const orgs = await fetchAll<Organization & { last_auto_period: string | null }>((a, b) => db.from('organizations').select('*').or('auto_charges.eq.true,auto_reminders.eq.true,package_reminders.eq.true').order('id').range(a, b));
+  const summary = { orgs: orgs.length, charges: 0, emails: 0, packageEmails: 0, errors: [] as string[] };
 
   for (const org of orgs) {
     if (!orgAccess(org).ok) continue;
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
         }
       }
       if (org.auto_reminders && emailEnabled()) summary.emails += await sendAutoReminders(db, org, today);
+      if (org.package_reminders) summary.packageEmails += await sendPackageReminders(db, org, today);
     } catch (e) {
       summary.errors.push(`${org.id}: ${e instanceof Error ? e.message : 'greška'}`);
     }
@@ -132,6 +134,7 @@ async function sendAutoReminders(db: ReturnType<typeof createAdminClient>, org: 
         late ? 'Podsećamo da uplata još nije evidentirana:' : 'Podsećamo da uskoro dospeva uplata:',
         ...fresh.map((f) => `${fullName(f.charge.students!)}, ${periodLabel(f.charge.period)}${f.charge.description ? ` (${f.charge.description})` : ''}: ${rsd(f.remaining)}`),
         `Ukupno: ${rsd(total)}`,
+        org.payment_instructions?.trim() ?? '',
         org.bank_account ? `Račun: ${org.bank_account}` : '',
         link ? `QR kod za uplatu i detalji: ${parentUrl(link.token)}` : '',
         '',

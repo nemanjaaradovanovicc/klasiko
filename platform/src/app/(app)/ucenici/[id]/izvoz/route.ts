@@ -11,10 +11,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const { data: student } = await supabase.from('students').select('*').eq('id', id).eq('org_id', ctx.org.id).maybeSingle();
   if (!student) return new NextResponse('Učenik nije pronađen.', { status: 404 });
   const by = (table: string, order: string) => fetchAll<unknown>((a, b) => supabase.from(table).select('*').eq('org_id', ctx.org.id).eq('student_id', id).order(order).range(a, b));
-  const [grupe, zaduzenja, uplate, prisustvo, dolasci, izostanci, paketi] = await Promise.all([
-    by('group_members', 'group_id'), by('charges', 'id'), by('payments', 'id'), by('attendance', 'session_id'), by('checkins', 'id'), by('absence_notices', 'id'), by('class_packages', 'id'),
+  const [grupe, zaduzenja, uplate, prisustvo, dolasci, izostanci, paketi, zajednicki] = await Promise.all([
+    by('group_members', 'group_id'), by('charges', 'id'), by('payments', 'id'), by('attendance', 'session_id'), by('checkins', 'id'), by('absence_notices', 'id'), by('class_packages', 'id'), by('class_package_students', 'class_package_id'),
   ]);
-  const body = { izvezeno: new Date().toISOString(), skola: ctx.org.name, ucenik: student, grupe, zaduzenja, uplate, prisustvo, dolasci, izostanci, paketi };
+  const body = { izvezeno: new Date().toISOString(), skola: ctx.org.name, ucenik: student, grupe, zaduzenja, uplate, prisustvo, dolasci, izostanci, paketi, zajednicki };
   return new NextResponse(JSON.stringify(body, null, 2), {
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': `attachment; filename="klasiko-ucenik-${student.ref_no}.json"`, 'Cache-Control': 'no-store' },
   });

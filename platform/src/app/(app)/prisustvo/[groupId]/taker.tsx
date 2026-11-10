@@ -9,14 +9,22 @@ interface S { id: string; name: string }
 
 type Draft = { marks: Record<string, AttStatus>; status: 'held' | 'cancelled'; note: string; teacherId: string };
 
-export function Taker({ groupId, date, startTime, students, initial, initialStatus, initialNote, saved, absences = {}, teachers, initialTeacher = '' }: {
+export function Taker({ groupId, date, startTime, students, initial, initialStatus, initialNote, saved, absences = {}, teachers, initialTeacher = '', dropIn = false, roster = [] }: {
   groupId: string; date: string; startTime: string; students: S[]; initial: Record<string, AttStatus>; initialStatus: 'held' | 'cancelled'; initialNote: string; saved: boolean;
   absences?: Record<string, string>; teachers?: { id: string; full_name: string }[]; initialTeacher?: string;
+  dropIn?: boolean; roster?: S[];
 }) {
+  const [extras, setExtras] = useState<S[]>(() => {
+    const known = new Set(students.map((s) => s.id));
+    return roster.filter((s) => !known.has(s.id) && initial[s.id]);
+  });
+  const list = [...students, ...extras];
   const [marks, setMarks] = useState<Record<string, AttStatus>>(() => {
     const m: Record<string, AttStatus> = {};
     // Izostanak koji je roditelj javio unapred se predlaže kao opravdan.
-    students.forEach((s) => (m[s.id] = initial[s.id] ?? (absences[s.id] !== undefined ? 'excused' : 'present')));
+    for (const s of [...students, ...roster.filter((r) => !students.some((x) => x.id === r.id) && initial[r.id])]) {
+      m[s.id] = initial[s.id] ?? (absences[s.id] !== undefined ? 'excused' : 'present');
+    }
     return m;
   });
   const [status, setStatus] = useState(initialStatus);
@@ -83,18 +91,38 @@ export function Taker({ groupId, date, startTime, students, initial, initialStat
         <button type="button" onClick={() => { touch(); setStatus('cancelled'); }} className={`btn btn-sm ${status === 'cancelled' ? 'btn-coral' : 'btn-soft'}`}>Čas je otkazan</button>
         {status === 'held' && (
           <>
-            <button type="button" className="btn btn-sm btn-ghost" onClick={() => { touch(); setMarks(Object.fromEntries(students.map((s) => [s.id, 'present' as AttStatus]))); }}>Svi prisutni</button>
-            <span className="ml-auto text-[14px] font-extrabold text-ink">{present} / {students.length} prisutno</span>
+            <button type="button" className="btn btn-sm btn-ghost" onClick={() => { touch(); setMarks(Object.fromEntries(list.map((s) => [s.id, 'present' as AttStatus]))); }}>Svi prisutni</button>
+            <span className="ml-auto text-[14px] font-extrabold text-ink">{present} / {list.length} prisutno</span>
           </>
         )}
       </div>
 
+      {dropIn && status === 'held' && (
+        <label className="block">
+          <span className="label">Dodaj dete samo za ovaj čas</span>
+          <select
+            className="input"
+            value=""
+            onChange={(e) => {
+              const picked = roster.find((r) => r.id === e.target.value);
+              if (!picked || list.some((s) => s.id === picked.id)) return;
+              touch();
+              setExtras((xs) => [...xs, picked]);
+              setMarks((m) => ({ ...m, [picked.id]: absences[picked.id] !== undefined ? 'excused' : 'present' }));
+            }}
+          >
+            <option value="">Izaberi učenika</option>
+            {roster.filter((r) => !list.some((s) => s.id === r.id)).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+          </select>
+        </label>
+      )}
+
       {status === 'held' ? (
-        students.length === 0 ? (
-          <div className="card p-6 text-center font-semibold text-mut">U grupi nema učenika.</div>
+        list.length === 0 ? (
+          <div className="card p-6 text-center font-semibold text-mut">{dropIn ? 'Niko nije dodat za ovaj čas. Izaberi dete iznad.' : 'U grupi nema učenika.'}</div>
         ) : (
           <ul className="card divide-y divide-line">
-            {students.map((s) => (
+            {list.map((s) => (
               <li key={s.id} className="flex items-center gap-3 px-4 py-2.5">
                 <span className="min-w-0 flex-1">
                   <span className={`block truncate text-[16px] font-bold ${marks[s.id] === 'present' ? 'text-ink' : 'text-mut'}`}>{s.name}</span>
@@ -108,7 +136,7 @@ export function Taker({ groupId, date, startTime, students, initial, initialStat
           </ul>
         )
       ) : (
-        <div className="card p-5 text-[15px] font-semibold text-ink-2">Otkazan čas se ne računa u prisustvo. Dodaj razlog ispod, npr. „predavač bolestan, nadoknada u četvrtak”.</div>
+        <div className="card p-5 text-[15px] font-semibold text-ink-2">Otkazan čas se ne računa u prisustvo i ne troši paket. Ako nema dogovorene nadoknade, rok paketa se produžava za nedelju dana. Dodaj razlog ispod, npr. „predavač bolestan”.</div>
       )}
 
       {teachers && (

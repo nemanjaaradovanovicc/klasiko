@@ -7,6 +7,26 @@ export function rsd(n: number | string | null | undefined): string {
   return new Intl.NumberFormat('sr-Latn-RS', { maximumFractionDigits: 0 }).format(v) + ' RSD';
 }
 
+export function formatMoney(n: number | string | null | undefined, currency?: string | null): string {
+  const v = Number(n ?? 0);
+  const c = (currency || 'RSD').toUpperCase();
+  if (c === 'EUR') {
+    const whole = Math.abs(v - Math.round(v)) < 0.001;
+    return new Intl.NumberFormat('sr-Latn-RS', { minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 }).format(v) + ' EUR';
+  }
+  return rsd(v);
+}
+
+export function formatTotals(items: { amount: number; currency?: string | null }[]): string {
+  const by = new Map<string, number>();
+  for (const it of items) {
+    const c = (it.currency || 'RSD').toUpperCase();
+    by.set(c, Math.round(((by.get(c) ?? 0) + Number(it.amount)) * 100) / 100);
+  }
+  if (by.size === 0) return rsd(0);
+  return [...by.entries()].map(([c, n]) => formatMoney(n, c)).join(' · ');
+}
+
 export function num(n: number | string | null | undefined): string {
   return new Intl.NumberFormat('sr-Latn-RS', { maximumFractionDigits: 0 }).format(Number(n ?? 0));
 }

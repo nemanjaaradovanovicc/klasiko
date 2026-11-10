@@ -4,18 +4,19 @@ import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Flash, Badge, Stat } from '@/components/ui';
 import { StudentFields } from '@/components/student-form';
-import { attendanceStats, fullName, dateSr, rsd, periodLabel, todayISO } from '@/lib/format';
+import { attendanceStats, formatMoney, formatTotals, fullName, dateSr, periodLabel, todayISO } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ConfirmButton, TypedConfirm } from '@/components/confirm';
 import { packageBalances } from '@/lib/packages-db';
 import { phoneKey, waUrl } from '@/lib/phone';
 import { distributeAdvance } from '../../uplate/actions';
 import type { Student } from '@/lib/types';
-import { updateStudent, setStudentActive, deleteStudent, addToGroup, removeFromGroup, createParentLink, revokeParentLink, linkFamily, unlinkFamily, buyPackage, deletePackage } from '../actions';
+import { updateStudent, setStudentActive, deleteStudent, addToGroup, removeFromGroup, createParentLink, revokeParentLink, linkFamily, unlinkFamily } from '../actions';
+import { assignPackage, deletePackagePurchase } from '../../paketi/actions';
 import { CopyButton } from '@/components/copy-button';
 import { parentUrl } from '@/lib/parent';
 
-const OK: Record<string, string> = { '1': 'Sačuvano.', novi: 'Učenik je dodat.', ispisan: 'Učenik je ispisan i uklonjen iz grupa.', aktivan: 'Učenik je ponovo aktivan.', link: 'Link za roditelje je napravljen. Pošalji ga roditelju.', ugasen: 'Link je poništen i više ne radi.', cekanje: 'Grupa je popunjena, pa je učenik na listi čekanja.', avans: 'Avans je raspoređen na otvorena zaduženja.', paket: 'Paket je dodat, a zaduženje je napravljeno.' };
+const OK: Record<string, string> = { '1': 'Sačuvano.', novi: 'Učenik je dodat.', ispisan: 'Učenik je ispisan i uklonjen iz grupa.', aktivan: 'Učenik je ponovo aktivan.', link: 'Link za roditelje je napravljen. Pošalji ga roditelju.', ugasen: 'Link je poništen i više ne radi.', cekanje: 'Grupa je popunjena, pa je učenik na listi čekanja.', avans: 'Avans je raspoređen na otvorena zaduženja.', paket: 'Paket je dodat.', obrisan: 'Paket je obrisan. Zaduženje, ako postoji, ostaje na Uplatama.' };
 
 export default async function StudentPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
   const ctx = await requireOwner();
@@ -24,21 +25,24 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
   const supabase = await createClient();
   type M = { group_id: string; joined_at: string; groups: { name: string; color: string; monthly_fee: number | null; package_classes: number | null; fee_type: string } | null };
   type A = { status: string; session_id: string; sessions: { date: string; group_id: string; groups: { name: string } | null } | null };
-  type C = { id: string; period: string; amount: number; description: string | null; groups: { name: string } | null };
-  type P = { id: string; amount: number; paid_at: string; method: string; charge_id: string | null; note: string | null };
+  type C = { id: string; period: string; amount: number; currency: string | null; description: string | null; groups: { name: string } | null };
+  type P = { id: string; amount: number; currency: string | null; paid_at: string; method: string; charge_id: string | null; note: string | null };
+  type Pkg = { id: string; classes_total: number; price: number; currency: string | null; purchased_at: string; expires_at: string | null; paid_at: string | null; group_id: string; groups: { name: string } | null };
   type Sib = { id: string; first_name: string; last_name: string; parent_phone: string | null; family_id: string | null };
   const today = todayISO();
-  const [{ data: s }, { data: members }, { data: groups }, attList0, chs, pays, { data: plink0 }, allStudents, balances, { data: pkgs }, { data: waiting }] = await Promise.all([
+  const [{ data: s }, { data: members }, { data: groups }, attList0, chs, pays, { data: plink0 }, allStudents, balances, { data: pkgs }, { data: sharedPkgs }, { data: catalog }, { data: waiting }] = await Promise.all([
     supabase.from('students').select('*').eq('id', id).eq('org_id', ctx.org.id).single<Student>(),
     supabase.from('group_members').select('group_id, joined_at, groups(name, color, monthly_fee, package_classes, fee_type)').eq('student_id', id),
     supabase.from('groups').select('id,name').eq('org_id', ctx.org.id).eq('active', true).order('name'),
     fetchAll<A>((a, b) => supabase.from('attendance').select('status, session_id, sessions(date, group_id, groups(name))').eq('student_id', id).eq('org_id', ctx.org.id).order('session_id').range(a, b)),
-    fetchAll<C>((a, b) => supabase.from('charges').select('id, period, amount, description, groups(name)').eq('student_id', id).eq('org_id', ctx.org.id).order('period', { ascending: false }).order('id').range(a, b)),
-    fetchAll<P>((a, b) => supabase.from('payments').select('id, amount, paid_at, method, charge_id, note').eq('student_id', id).eq('org_id', ctx.org.id).order('paid_at', { ascending: false }).order('id').range(a, b)),
+    fetchAll<C>((a, b) => supabase.from('charges').select('id, period, amount, currency, description, groups(name)').eq('student_id', id).eq('org_id', ctx.org.id).order('period', { ascending: false }).order('id').range(a, b)),
+    fetchAll<P>((a, b) => supabase.from('payments').select('id, amount, currency, paid_at, method, charge_id, note').eq('student_id', id).eq('org_id', ctx.org.id).order('paid_at', { ascending: false }).order('id').range(a, b)),
     supabase.from('parent_links').select('token, last_seen_at, student_id').eq('org_id', ctx.org.id).eq('revoked', false).order('created_at', { ascending: false }),
     fetchAll<Sib>((a, b) => supabase.from('students').select('id, first_name, last_name, parent_phone, family_id').eq('org_id', ctx.org.id).eq('active', true).order('last_name').order('id').range(a, b)),
     packageBalances(supabase, ctx.org.id, today, [id]),
-    supabase.from('class_packages').select('id, classes_total, price, purchased_at, expires_at, group_id, groups(name)').eq('student_id', id).eq('org_id', ctx.org.id).order('purchased_at', { ascending: false }),
+    supabase.from('class_packages').select('id, classes_total, price, currency, purchased_at, expires_at, paid_at, group_id, groups(name)').eq('student_id', id).eq('org_id', ctx.org.id).order('purchased_at', { ascending: false }),
+    supabase.from('class_package_students').select('class_packages(id, classes_total, price, currency, purchased_at, expires_at, paid_at, group_id, groups(name))').eq('student_id', id).eq('org_id', ctx.org.id),
+    supabase.from('lesson_packages').select('id, name, lessons, price, currency').eq('org_id', ctx.org.id).eq('active', true).order('name'),
     supabase.from('group_waitlist').select('group_id, groups(name)').eq('student_id', id),
   ]);
   if (!s) notFound();
@@ -49,9 +53,8 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
   const stats = attendanceStats(attList);
   const paidByCharge = new Map<string, number>();
   for (const p of pays) if (p.charge_id) paidByCharge.set(p.charge_id, (paidByCharge.get(p.charge_id) ?? 0) + Number(p.amount));
-  const totalDue = chs.reduce((a, c) => a + Number(c.amount), 0);
-  const totalPaid = pays.reduce((a, p) => a + Number(p.amount), 0);
-  const balance = totalDue - totalPaid;
+  const dueLabel = formatTotals(chs.map((c) => ({ amount: Number(c.amount), currency: c.currency })));
+  const paidLabel = formatTotals(pays.map((p) => ({ amount: Number(p.amount), currency: p.currency })));
   const advance = pays.filter((p) => !p.charge_id).reduce((a, p) => a + Number(p.amount), 0);
 
   const siblings = s.family_id ? allStudents.filter((x) => x.family_id === s.family_id && x.id !== s.id) : [];
@@ -59,8 +62,10 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
   const suggested = key ? allStudents.filter((x) => x.id !== s.id && phoneKey(x.parent_phone) === key && (!s.family_id || x.family_id !== s.family_id)) : [];
   const familyIds = new Set([s.id, ...siblings.map((x) => x.id)]);
   const plink = ((plink0 ?? []) as { token: string; last_seen_at: string | null; student_id: string }[]).find((l) => familyIds.has(l.student_id));
-  const pkgList = (pkgs ?? []) as unknown as { id: string; classes_total: number; price: number; purchased_at: string; expires_at: string | null; group_id: string; groups: { name: string } | null }[];
-  const packageGroups = mem.filter((m) => m.groups?.fee_type === 'package');
+  const owned = (pkgs ?? []) as unknown as Pkg[];
+  const linkedPkgs = ((sharedPkgs ?? []) as unknown as { class_packages: Pkg | null }[]).map((r) => r.class_packages).filter((p): p is Pkg => !!p);
+  const pkgList = [...owned, ...linkedPkgs.filter((p) => !owned.some((o) => o.id === p.id))];
+  const catalogList = (catalog ?? []) as { id: string; name: string; lessons: number; price: number; currency: string }[];
   const waitGroups = (waiting ?? []) as unknown as { group_id: string; groups: { name: string } | null }[];
 
   return (
@@ -83,8 +88,8 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Prisustvo" value={stats.pct === null ? '—' : `${stats.pct}%`} hint={`${stats.present} od ${stats.counted} časova${stats.excused ? `, opravdano ${stats.excused}` : ''}`} />
         <Stat label="Grupe" value={mem.length} />
-        <Stat label="Ukupno uplaćeno" value={rsd(totalPaid)} />
-        <Stat label={balance > 0 ? 'Duguje' : 'Stanje'} value={rsd(Math.abs(balance))} tone={balance > 0 ? 'coral' : 'ok'} hint={balance < 0 ? 'u plusu' : undefined} />
+        <Stat label="Ukupno uplaćeno" value={paidLabel} />
+        <Stat label="Zaduženo" value={dueLabel} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
@@ -189,13 +194,13 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
             )}
           </Card>
 
-          {(packageGroups.length > 0 || pkgList.length > 0) && (
-            <Card title="Paketi časova">
+          {(mem.length > 0 || pkgList.length > 0) && (
+            <Card title="Paketi časova" actions={<Link href="/paketi" className="text-[13px] font-bold text-brand">Svi paketi →</Link>}>
               {balances.length > 0 && (
                 <ul className="mb-3 flex flex-col gap-2">
                   {balances.map((b) => (
-                    <li key={b.group_id} className="flex items-center justify-between gap-2 rounded-xl bg-soft px-3 py-2">
-                      <span className="min-w-0 truncate font-bold text-ink">{b.group}</span>
+                    <li key={`${b.id}:${b.student_id}`} className="flex items-center justify-between gap-2 rounded-xl bg-soft px-3 py-2">
+                      <span className="min-w-0 truncate font-bold text-ink">{b.group}{b.price ? ` · ${formatMoney(b.price, b.currency)}` : ''}</span>
                       <Badge tone={b.remaining <= 1 ? 'coral' : 'ok'}>{b.expired ? 'istekao' : `ostalo ${b.remaining} od ${b.total}`}</Badge>
                     </li>
                   ))}
@@ -205,21 +210,38 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
                 <ul className="mb-3 flex flex-col gap-1.5 text-[13px] font-semibold text-ink-2">
                   {pkgList.map((p) => (
                     <li key={p.id} className="flex items-center justify-between gap-2">
-                      <span>{dateSr(p.purchased_at)} · {p.groups?.name} · {p.classes_total} čas. · {rsd(p.price)}{p.expires_at ? ` · važi do ${dateSr(p.expires_at)}` : ''}</span>
-                      <form action={deletePackage}><input type="hidden" name="id" value={p.id} /><input type="hidden" name="student_id" value={s.id} /><ConfirmButton message="Obrisati paket? Zaduženje za njega ostaje, obriši ga na stranici Uplate." className="font-bold text-coral-dark hover:underline">obriši</ConfirmButton></form>
+                      <span>{dateSr(p.purchased_at)} · {p.groups?.name} · {p.classes_total} čas. · {formatMoney(p.price, p.currency)}{p.paid_at ? ` · plaćen ${dateSr(p.paid_at)}` : ''}{p.expires_at ? ` · važi do ${dateSr(p.expires_at)}` : ''}</span>
+                      <form action={deletePackagePurchase}><input type="hidden" name="id" value={p.id} /><input type="hidden" name="back" value={`/ucenici/${s.id}`} /><ConfirmButton message="Obrisati paket? Zaduženje za njega ostaje, obriši ga na stranici Uplate." className="font-bold text-coral-dark hover:underline">obriši</ConfirmButton></form>
                     </li>
                   ))}
                 </ul>
               )}
-              {packageGroups.length > 0 && (
-                <form action={buyPackage} className="grid gap-2 border-t border-line pt-3 sm:grid-cols-2">
+              {mem.length > 0 && (
+                <form action={assignPackage} className="grid gap-2 border-t border-line pt-3 sm:grid-cols-2">
+                  <input type="hidden" name="back" value={`/ucenici/${s.id}`} />
                   <input type="hidden" name="student_id" value={s.id} />
-                  <select name="group_id" className="input sm:col-span-2" required>
-                    {packageGroups.map((m) => <option key={m.group_id} value={m.group_id}>{m.groups?.name}</option>)}
+                  <select name="package_id" className="input sm:col-span-2" defaultValue="">
+                    <option value="">Ručni unos (bez kataloga)</option>
+                    {catalogList.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.lessons} čas. · {formatMoney(c.price, c.currency)}</option>)}
                   </select>
-                  <input name="classes" type="number" min={1} step="1" className="input" placeholder="Broj časova" defaultValue={packageGroups[0].groups?.package_classes ?? undefined} required />
-                  <input name="price" type="number" min={0} step="1" className="input" placeholder="Cena (RSD)" defaultValue={packageGroups[0].groups?.monthly_fee ?? undefined} required />
-                  <label className="block sm:col-span-2"><span className="label">Važi do (opciono)</span><input name="expires_at" type="date" className="input" /></label>
+                  <select name="group_id" className="input sm:col-span-2" required>
+                    {mem.map((m) => <option key={m.group_id} value={m.group_id}>{m.groups?.name}</option>)}
+                  </select>
+                  {siblings.map((sib) => (
+                    <div key={sib.id} className="flex flex-wrap items-center gap-2 sm:col-span-2">
+                      <label className="flex items-center gap-2 text-[13px] font-bold text-ink"><input type="checkbox" name="extra_student_id" value={sib.id} className="h-4 w-4 accent-[#5B2A86]" />{fullName(sib)}</label>
+                      <select name={`group_for_${sib.id}`} className="input h-9 w-auto text-sm" defaultValue={mem[0]?.group_id}>
+                        {(groups ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                  <input name="classes" type="number" min={1} step="1" className="input" placeholder="Broj časova" />
+                  <input name="price" type="number" min={0} step="0.01" className="input" placeholder="Cena" />
+                  <select name="currency" className="input" defaultValue="EUR"><option value="EUR">EUR</option><option value="RSD">RSD</option></select>
+                  <label className="block"><span className="label">Datum uplate</span><input name="paid_at" type="date" className="input" /></label>
+                  <label className="flex items-start gap-2 sm:col-span-2 text-[13px] font-semibold text-ink-2"><input type="checkbox" name="auto_expires" defaultChecked className="mt-0.5 h-4 w-4 accent-[#5B2A86]" />Rok po rasporedu (10 časova jednom nedeljno traje 10 nedelja). Ako predavač otkaže čas bez nadoknade, rok se produžava.</label>
+                  <label className="block sm:col-span-2"><span className="label">Važi do, ako isključiš rok po rasporedu</span><input name="expires_at" type="date" className="input" /></label>
+                  <label className="flex items-start gap-2 sm:col-span-2 text-[13px] font-semibold text-ink-2"><input type="checkbox" name="shared" className="mt-0.5 h-4 w-4 accent-[#5B2A86]" />Zajednički čas (duo): deca dele jedan fond časova i jednu cenu.</label>
                   <div className="sm:col-span-2"><button className="btn btn-soft">Dodaj paket</button></div>
                 </form>
               )}
@@ -229,7 +251,7 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
           <Card title="Članarine" actions={<Link href="/uplate" className="text-[13px] font-bold text-brand">Sve uplate →</Link>}>
             {advance > 0 && (
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ok-soft px-3 py-2">
-                <span className="text-[14px] font-extrabold text-ok">Avans: {rsd(advance)}</span>
+                <span className="text-[14px] font-extrabold text-ok">Avans: {formatMoney(advance)}</span>
                 <form action={distributeAdvance}><input type="hidden" name="student_id" value={s.id} /><button className="btn btn-sm btn-soft">Rasporedi na zaduženja</button></form>
               </div>
             )}
@@ -247,8 +269,8 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
                         <div className="text-[12px] font-semibold text-mut">{c.description ?? c.groups?.name ?? ''}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[14px] font-bold tabular-nums">{rsd(c.amount)}</div>
-                        <Badge tone={ok ? 'ok' : paid > 0 ? 'soft' : 'coral'}>{ok ? 'Plaćeno' : paid > 0 ? `Uplaćeno ${rsd(paid)}` : 'Nije plaćeno'}</Badge>
+                        <div className="text-[14px] font-bold tabular-nums">{formatMoney(c.amount, c.currency)}</div>
+                        <Badge tone={ok ? 'ok' : paid > 0 ? 'soft' : 'coral'}>{ok ? 'Plaćeno' : paid > 0 ? `Uplaćeno ${formatMoney(paid, c.currency)}` : 'Nije plaćeno'}</Badge>
                       </div>
                     </li>
                   );

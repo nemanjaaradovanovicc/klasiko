@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { QrImage } from '@/components/qr-image';
 import { familyReference, ipsPayload, studentReference } from '@/lib/ips';
-import { WEEKDAYS, addDays, attendanceStats, currentPeriod, dateLong, dateSr, parsePeriod, periodLabel, rsd, shiftPeriod, time, todayISO, fullName } from '@/lib/format';
+import { WEEKDAYS, addDays, attendanceStats, currentPeriod, dateLong, dateSr, formatMoney, formatTotals, parsePeriod, periodLabel, shiftPeriod, time, todayISO, fullName } from '@/lib/format';
 import { waUrl } from '@/lib/phone';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { packageBalances } from '@/lib/packages-db';
@@ -29,7 +29,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
   type St = { id: string; org_id: string; first_name: string; last_name: string; ref_no: number; active: boolean; family_id: string | null };
   const [{ data: linked }, { data: org }] = await Promise.all([
     db.from('students').select('id, org_id, first_name, last_name, ref_no, active, family_id').eq('id', link.student_id).eq('org_id', link.org_id).maybeSingle<St>(),
-    db.from('organizations').select('name, phone, email, bank_account, payee_name, city, status').eq('id', link.org_id).single(),
+    db.from('organizations').select('name, phone, email, bank_account, payee_name, city, status, payment_instructions').eq('id', link.org_id).single(),
   ]);
   if (!linked || !org || org.status === 'cancelled' || !linked.active) notFound();
   const { data: famRows } = linked.family_id
@@ -39,14 +39,14 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
   const ids = kids.map((k) => k.id);
   const child = kids.find((k) => String(k.ref_no) === sp.dete) ?? linked;
 
-  type C = { id: string; period: string; amount: number; description: string | null; student_id: string; payments: { amount: number; paid_at: string }[] };
+  type C = { id: string; period: string; amount: number; currency: string | null; description: string | null; student_id: string; payments: { amount: number; paid_at: string }[] };
   type A = { status: string; session_id: string; sessions: { date: string; start_time: string; status: string; note: string | null; group_id: string; groups: { name: string } | null } };
-  type G = { id: string; name: string; color: string; active: boolean; profiles: { full_name: string } | null; schedule_slots: { weekday: number; start_time: string; end_time: string; rooms: { name: string } | null }[] };
+  type G = { id: string; name: string; color: string; active: boolean; profiles: { full_name: string } | null; schedule_slots: { weekday: number; start_time: string; end_time: string; recurrence: string | null; rooms: { name: string } | null }[] };
   const [{ data: members }, att, charges, { data: notices }, balances] = await Promise.all([
-    db.from('group_members').select('groups(id, name, color, active, profiles(full_name), schedule_slots(weekday, start_time, end_time, rooms(name)))').eq('student_id', child.id),
+    db.from('group_members').select('groups(id, name, color, active, profiles(full_name), schedule_slots(weekday, start_time, end_time, recurrence, rooms(name)))').eq('student_id', child.id),
     fetchAll<A>((a, b) => db.from('attendance').select('status, session_id, sessions!inner(date, start_time, status, note, group_id, groups(name))').eq('student_id', child.id).gte('sessions.date', `${period}-01`).lt('sessions.date', `${shiftPeriod(period, 1)}-01`).order('session_id').range(a, b)),
     // Sva zaduženja, da nijedan stariji dug ne ostane skriven.
-    fetchAll<C>((a, b) => db.from('charges').select('id, period, amount, description, student_id, payments(amount, paid_at)').in('student_id', ids).eq('org_id', link.org_id).order('period', { ascending: false }).order('id').range(a, b)),
+    fetchAll<C>((a, b) => db.from('charges').select('id, period, amount, currency, description, student_id, payments(amount, paid_at)').in('student_id', ids).eq('org_id', link.org_id).order('period', { ascending: false }).order('id').range(a, b)),
     db.from('absence_notices').select('id, date, note, student_id').in('student_id', ids).gte('date', today).order('date'),
     packageBalances(db, link.org_id, today, [child.id]),
   ]);
@@ -63,6 +63,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
   });
   const unpaid = chs.filter((c) => c.remaining > 0).sort((a, b) => a.period.localeCompare(b.period));
   const debt = unpaid.reduce((a, c) => a + c.remaining, 0);
+  const allRsd = unpaid.every((c) => (c.currency || 'RSD') === 'RSD');
   const paidChs = chs.filter((c) => c.paid > 0).slice(0, 24);
   const kidById = new Map(kids.map((k) => [k.id, k]));
   const many = kids.length > 1;
@@ -71,7 +72,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
   const payee = org.payee_name || org.name;
   const q = (m: string, d?: number) => `/r/${token}?mesec=${m}${(d ?? child.ref_no) !== linked.ref_no ? `&dete=${d ?? child.ref_no}` : ''}`;
   // Jedan QR za ceo dug: uplata se u školi raspoređuje na sva otvorena zaduženja.
-  const totalQr = org.bank_account && unpaid.length > 1 ? ipsPayload({ account: org.bank_account, payee, amount: debt, purpose: `Clanarine ${linked.last_name || linked.first_name}`, payer: fullName(linked), reference: familyReference(linked.ref_no) }) : null;
+  const totalQr = allRsd && org.bank_account && unpaid.length > 1 ? ipsPayload({ account: org.bank_account, payee, amount: debt, purpose: `Clanarine ${linked.last_name || linked.first_name}`, payer: fullName(linked), reference: familyReference(linked.ref_no) }) : null;
 
   return (
     <main className="min-h-dvh bg-soft px-4 pb-10 pt-[calc(1.25rem+env(safe-area-inset-top))]">
@@ -88,8 +89,9 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
           <section className="rounded-3xl bg-white p-5 ring-1 ring-line">
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="text-[17px] font-extrabold text-ink">Za uplatu</h2>
-              <span className="text-[22px] font-extrabold tabular-nums text-coral-dark">{rsd(debt)}</span>
+              <span className="text-[22px] font-extrabold tabular-nums text-coral-dark">{formatTotals(unpaid.map((c) => ({ amount: c.remaining, currency: c.currency })))}</span>
             </div>
+            {org.payment_instructions?.trim() && <p className="mt-2 whitespace-pre-line text-[13px] font-semibold text-ink-2">{org.payment_instructions.trim()}</p>}
             {totalQr && (
               <div className="mt-3 flex items-center gap-4 rounded-2xl bg-soft-2 p-4">
                 <QrImage payload={totalQr} size={112} />
@@ -104,7 +106,8 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
             <ul className="mt-3 flex flex-col gap-3">
               {unpaid.map((c) => {
                 const kid = kidById.get(c.student_id) ?? linked;
-                const qr = org.bank_account
+                const dinar = (c.currency || 'RSD') === 'RSD';
+                const qr = dinar && org.bank_account
                   ? ipsPayload({ account: org.bank_account, payee, amount: c.remaining, purpose: `Clanarina ${periodLabel(c.period)} ${fullName(kid)}`, payer: fullName(kid), reference: studentReference(kid.ref_no, c.period) })
                   : null;
                 const details = (
@@ -124,9 +127,9 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
                         <div className="font-extrabold text-ink">{periodLabel(c.period)}{many ? ` · ${kid.first_name}` : ''}</div>
                         <div className="truncate text-[13px] font-semibold text-mut">{c.description}</div>
                       </div>
-                      <div className="shrink-0 text-[17px] font-extrabold tabular-nums">{rsd(c.remaining)}</div>
+                      <div className="shrink-0 text-[17px] font-extrabold tabular-nums">{formatMoney(c.remaining, c.currency)}</div>
                     </div>
-                    {org.bank_account && (totalQr
+                    {dinar && org.bank_account && (totalQr
                       ? <details className="mt-3"><summary className="cursor-pointer text-[13px] font-bold text-brand">Plati samo ovo</summary><div className="mt-3">{details}</div></details>
                       : <div className="mt-3">{details}</div>)}
                   </li>
@@ -169,7 +172,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
             <h2 className="text-[16px] font-extrabold text-ink">Paket časova{many ? `, ${child.first_name}` : ''}</h2>
             <ul className="mt-2 flex flex-col gap-1.5">
               {balances.map((b) => (
-                <li key={b.group_id} className="flex items-center justify-between gap-2 text-[14px]">
+                <li key={`${b.id}:${b.student_id}`} className="flex items-center justify-between gap-2 text-[14px]">
                   <span className="min-w-0 truncate font-bold text-ink">{b.group}</span>
                   <span className={`font-extrabold tabular-nums ${b.remaining <= 1 ? 'text-coral-dark' : 'text-ok'}`}>{b.expired ? 'istekao' : `još ${b.remaining} od ${b.total}`}</span>
                 </li>
@@ -247,7 +250,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
                   {g.profiles?.full_name && <div className="text-[13px] font-semibold text-mut">{g.profiles.full_name}</div>}
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {[...g.schedule_slots].sort((a, b) => a.weekday - b.weekday || a.start_time.localeCompare(b.start_time)).map((s, i) => (
-                      <span key={i} className="rounded-lg bg-white px-2 py-1 text-[12px] font-bold text-ink-2">{WEEKDAYS[s.weekday]} {time(s.start_time)}–{time(s.end_time)}{s.rooms ? `, ${s.rooms.name}` : ''}</span>
+                      <span key={i} className="rounded-lg bg-white px-2 py-1 text-[12px] font-bold text-ink-2">{WEEKDAYS[s.weekday]} {time(s.start_time)}–{time(s.end_time)}{s.recurrence === 'biweekly' ? ', svake druge nedelje' : ''}{s.rooms ? `, ${s.rooms.name}` : ''}</span>
                     ))}
                   </div>
                 </li>
@@ -263,7 +266,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
               {paidChs.map((c) => (
                 <li key={c.id} className="flex items-center justify-between gap-2 py-2 text-[14px]">
                   <span className="font-semibold text-ink-2">{periodLabel(c.period)}{many ? ` · ${kidById.get(c.student_id)?.first_name}` : ''}</span>
-                  <span className="font-bold tabular-nums text-ok">{rsd(c.paid)}{c.remaining === 0 ? ' ✓' : ''}</span>
+                  <span className="font-bold tabular-nums text-ok">{formatMoney(c.paid, c.currency)}{c.remaining === 0 ? ' ✓' : ''}</span>
                 </li>
               ))}
             </ul>

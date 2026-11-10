@@ -32,7 +32,7 @@ export async function emailAllDebtors(): Promise<{ sent?: number; failed?: numbe
   for (const row of rows) {
     if (!row.email) continue;
     const token = row.familyIds.map((id) => linkBy.get(id)).find(Boolean);
-    const res = await sendEmail({ to: row.email, replyTo: ctx.org.email, subject: `${ctx.org.name}: podsetnik za uplatu`, text: debtMessage(row, ctx.org.name, ctx.org.bank_account, token ? parentUrl(token) : null) });
+    const res = await sendEmail({ to: row.email, replyTo: ctx.org.email, subject: `${ctx.org.name}: podsetnik za uplatu`, text: debtMessage(row, ctx.org.name, ctx.org.bank_account, token ? parentUrl(token) : null, ctx.org.payment_instructions) });
     if (res.ok) {
       sent++;
       await supabase.from('reminders').insert(row.students.map((s) => ({ org_id: ctx.org.id, student_id: s.id, channel: 'email', kind: 'manual', sent_by: ctx.userId })));

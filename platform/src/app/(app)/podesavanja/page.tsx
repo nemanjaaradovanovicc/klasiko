@@ -1,10 +1,10 @@
 import { requireOwner, orgAccess } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { PageHeader, Card, Field, Flash, Badge, Select } from '@/components/ui';
+import { PageHeader, Card, Field, Flash, Badge, Select, TextArea } from '@/components/ui';
 import { CredsForm, ResetButton } from '@/components/creds';
 import { PLANS, BILLING_LABEL, STATUS_LABEL, ROLE_LABEL, type Profile } from '@/lib/types';
 import { dateSr, rsd } from '@/lib/format';
-import { updateSchool, updateAutomation, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember } from './actions';
+import { updateSchool, updateAutomation, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember, updateTeamEmail } from './actions';
 import { ConfirmButton } from '@/components/confirm';
 import { AUDIT_LABEL } from '@/lib/audit';
 import { emailEnabled } from '@/lib/email';
@@ -15,7 +15,7 @@ import type { Invoice, PlatformSettings } from '@/lib/types';
 
 export const metadata = { title: 'Podešavanja' };
 
-const OK: Record<string, string> = { '1': 'Podaci škole su sačuvani.', sala: 'Sala je dodata.', tim: 'Tim je ažuriran.', auto: 'Automatska naplata je sačuvana.' };
+const OK: Record<string, string> = { '1': 'Podaci škole su sačuvani.', sala: 'Sala je dodata.', tim: 'Tim je ažuriran.', auto: 'Automatska naplata je sačuvana.', email: 'Email za prijavu je sačuvan. Poruka nije poslata.' };
 
 export default async function Settings({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   const ctx = await requireOwner();
@@ -53,6 +53,10 @@ export default async function Settings({ searchParams }: { searchParams: Promise
             <div className="sm:col-span-2 mt-2 text-[13px] font-extrabold uppercase tracking-wider text-mut">Uplate (za IPS QR kod)</div>
             <Field label="Tekući račun" name="bank_account" defaultValue={org.bank_account} placeholder="160-5100000000-99" />
             <Field label="Naziv primaoca na uplatnici" name="payee_name" defaultValue={org.payee_name ?? org.name} />
+            <div className="sm:col-span-2">
+              <TextArea label="Uputstvo za uplatu" name="payment_instructions" defaultValue={org.payment_instructions} rows={5} placeholder={'Izlazi u podsetnicima roditeljima. Npr.\nPayPal: skola@example.com\nWestern Union, MoneyGram ili Ria: ime i grad primaoca\nDinarski račun: 160-0000000000000-00\nIBAN i SWIFT: ...'} />
+              <span className="mt-1 block text-[12px] font-semibold text-mut">Slobodan tekst. IPS QR i dalje koristi samo tekući račun i samo za iznose u dinarima.</span>
+            </div>
             <Field label="Podrazumevana mesečna cena (RSD)" name="default_fee" type="number" min={0} defaultValue={org.default_fee} hint="Koristi se kad grupa nema svoju cenu" />
             <Field label="Rok za uplatu (dan u mesecu)" name="fee_due_day" type="number" min={1} max={28} defaultValue={org.fee_due_day} />
             <div className="sm:col-span-2"><button className="btn">Sačuvaj</button></div>
@@ -148,7 +152,12 @@ export default async function Settings({ searchParams }: { searchParams: Promise
             ) : (
               <p className="text-[14px] font-semibold text-ink-2">Podsetnike šalješ na WhatsApp, na stranici „Ko duguje”.</p>
             )}
-            <Field label="Popust za braću i sestre (%)" name="sibling_discount_pct" type="number" min={0} max={100} step="1" defaultValue={org.sibling_discount_pct} hint="Prvo upisano dete u porodici plaća punu cenu. Porodice se povezuju na kartici učenika." />
+            <Field label="Popust za drugo dete (%)" name="sibling_discount_pct" type="number" min={0} max={100} step="1" defaultValue={org.sibling_discount_pct} hint="Važi za mesečnu članarinu. Prvo upisano dete u porodici plaća punu cenu." />
+            <Field label="Popust za treće i svako naredno dete (%)" name="sibling_discount_3_pct" type="number" min={0} max={100} step="1" defaultValue={org.sibling_discount_3_pct ?? 0} hint="Ako ostane 0, važi isti procenat kao za drugo dete. Paket sa fiksnom cenom za dvoje ili troje dece dodaje se na stranici Paketi." />
+            <label className="flex items-start gap-3">
+              <input type="checkbox" name="package_reminders" defaultChecked={org.package_reminders !== false} className="mt-1 h-5 w-5 accent-[#5B2A86]" />
+              <span className="text-[14px] font-semibold text-ink-2"><b className="text-ink">Podsetnik pred poslednji čas paketa</b>. Kad ostane još jedan čas, roditelj dobija poruku da plati sledeći paket. Mejl ide sam ako je slanje mejla uključeno, a WhatsApp šalješ sa stranice Paketi. Podrazumevano je uključeno.</span>
+            </label>
             <div><button className="btn">Sačuvaj</button></div>
           </form>
         </Card>
@@ -181,6 +190,14 @@ export default async function Settings({ searchParams }: { searchParams: Promise
                     {!u.active && <Badge tone="coral">Deaktiviran</Badge>}
                     {u.must_change_password && u.active && <Badge tone="gray">Čeka prvu prijavu</Badge>}
                   </div>
+                  {u.id !== ctx.userId && (
+                    <form action={updateTeamEmail} className="mt-2 flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="user_id" value={u.id} />
+                      <input name="email" type="email" required defaultValue={u.email ?? ''} aria-label="Email za prijavu" className="input h-9 w-64 text-sm" />
+                      <button className="btn btn-sm btn-soft">Sačuvaj email</button>
+                      <span className="w-full text-[12px] font-semibold text-mut">Menja samo adresu za prijavu. Ne šalje se mejl ni pozivnica.</span>
+                    </form>
+                  )}
                 </div>
                 {u.id !== ctx.userId && (
                   <div className="flex flex-wrap items-start gap-2">

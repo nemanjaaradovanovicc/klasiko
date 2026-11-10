@@ -5,13 +5,16 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { isISODate, isPeriod, todayISO } from '@/lib/format';
+import { formatMoney, isISODate, isPeriod, todayISO } from '@/lib/format';
 import { matchRows, statementKeys, type Allocation, type StatementRow, type MatchResult } from '@/lib/match';
 import { chunks, fetchAll } from '@/lib/supabase/fetch-all';
 import { applyAdvances, createChargesForPeriod, installmentPlan } from '@/lib/charges';
 
 function back(period: string, q: string) {
   return `/uplate?mesec=${period}${q ? '&' + q : ''}`;
+}
+function currencyOf(v: FormDataEntryValue | null): 'RSD' | 'EUR' {
+  return String(v ?? '').toUpperCase() === 'EUR' ? 'EUR' : 'RSD';
 }
 function parseMoney(v: FormDataEntryValue | null): number | null {
   const raw = String(v ?? '').trim().replace(/\s/g, '');
@@ -48,7 +51,7 @@ export async function addCharge(fd: FormData) {
   if (!studentId || amount === null) redirect(back(period, 'err=' + encodeURIComponent('Izaberi učenika i unesi iznos.')));
   const supabase = await createClient();
   const { error } = await supabase.from('charges').insert({
-    org_id: ctx.org.id, student_id: studentId, group_id: null, period, amount, kind: 'extra',
+    org_id: ctx.org.id, student_id: studentId, group_id: null, period, amount, currency: currencyOf(fd.get('currency')), kind: 'extra',
     description: String(fd.get('description') || '').trim() || 'Dodatno zaduženje',
     due_date: `${period}-${String(ctx.org.fee_due_day).padStart(2, '0')}`,
   });
@@ -78,7 +81,7 @@ export async function createInstallments(fd: FormData) {
   if (students.length === 0) redirect(back(first, 'err=' + encodeURIComponent('U grupi nema aktivnih učenika.')));
   const plan = installmentPlan(total, count, first);
   const rows = students.flatMap((sid) => plan.map((p) => ({
-    org_id: ctx.org.id, student_id: sid, group_id: groupId || null, period: p.period, amount: p.amount, kind: 'installment',
+    org_id: ctx.org.id, student_id: sid, group_id: groupId || null, period: p.period, amount: p.amount, currency: currencyOf(fd.get('currency')), kind: 'installment',
     description: count > 1 ? `${title}, ${p.label}` : title, due_date: `${p.period}-${String(ctx.org.fee_due_day).padStart(2, '0')}`,
   })));
   const { error } = await supabase.from('charges').insert(rows);
@@ -93,7 +96,7 @@ export async function recordPayment(fd: FormData) {
   if (!isPeriod(period)) redirect('/uplate');
   const chargeId = String(fd.get('charge_id'));
   const supabase = await createClient();
-  const { data: ch } = await supabase.from('charges').select('id, student_id, amount, payments(amount)').eq('id', chargeId).eq('org_id', ctx.org.id).single();
+  const { data: ch } = await supabase.from('charges').select('id, student_id, amount, currency, payments(amount)').eq('id', chargeId).eq('org_id', ctx.org.id).single();
   if (!ch) redirect(back(period, 'err=' + encodeURIComponent('Zaduženje nije pronađeno.')));
   const paid = (ch.payments ?? []).reduce((a: number, p: { amount: number }) => a + Number(p.amount), 0);
   const remaining = cents(Math.max(0, Number(ch.amount) - paid));
@@ -101,7 +104,8 @@ export async function recordPayment(fd: FormData) {
   if (!(amount > 0)) redirect(back(period, 'err=' + encodeURIComponent('Zaduženje je već plaćeno.')));
   const method = ['cash', 'bank', 'card', 'other'].includes(String(fd.get('method'))) ? String(fd.get('method')) : 'bank';
   const paidAtRaw = String(fd.get('paid_at') || '');
-  const base = { org_id: ctx.org.id, student_id: ch.student_id, method, paid_at: isISODate(paidAtRaw) ? paidAtRaw : todayISO(), note: String(fd.get('note') || '').trim() || null, created_by: ctx.userId };
+  const currency = ch.currency || 'RSD';
+  const base = { org_id: ctx.org.id, student_id: ch.student_id, method, currency, paid_at: isISODate(paidAtRaw) ? paidAtRaw : todayISO(), note: String(fd.get('note') || '').trim() || null, created_by: ctx.userId };
   // Više od duga: razlika ostaje kao avans učenika, ne „nestaje” u jednom zaduženju.
   const onCharge = Math.min(amount, remaining);
   const rows = [
@@ -110,7 +114,7 @@ export async function recordPayment(fd: FormData) {
   ];
   const { error } = await supabase.from('payments').insert(rows);
   revalidatePath('/uplate');
-  const msg = amount > remaining ? `Uplata je evidentirana. ${cents(amount - remaining)} RSD je upisano kao avans.` : 'Uplata je evidentirana.';
+  const msg = amount > remaining ? `Uplata je evidentirana. ${formatMoney(cents(amount - remaining), currency)} je upisano kao avans.` : 'Uplata je evidentirana.';
   redirect(back(period, error ? 'err=' + encodeURIComponent(error.message) : 'ok=' + encodeURIComponent(msg)) + (fd.get('filter') ? `&prikaz=${fd.get('filter')}` : ''));
 }
 

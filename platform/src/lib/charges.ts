@@ -1,7 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 
-type OrgLike = { id: string; fee_due_day: number; default_fee: number | null; sibling_discount_pct?: number | null };
+type OrgLike = { id: string; fee_due_day: number; default_fee: number | null; sibling_discount_pct?: number | null; sibling_discount_3_pct?: number | null };
+
+// Prvo dete plaća punu cenu, drugo dobija prvi procenat, treće i svako naredno drugi (ili isti kao drugo ako drugi nije upisan).
+export function siblingRate(rank: number, second: number, third: number): number {
+  if (rank <= 1) return 0;
+  if (rank === 2) return second;
+  return third > 0 ? third : second;
+}
 type GroupRow = { id: string; name: string; monthly_fee: number | null; group_members: { student_id: string; students: { id: string; active: boolean; custom_fee: number | null; discount_pct: number; family_id: string | null; ref_no: number; joined_at: string } | null }[] };
 
 const lastDay = (period: string) => {
@@ -20,13 +27,18 @@ export async function createChargesForPeriod(db: SupabaseClient, org: OrgLike, p
   const due = `${period}-${String(org.fee_due_day).padStart(2, '0')}`;
   const end = lastDay(period);
 
-  // Popust za braću i sestre: najstarije upisano dete u porodici plaća punu cenu.
-  const sibDiscount = Number(org.sibling_discount_pct ?? 0);
-  const firstInFamily = new Map<string, number>();
-  if (sibDiscount > 0) {
+  // Popust za braću i sestre: redosled je po broju upisa (ref_no), prvo dete plaća punu cenu.
+  const secondPct = Number(org.sibling_discount_pct ?? 0);
+  const thirdPct = Number(org.sibling_discount_3_pct ?? 0);
+  const familyRefs = new Map<string, Set<number>>();
+  if (secondPct > 0 || thirdPct > 0) {
     for (const g of groups) for (const m of g.group_members) {
       const st = m.students;
-      if (st?.active && st.family_id) firstInFamily.set(st.family_id, Math.min(firstInFamily.get(st.family_id) ?? Infinity, st.ref_no));
+      if (st?.active && st.family_id) {
+        const set = familyRefs.get(st.family_id) ?? new Set<number>();
+        set.add(st.ref_no);
+        familyRefs.set(st.family_id, set);
+      }
     }
   }
 
@@ -38,7 +50,9 @@ export async function createChargesForPeriod(db: SupabaseClient, org: OrgLike, p
       if (!st || !st.active || have.has(`${st.id}:${g.id}`) || st.joined_at > end) continue;
       const base = st.custom_fee ?? g.monthly_fee ?? org.default_fee;
       if (base === null || base === undefined) { skipped++; continue; }
-      const sib = sibDiscount > 0 && st.family_id && firstInFamily.get(st.family_id) !== st.ref_no ? sibDiscount : 0;
+      const refs = st.family_id ? [...(familyRefs.get(st.family_id) ?? [])].sort((a, b) => a - b) : [];
+      const rank = refs.indexOf(st.ref_no) + 1;
+      const sib = siblingRate(rank, secondPct, thirdPct);
       const discount = Math.max(Number(st.discount_pct || 0), sib);
       rows.push({ org_id: org.id, student_id: st.id, group_id: g.id, period, amount: Math.round(Number(base) * (1 - discount / 100)), due_date: due, description: g.name, kind: 'monthly' });
     }

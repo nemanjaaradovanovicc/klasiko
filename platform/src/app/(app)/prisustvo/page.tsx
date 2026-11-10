@@ -3,6 +3,7 @@ import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Empty, Badge } from '@/components/ui';
 import { addDays, dateLong, isoWeekday, parseDate, time, todayISO } from '@/lib/format';
+import { slotOccursOn } from '@/lib/schedule';
 
 export const metadata = { title: 'Prisustvo' };
 
@@ -15,16 +16,16 @@ export default async function AttendanceList({ searchParams }: { searchParams: P
   const [{ data: slots }, { data: sessions }] = await Promise.all([
     supabase
       .from('schedule_slots')
-      .select('id, start_time, end_time, rooms(name), groups!inner(id, name, color, active, group_members(student_id))')
+      .select('id, start_time, end_time, recurrence, anchor_date, rooms(name), groups!inner(id, name, color, active, group_members(student_id))')
       .eq('org_id', ctx.org.id)
       .eq('weekday', wd)
       .eq('groups.active', true)
       .order('start_time'),
     supabase.from('sessions').select('id, group_id, start_time, end_time, status, makeup_for, attendance(status), groups(id, name, color, group_members(student_id))').eq('org_id', ctx.org.id).eq('date', date),
   ]);
-  type S = { id: string; start_time: string; end_time: string; rooms: { name: string } | null; groups: { id: string; name: string; color: string; group_members: { student_id: string }[] } };
+  type S = { id: string; start_time: string; end_time: string; recurrence: string | null; anchor_date: string | null; rooms: { name: string } | null; groups: { id: string; name: string; color: string; group_members: { student_id: string }[] } };
   type Se = { id: string; group_id: string; start_time: string; end_time: string | null; status: string; makeup_for: string | null; attendance: { status: string }[]; groups: { id: string; name: string; color: string; group_members: { student_id: string }[] } | null };
-  const list = (slots ?? []) as unknown as S[];
+  const list = ((slots ?? []) as unknown as S[]).filter((s) => slotOccursOn(date, { ...s, weekday: wd }));
   const sess = (sessions ?? []) as unknown as Se[];
   const find = (s: S) => sess.find((x) => x.group_id === s.groups.id && x.start_time.slice(0, 5) === s.start_time.slice(0, 5));
   // Časovi van rasporeda (nadoknade) za ovaj dan
