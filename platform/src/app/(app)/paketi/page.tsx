@@ -29,14 +29,28 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
   type G = { id: string; name: string; drop_in: boolean; fee_type: string };
   type M = { group_id: string; student_id: string; students: { id: string; first_name: string; last_name: string; active: boolean } | null };
   type St = { id: string; first_name: string; last_name: string; active: boolean };
-  const [{ data: catalog }, { data: groups }, { data: members }, balances, { data: reminders }, links] = await Promise.all([
+  const [catalogRes, groupsRes, membersRes, remindersRes, balancesRes, linksRes] = await Promise.all([
     supabase.from('lesson_packages').select('id, name, lessons, price, currency, shared, active').eq('org_id', ctx.org.id).order('name'),
     supabase.from('groups').select('id, name, drop_in, fee_type').eq('org_id', ctx.org.id).eq('active', true).order('name'),
     supabase.from('group_members').select('group_id, student_id, students(id, first_name, last_name, active)').eq('org_id', ctx.org.id),
-    packageBalances(supabase, ctx.org.id, today),
     supabase.from('reminders').select('class_package_id, channel').eq('org_id', ctx.org.id).eq('kind', 'package_low'),
-    fetchAll<{ student_id: string; token: string }>((a, b) => supabase.from('parent_links').select('student_id, token').eq('org_id', ctx.org.id).eq('revoked', false).order('token').range(a, b)),
+    packageBalances(supabase, ctx.org.id, today).then((rows) => ({ rows, error: null as string | null })).catch((e: unknown) => {
+      console.error(e);
+      return { rows: [] as Balance[], error: 'Kupljeni paketi se trenutno ne mogu prikazati. Katalog i dodela i dalje rade.' };
+    }),
+    fetchAll<{ student_id: string; token: string }>((a, b) => supabase.from('parent_links').select('student_id, token').eq('org_id', ctx.org.id).eq('revoked', false).order('token').range(a, b)).catch((e: unknown) => {
+      console.error(e);
+      return [] as { student_id: string; token: string }[];
+    }),
   ]);
+  const catalog = catalogRes.data;
+  const groups = groupsRes.data;
+  const members = membersRes.data;
+  const reminders = remindersRes.data;
+  const balances = balancesRes.rows;
+  const links = linksRes;
+  const loadError = balancesRes.error
+    ?? (catalogRes.error || groupsRes.error || membersRes.error ? 'Deo podataka se nije učitao. Osveži stranicu. Katalog možeš da sačuvaš ako se forma vidi.' : null);
   const cats = (catalog ?? []) as Cat[];
   const activeCats = cats.filter((c) => c.active);
   const grs = (groups ?? []) as G[];
@@ -73,7 +87,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
         title="Paketi časova"
         subtitle={ctx.isOwner ? 'Katalog, kupovina i datumi uplate' : 'Uplata i istek za tvoje učenike'}
       />
-      <Flash ok={sp.ok ? (OK[sp.ok] ?? sp.ok) : undefined} err={sp.err} />
+      <Flash ok={sp.ok ? (OK[sp.ok] ?? sp.ok) : undefined} err={sp.err ?? loadError ?? undefined} />
 
       {ctx.isOwner && (
         <Card title="Katalog paketa" className="mb-6">

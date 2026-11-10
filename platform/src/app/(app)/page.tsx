@@ -39,7 +39,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     !ctx.isOwner ? supabase.from('sessions').select('id', { count: 'exact', head: true }).eq('teacher_id', ctx.userId).eq('status', 'held').gte('date', `${period}-01`) : Promise.resolve({ count: 0 }),
     fetchAll<AR>((a, b) => supabase.from('attendance').select('student_id, session_id, status, students(first_name, last_name, parent_phone, phone, active), sessions!inner(date, group_id, groups(name))').eq('org_id', ctx.org.id).gte('sessions.date', addDays(today, -60)).order('session_id').order('student_id').range(a, b)),
     supabase.from('absence_notices').select('id, date, note, student_id, students(first_name, last_name)').eq('org_id', ctx.org.id).gte('date', today).lte('date', addDays(today, 7)).order('date'),
-    lowPackages(supabase, ctx.org.id, today),
+    lowPackages(supabase, ctx.org.id, today).catch((e) => { console.error(e); return []; }),
   ]);
   const attRows = recentAtt.filter((r) => r.students?.active).map((r) => ({ ...r, date: r.sessions.date }));
   const streaks = absenceStreaks(attRows).slice(0, 8);
