@@ -6,6 +6,7 @@ import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { changeUserEmail, createOrgUser, resetUserPassword, setActive, type Creds } from '@/lib/users';
+import { applyChosenPassword, passwordError } from '@/lib/passwords';
 import { normalizeAccount } from '@/lib/ips';
 import { teacherLimitError } from '@/lib/plan';
 import { audit } from '@/lib/audit';
@@ -125,6 +126,39 @@ export async function updateTeamEmail(fd: FormData) {
   await audit({ userId: ctx.userId, email: ctx.email }, 'team.email', { orgId: ctx.org.id, target: email, details: { userId } });
   revalidatePath('/podesavanja');
   redirect('/podesavanja?ok=email#tim');
+}
+
+// Vlasnik upisuje lozinku člana tima. Ne šalje mejl ni pozivnicu.
+export async function setTeamPassword(fd: FormData) {
+  const ctx = await requireOwner();
+  const userId = String(fd.get('user_id') || '');
+  const password = String(fd.get('password') ?? '');
+  if (!userId || userId === ctx.userId) redirect('/podesavanja?err=' + encodeURIComponent('Svoju lozinku menjaš na stranici Lozinka.') + '#tim');
+  const bad = passwordError(password);
+  if (bad) redirect('/podesavanja?err=' + encodeURIComponent(bad) + '#tim');
+  const db = createAdminClient();
+  const { data: member } = await db.from('profiles').select('id, email, full_name').eq('id', userId).eq('org_id', ctx.org.id).maybeSingle();
+  if (!member?.email) redirect('/podesavanja?err=' + encodeURIComponent('Korisnik nije iz tvoje škole ili nema email za prijavu.') + '#tim');
+  const admin = db.auth.admin;
+  const res = await applyChosenPassword({
+    getUserById: async (id) => {
+      const { data, error } = await admin.getUserById(id);
+      return { user: data.user ? { id: data.user.id } : null, error: error?.message ?? null };
+    },
+    updateUserById: async (id, attrs) => {
+      const { error } = await admin.updateUserById(id, attrs);
+      return { error: error?.message ?? null };
+    },
+    createUser: async (attrs) => {
+      const { error } = await admin.createUser(attrs);
+      return { error: error?.message ?? null };
+    },
+  }, { id: member.id, email: member.email, full_name: member.full_name || '' }, password);
+  if (res.error) redirect('/podesavanja?err=' + encodeURIComponent(res.error) + '#tim');
+  await db.from('profiles').update({ must_change_password: false }).eq('id', userId).eq('org_id', ctx.org.id);
+  await audit({ userId: ctx.userId, email: ctx.email }, 'team.password', { orgId: ctx.org.id, target: member.email, details: { userId } });
+  revalidatePath('/podesavanja');
+  redirect('/podesavanja?ok=lozinka#tim');
 }
 
 // Automatska naplata i popust za braću i sestre.
