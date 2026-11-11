@@ -4,7 +4,7 @@ import { PageHeader, Card, Field, Flash, Badge, Select, TextArea } from '@/compo
 import { CredsForm, ResetButton } from '@/components/creds';
 import { PLANS, BILLING_LABEL, STATUS_LABEL, ROLE_LABEL, type Profile } from '@/lib/types';
 import { dateSr, rsd } from '@/lib/format';
-import { updateSchool, updateAutomation, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember, updateTeamEmail } from './actions';
+import { updateSchool, updateAutomation, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember, updateTeamEmail, setTeamPassword } from './actions';
 import { ConfirmButton } from '@/components/confirm';
 import { AUDIT_LABEL } from '@/lib/audit';
 import { emailEnabled } from '@/lib/email';
@@ -15,7 +15,7 @@ import type { Invoice, PlatformSettings } from '@/lib/types';
 
 export const metadata = { title: 'Podešavanja' };
 
-const OK: Record<string, string> = { '1': 'Podaci škole su sačuvani.', sala: 'Sala je dodata.', tim: 'Tim je ažuriran.', auto: 'Automatska naplata je sačuvana.', email: 'Email za prijavu je sačuvan. Poruka nije poslata.' };
+const OK: Record<string, string> = { '1': 'Podaci škole su sačuvani.', sala: 'Sala je dodata.', tim: 'Tim je ažuriran.', auto: 'Automatska naplata je sačuvana.', email: 'Email za prijavu je sačuvan. Poruka nije poslata.', lozinka: 'Lozinka je sačuvana. Poruka nije poslata.' };
 
 export default async function Settings({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   const ctx = await requireOwner();
@@ -200,7 +200,13 @@ export default async function Settings({ searchParams }: { searchParams: Promise
                   )}
                 </div>
                 {u.id !== ctx.userId && (
-                  <div className="flex flex-wrap items-start gap-2">
+                  <div className="flex flex-col items-start gap-2">
+                    <form action={setTeamPassword} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="user_id" value={u.id} />
+                      <input name="password" type="password" required minLength={8} maxLength={72} autoComplete="new-password" aria-label="Nova lozinka" placeholder="Nova lozinka" className="input h-9 w-40 text-sm" />
+                      <button className="btn btn-sm btn-soft">Postavi lozinku</button>
+                      <span className="w-full text-[12px] font-semibold text-mut">Barem 8 znakova. Ne šalje se mejl ni pozivnica. Ovom lozinkom se član tima odmah prijavljuje.</span>
+                    </form>
                     <ResetButton action={resetTeamPassword} userId={u.id} />
                     <form action={toggleTeamMember}>
                       <input type="hidden" name="user_id" value={u.id} />
