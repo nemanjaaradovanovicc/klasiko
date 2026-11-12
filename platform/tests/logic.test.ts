@@ -10,6 +10,7 @@ import { familySuggestions } from '@/lib/families';
 import { slotConflicts } from '@/lib/groups';
 import { familyReference, ipsPayload, studentReference } from '@/lib/ips';
 import { trialReminderDue } from '@/lib/billing';
+import { isTrialOutcome, trialStats, trialsByTeacher } from '@/lib/trials';
 
 const charges: MatchCharge[] = [
   { id: 'ana-10', period: '2026-10', remaining: 4000, first_name: 'Ana', last_name: 'Petrović', parent_name: 'Marija Petrović', ref_no: 1042 },
@@ -241,5 +242,33 @@ describe('podsetnik za probni period', () => {
   it('samo za škole u probnom periodu', () => {
     expect(due('2026-06-16', null, 'active')).toBeNull();
     expect(due(null)).toBeNull();
+  });
+});
+
+describe('probni časovi', () => {
+  const rows = [
+    { outcome: 'enrolled', teacher_id: 't1' },
+    { outcome: 'enrolled', teacher_id: 't1' },
+    { outcome: 'declined', teacher_id: 't1' },
+    { outcome: 'pending', teacher_id: 't2' },
+    { outcome: 'declined', teacher_id: null },
+  ];
+  it('broji ishode, a procenat računa samo od onih sa ishodom', () => {
+    expect(trialStats(rows)).toEqual({ total: 5, enrolled: 2, declined: 2, pending: 1, pct: 50 });
+    expect(trialStats([{ outcome: 'pending' }])).toEqual({ total: 1, enrolled: 0, declined: 0, pending: 1, pct: null });
+    expect(trialStats([])).toEqual({ total: 0, enrolled: 0, declined: 0, pending: 0, pct: null });
+  });
+  it('deli brojke po predavaču, od onoga sa najviše probnih', () => {
+    const out = trialsByTeacher(rows, new Map([['t1', 'Jelena']]));
+    expect(out.map((t) => [t.name, t.total, t.enrolled, t.declined, t.pending, t.pct])).toEqual([
+      ['Jelena', 3, 2, 1, 0, 67],
+      ['Bez predavača', 1, 0, 1, 0, 0],
+      ['Bivši korisnik', 1, 0, 0, 1, null],
+    ]);
+  });
+  it('prihvata samo poznate ishode', () => {
+    expect(['pending', 'enrolled', 'declined'].every(isTrialOutcome)).toBe(true);
+    expect(isTrialOutcome('maybe')).toBe(false);
+    expect(isTrialOutcome(null)).toBe(false);
   });
 });

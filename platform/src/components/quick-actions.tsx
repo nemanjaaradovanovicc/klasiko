@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Plus, X, UserPlus, CheckSquare, Wallet, UsersRound, Building2, Receipt, Package } from 'lucide-react';
+import { Plus, X, UserPlus, CheckSquare, Wallet, UsersRound, Building2, Receipt, Package, Sparkles } from 'lucide-react';
 
-const ICONS = { UserPlus, CheckSquare, Wallet, UsersRound, Building2, Receipt, Package } as const;
+const ICONS = { UserPlus, CheckSquare, Wallet, UsersRound, Building2, Receipt, Package, Sparkles } as const;
 export interface QuickAction { href: string; label: string; hint: string; icon: keyof typeof ICONS }
 
 // Plutajuće dugme „+” na telefonu: najčešće radnje u dva dodira.

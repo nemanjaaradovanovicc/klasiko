@@ -172,7 +172,7 @@ describe('stari podaci', () => {
 describe('paketi i porodice', () => {
   // Test „stari podaci” ponovo pokreće 004 i vraća staru funkciju provere škole. 006 je vraća.
   beforeAll(async () => {
-    await db.exec(migrations.at(-1)!);
+    await db.exec(migrations[6]); // 006_paketi_porodice
   });
   it('predavač ne pravi katalog, a vlasnik pravi', async () => {
     expect(await fails(TEA_A, `insert into lesson_packages (org_id, name, lessons, price, currency) values ('${ORG_A}', '10 časova', 10, 250, 'EUR')`)).toBe(true);
@@ -212,5 +212,54 @@ describe('paketi i porodice', () => {
     const ins = `insert into reminders (org_id, student_id, channel, kind) values ('${ORG_A}', '${ST_A}', 'whatsapp', 'manual')`;
     expect(await fails(OWN_A, ins)).toBe(false);
     expect(await fails(OWN_A, ins)).toBe(false);
+  });
+});
+
+describe('probni časovi', () => {
+  const insert = (uid: string, teacher: string, name: string, extra = '') =>
+    as<{ id: string; student_id: string | null }>(uid, `insert into trial_lessons (org_id, date, teacher_id, first_name${extra ? ', ' + extra.split('=')[0] : ''}) values ('${ORG_A}', '2026-11-03', '${teacher}', '${name}'${extra ? ', ' + extra.split('=')[1] : ''}) returning id, student_id`);
+  let mine = '', owners = '';
+
+  it('predavač upisuje probni čas samo na sebe', async () => {
+    [{ id: mine }] = await insert(TEA_A, TEA_A, 'Kandidat predavača');
+    await expect(insert(TEA_A, OWN_A, 'Na tuđe ime')).rejects.toThrow();
+    [{ id: owners }] = await insert(OWN_A, OWN_A, 'Kandidat vlasnika');
+  });
+  it('predavač vidi svoje, vlasnik sve, druga škola ništa', async () => {
+    expect((await as<{ id: string }>(TEA_A, 'select id from trial_lessons')).map((r) => r.id)).toEqual([mine]);
+    expect((await as(OWN_A, 'select id from trial_lessons')).length).toBe(2);
+    expect(await as(OWN_B, 'select id from trial_lessons')).toEqual([]);
+    expect(await as(TEA_A, `update trial_lessons set outcome = 'enrolled' where id = '${owners}' returning id`)).toEqual([]);
+  });
+  it('predavač upisuje ishod, ali ne povezuje učenika', async () => {
+    const [row] = await as<{ outcome: string; student_id: string | null }>(TEA_A, `update trial_lessons set outcome = 'enrolled', student_id = '${ST_A2}' where id = '${mine}' returning outcome, student_id`);
+    expect(row).toEqual({ outcome: 'enrolled', student_id: null });
+    const [ins] = await insert(TEA_A, TEA_A, 'Sa učenikom', `student_id='${ST_A}'`);
+    expect(ins.student_id).toBeNull();
+    const [linked] = await as<{ student_id: string | null }>(OWN_A, `update trial_lessons set student_id = '${ST_A2}' where id = '${mine}' returning student_id`);
+    expect(linked.student_id).toBe(ST_A2);
+    // Izmena predavača posle toga ne skida vezu koju je napravio vlasnik.
+    const [kept] = await as<{ student_id: string | null }>(TEA_A, `update trial_lessons set note = 'dogovoren termin' where id = '${mine}' returning student_id`);
+    expect(kept.student_id).toBe(ST_A2);
+  });
+  it('predavač briše svoj unos samo dok ishod nije upisan', async () => {
+    expect(await as(TEA_A, `delete from trial_lessons where id = '${mine}' returning id`)).toEqual([]);
+    const [{ id: fresh }] = await insert(TEA_A, TEA_A, 'Greška u unosu');
+    expect((await as(TEA_A, `delete from trial_lessons where id = '${fresh}' returning id`)).length).toBe(1);
+    expect((await as(OWN_A, `delete from trial_lessons where id = '${mine}' returning id`)).length).toBe(1);
+  });
+  it('odbija predavača, grupu i učenika druge škole', async () => {
+    expect(await fails(OWN_A, `insert into trial_lessons (org_id, teacher_id, first_name) values ('${ORG_A}', '${OWN_B}', 'x')`)).toBe(true);
+    expect(await fails(OWN_A, `insert into trial_lessons (org_id, group_id, first_name) values ('${ORG_A}', '${G_B}', 'x')`)).toBe(true);
+    expect(await fails(OWN_A, `insert into trial_lessons (org_id, student_id, first_name) values ('${ORG_A}', '${ST_B}', 'x')`)).toBe(true);
+    expect(await fails(OWN_B, `insert into trial_lessons (org_id, first_name) values ('${ORG_A}', 'x')`)).toBe(true);
+    expect(await fails(OWN_A, `insert into trial_lessons (org_id, first_name, outcome) values ('${ORG_A}', 'x', 'mozda')`)).toBe(true);
+  });
+  it('brisanje učenika ostavlja probni čas i njegov ishod', async () => {
+    const [{ id: st }] = await as<{ id: string }>(OWN_A, `insert into students (org_id, first_name) values ('${ORG_A}', 'Privremeni') returning id`);
+    const [{ id }] = await as<{ id: string }>(OWN_A, `insert into trial_lessons (org_id, teacher_id, first_name, outcome, student_id) values ('${ORG_A}', '${TEA_A}', 'Privremeni', 'enrolled', '${st}') returning id`);
+    await as(OWN_A, `delete from students where id = '${st}'`);
+    const [row] = await as<{ outcome: string; student_id: string | null }>(OWN_A, `select outcome, student_id from trial_lessons where id = '${id}'`);
+    expect(row).toEqual({ outcome: 'enrolled', student_id: null });
   });
 });

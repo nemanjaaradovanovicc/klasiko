@@ -314,6 +314,69 @@ const teacher = new Browser();
   ok(noMoney.path === '/' && !noMoney.text.includes('Očekivano'), 'predavač ne vidi uplate', noMoney.path);
 }
 
+section('Probni časovi');
+{
+  const clean = (t) => t.replace(/<!-- -->/g, '');
+  const day = `${period}-05`;
+  const add = await teacher.call('saveTrial', form({ date: day, start_time: '18:30', first_name: 'Proba', last_name: 'Kandidat', phone: '0647770001', group_id: groupId, note: 'Nivo A2' }));
+  ok(add.redirect?.includes('ok=upisan'), 'predavač upisuje probni čas', add.redirect);
+  const [t1] = await rest(`trial_lessons?${orgQ}&first_name=eq.Proba&select=*`);
+  ok(t1?.teacher_id === teacherProfile.id && t1.outcome === 'pending' && t1.group_id === groupId, 'probni čas se vodi na predavača i čeka odluku', t1);
+  const noName = await teacher.call('saveTrial', form({ date: day, first_name: ' ' }));
+  ok(q(noName.redirect).includes('Unesi ime'), 'bez imena kandidata nema upisa', noName.redirect);
+  const [ownerProfile] = await rest(`profiles?email=eq.${encodeURIComponent(ownerEmail)}&select=id`);
+  const spoof = await teacher.call('saveTrial', form({ date: day, first_name: 'Tuđi', teacher_id: ownerProfile.id }));
+  const [t2] = await rest(`trial_lessons?${orgQ}&first_name=eq.Tu%C4%91i&select=id,teacher_id`);
+  ok(spoof.redirect?.includes('ok=upisan') && t2.teacher_id === teacherProfile.id, 'predavač ne može da upiše probni čas na drugoga', t2);
+  const noTeacher = await owner.call('saveTrial', form({ date: day, first_name: 'Bez', last_name: 'Predavača' }));
+  ok(q(noTeacher.redirect).includes('Izaberi ko je držao'), 'vlasnik mora da izabere predavača', noTeacher.redirect);
+  const own = await owner.call('saveTrial', form({ date: day, first_name: 'Vlasnikov', last_name: 'Kandidat', teacher_id: ownerProfile.id }));
+  const [t3] = await rest(`trial_lessons?${orgQ}&first_name=eq.Vlasnikov&select=id,teacher_id`);
+  ok(own.redirect?.includes('ok=upisan') && t3.teacher_id === ownerProfile.id, 'vlasnik upisuje probni čas koji je sam držao', t3);
+
+  const tPage = clean((await teacher.get(`/probni?mesec=${period}`)).text);
+  ok(tPage.includes('Proba Kandidat') && !tPage.includes('Vlasnikov Kandidat'), 'predavač vidi samo svoje probne časove');
+  const foreign = await teacher.call('setTrialOutcome', form({ id: t3.id, outcome: 'declined', back: `/probni?mesec=${period}` }));
+  ok(q(foreign.redirect).includes('samo svoje') && (await rest(`trial_lessons?id=eq.${t3.id}&select=outcome`))[0].outcome === 'pending', 'predavač ne menja ishod tuđeg probnog časa', foreign.redirect);
+
+  const yes = await teacher.call('setTrialOutcome', form({ id: t1.id, outcome: 'enrolled', back: `/probni?mesec=${period}` }));
+  const no = await teacher.call('setTrialOutcome', form({ id: t2.id, outcome: 'declined', back: `/probni?mesec=${period}` }));
+  ok(yes.redirect?.includes('ok=ishod') && no.redirect?.includes('ok=ishod'), 'predavač upisuje ishod', [yes.redirect, no.redirect]);
+  const evil = await teacher.call('setTrialOutcome', form({ id: t1.id, outcome: 'enrolled', back: '//zli.example' }));
+  ok(evil.redirect?.startsWith('/probni'), 'povratna adresa ostaje u aplikaciji', evil.redirect);
+  const keep = await teacher.call('deleteTrial', form({ id: t1.id, back: '/probni' }));
+  ok(q(keep.redirect).includes('samo vlasnik') && (await rest(`trial_lessons?id=eq.${t1.id}&select=id`)).length === 1, 'predavač ne briše probni čas sa upisanim ishodom', keep.redirect);
+  const edit = await teacher.call('saveTrial', form({ id: t1.id, date: day, start_time: '19:00', first_name: 'Proba', last_name: 'Kandidat', phone: '0647770001', email: 'proba@klasiko.test', group_id: groupId }));
+  const [t1b] = await rest(`trial_lessons?id=eq.${t1.id}&select=*`);
+  ok(edit.redirect?.includes('ok=izmena') && t1b.email === 'proba@klasiko.test' && t1b.start_time.startsWith('19:00') && t1b.outcome === 'enrolled', 'izmena podataka ne dira ishod', t1b);
+
+  const oPage = clean((await owner.get(`/probni?mesec=${period}`)).text);
+  ok(oPage.includes('Proba Kandidat') && oPage.includes('Vlasnikov Kandidat') && oPage.includes('Petar Predavač') && oPage.includes('Dodaj u učenike'), 'vlasnik vidi sve probne časove i ko ih je držao');
+  ok(/Probnih časova<\/div><div[^>]*>3</.test(oPage) && /Upisalo se<\/div><div[^>]*>1</.test(oPage) && /Nije se upisalo<\/div><div[^>]*>1</.test(oPage) && /Čeka odluku<\/div><div[^>]*>1</.test(oPage) && oPage.includes('50% od onih sa ishodom'), 'brojke za mesec: 3 probna, 1 upisan, 1 nije, 1 čeka', oPage.match(/(Probnih časova|Upisalo se|Nije se upisalo|Čeka odluku)<\/div><div[^>]*>\d+/g));
+
+  const formPage = clean((await owner.get(`/ucenici/novi?probni=${t1.id}`)).text);
+  ok(formPage.includes('Upis posle probnog časa') && formPage.includes('value="Proba"') && formPage.includes('value="0647770001"'), 'forma za novog učenika je popunjena iz probnog časa');
+  const enroll = await owner.call('createStudent', form({ trial_id: t1.id, first_name: 'Proba', last_name: 'Kandidat', phone: '0647770001', joined_at: day }));
+  const newId = enroll.redirect?.match(/ucenici\/([\w-]+)/)?.[1];
+  const [t1c] = await rest(`trial_lessons?id=eq.${t1.id}&select=student_id,outcome,outcome_at`);
+  ok(!!newId && t1c.student_id === newId && t1c.outcome === 'enrolled' && t1c.outcome_at === t1b.outcome_at, 'novi učenik je povezan sa probnim časom, a datum ishoda ostaje', t1c);
+  ok(clean((await owner.get(`/probni?mesec=${period}`)).text).includes('Karton učenika'), 'probni čas vodi na karton učenika');
+  const tLink = await teacher.call('saveTrial', form({ id: t1.id, date: day, first_name: 'Proba', last_name: 'Kandidat' }));
+  ok(tLink.redirect?.includes('ok=izmena') && (await rest(`trial_lessons?id=eq.${t1.id}&select=student_id`))[0].student_id === newId, 'izmena predavača ne skida vezu sa učenikom');
+
+  const rep = clean((await owner.get(`/izvestaji?mesec=${period}`)).text);
+  ok(rep.includes('Svi probni časovi') && rep.includes('1 ukupno') && rep.includes('2 ukupno') && rep.includes('1 upisano') && rep.includes('1 nije upisano') && rep.includes('1 čeka'), 'izveštaj pokazuje probne časove po predavaču', rep.match(/\d+ (ukupno|upisano|nije upisano|čeka)/g));
+  ok(!/3 održano/.test(rep), 'probni časovi ne ulaze u redovne časove predavača', rep.match(/\d+ održano/g));
+  const other = clean((await owner.get(`/probni?mesec=2020-01`)).text);
+  ok(other.includes('Nema probnih časova u ovom mesecu') && !other.includes('Proba Kandidat'), 'drugi mesec je prazan');
+
+  const del = await owner.call('deleteTrial', form({ id: t2.id, back: `/probni?mesec=${period}` }));
+  ok(del.redirect?.includes('ok=obrisan') && (await rest(`trial_lessons?id=eq.${t2.id}&select=id`)).length === 0, 'vlasnik briše probni čas', del.redirect);
+  await rest(`students?id=eq.${newId}`, { method: 'DELETE' });
+  const [t1d] = await rest(`trial_lessons?id=eq.${t1.id}&select=student_id,outcome`);
+  ok(t1d.student_id === null && t1d.outcome === 'enrolled', 'brisanje učenika ne briše probni čas', t1d);
+}
+
 section('Dolasci (QR)');
 {
   await owner.call('generateCards');

@@ -5,6 +5,7 @@ import { PageHeader, Card, Stat, Badge } from '@/components/ui';
 import { attendanceStats, currentPeriod, parsePeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr, time } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ExportButton } from './export';
+import { TRIAL_OUTCOME_LABEL, trialStats, trialsByTeacher, type TrialLesson } from '@/lib/trials';
 
 export const metadata = { title: 'Izveštaji' };
 
@@ -22,7 +23,8 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   type C = { id: string; amount: number; payments: { amount: number }[] };
   type Se = { id: string; group_id: string; status: string; date: string; start_time: string; end_time: string | null; teacher_id: string | null; attendance: { status: string }[] };
   type St = { id: string; first_name: string; last_name: string; birth_date: string | null; phone: string | null; email: string | null; parent_name: string | null; parent_phone: string | null; parent_email: string | null; joined_at: string; left_at: string | null; active: boolean; custom_fee: number | null; discount_pct: number; group_members: { groups: { name: string } | null }[] };
-  const [pays, chs, allSess, sts, { data: groups }, { data: profiles }, { data: slots }] = await Promise.all([
+  type Tr = Pick<TrialLesson, 'id' | 'date' | 'start_time' | 'teacher_id' | 'group_id' | 'first_name' | 'last_name' | 'phone' | 'email' | 'note' | 'outcome' | 'outcome_at'>;
+  const [pays, chs, allSess, sts, { data: groups }, { data: profiles }, { data: slots }, trials] = await Promise.all([
     fetchAll<P>((a, b) => supabase.from('payments').select('id, amount, paid_at, method, students(first_name, last_name), charges(period, description)').eq('org_id', ctx.org.id).gte('paid_at', sixAgo).lt('paid_at', end).order('id').range(a, b)),
     fetchAll<C>((a, b) => supabase.from('charges').select('id, amount, payments(amount)').eq('org_id', ctx.org.id).eq('period', period).order('id').range(a, b)),
     fetchAll<Se>((a, b) => supabase.from('sessions').select('id, group_id, status, date, start_time, end_time, teacher_id, attendance(status)').eq('org_id', ctx.org.id).gte('date', start).lt('date', end).neq('status', 'planned').order('id').range(a, b)),
@@ -30,6 +32,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
     supabase.from('groups').select('id, name, color, capacity, teacher_id, active, group_members(student_id)').eq('org_id', ctx.org.id).order('name'),
     supabase.from('profiles').select('id, full_name, role').eq('org_id', ctx.org.id),
     supabase.from('schedule_slots').select('group_id, weekday, start_time, end_time').eq('org_id', ctx.org.id),
+    fetchAll<Tr>((a, b) => supabase.from('trial_lessons').select('id, date, start_time, teacher_id, group_id, first_name, last_name, phone, email, note, outcome, outcome_at').eq('org_id', ctx.org.id).gte('date', start).lt('date', end).order('date').order('id').range(a, b)),
   ]);
 
   const months = [5, 4, 3, 2, 1, 0].map((i) => shiftPeriod(period, -i));
@@ -80,6 +83,10 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
     const gs = sess.filter((s) => s.group_id === g.id);
     return { ...g, sessions: gs.length, rate: attendanceStats(gs.flatMap((s) => s.attendance)).pct };
   });
+
+  // Probni časovi održani u ovom mesecu i šta je bilo posle njih.
+  const trial = trialStats(trials);
+  const trialRows = trialsByTeacher(trials, names);
 
   const label = periodLabel(period);
   return (
@@ -161,6 +168,47 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
           </ul>
         )}
         <p className="mt-3 text-[12px] font-semibold text-mut">Računaju se časovi za koje je upisano prisustvo, na predavača koji je držao čas. Vlasnik predavača menja pri upisu prisustva. Zakazane nadoknade se računaju tek kad se održe. Opravdani izostanci ne ulaze u procenat prisustva.</p>
+      </Card>
+
+      <Card title="Probni časovi" className="mt-6" actions={
+        <span className="flex flex-wrap items-center gap-3">
+          <Link href={`/probni?mesec=${period}`} className="text-[13px] font-bold text-brand">Svi probni časovi →</Link>
+          {trials.length > 0 && (
+            <ExportButton
+              label="Excel"
+              fileName={`klasiko-probni-casovi-${period}.xlsx`}
+              header={['Datum', 'Vreme', 'Ime', 'Prezime', 'Telefon', 'Email', 'Predavač', 'Grupa', 'Ishod', 'Datum ishoda', 'Napomena']}
+              rows={trials.map((t) => [dateSr(t.date), time(t.start_time), t.first_name, t.last_name, t.phone, t.email, t.teacher_id ? names.get(t.teacher_id) ?? 'Bivši korisnik' : 'Bez predavača', t.group_id ? groupById.get(t.group_id)?.name ?? '' : '', TRIAL_OUTCOME_LABEL[t.outcome], dateSr(t.outcome_at), t.note])}
+            />
+          )}
+        </span>
+      }>
+        {trials.length === 0 ? (
+          <p className="text-[14px] font-semibold text-mut">Nema upisanih probnih časova u ovom mesecu.</p>
+        ) : (
+          <>
+            <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <Stat label="Probnih časova" value={trial.total} tone="brand" />
+              <Stat label="Upisalo se" value={trial.enrolled} tone="ok" hint={trial.pct === null ? 'još nema ishoda' : `${trial.pct}% od onih sa ishodom`} />
+              <Stat label="Nije se upisalo" value={trial.declined} />
+              <Stat label="Čeka odluku" value={trial.pending} tone={trial.pending ? 'coral' : 'default'} />
+            </div>
+            <ul className="flex flex-col divide-y divide-line">
+              {trialRows.map((t) => (
+                <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                  <span className="min-w-0 font-extrabold text-ink">{t.name}</span>
+                  <span className="flex flex-wrap gap-1.5">
+                    <Badge>{t.total} ukupno</Badge>
+                    <Badge tone="ok">{t.enrolled} upisano</Badge>
+                    {t.declined > 0 && <Badge tone="gray">{t.declined} nije upisano</Badge>}
+                    {t.pending > 0 && <Badge tone="coral">{t.pending} čeka</Badge>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <p className="mt-3 text-[12px] font-semibold text-mut">Računaju se probni časovi održani u ovom mesecu, bez obzira na to kada je upisan ishod. Vode se odvojeno od redovnih časova, pa ne ulaze u „Časovi po predavaču” ni u prisustvo.</p>
       </Card>
 
       <Card title="Izvoz u Excel" className="mt-6">

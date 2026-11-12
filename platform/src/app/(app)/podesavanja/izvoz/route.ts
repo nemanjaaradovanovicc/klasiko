@@ -9,7 +9,7 @@ import { todayISO } from '@/lib/format';
 const TABLES: [string, string][] = [
   ['rooms', 'id'], ['groups', 'id'], ['students', 'id'], ['group_members', 'group_id,student_id'], ['group_waitlist', 'group_id,student_id'],
   ['schedule_slots', 'id'], ['sessions', 'id'], ['attendance', 'session_id,student_id'], ['charges', 'id'], ['payments', 'id'],
-  ['class_packages', 'id'], ['lesson_packages', 'id'], ['class_package_students', 'class_package_id,student_id'], ['package_extensions', 'class_package_id,session_id'], ['checkins', 'id'], ['absence_notices', 'id'], ['announcements', 'id'], ['reminders', 'id'],
+  ['class_packages', 'id'], ['lesson_packages', 'id'], ['class_package_students', 'class_package_id,student_id'], ['package_extensions', 'class_package_id,session_id'], ['checkins', 'id'], ['absence_notices', 'id'], ['announcements', 'id'], ['reminders', 'id'], ['trial_lessons', 'id'],
 ];
 
 export async function GET() {

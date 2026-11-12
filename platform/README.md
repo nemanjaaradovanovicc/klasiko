@@ -4,7 +4,7 @@ Next.js 16, React 19, Supabase (Postgres, Auth, RLS), Vercel.
 
 ## Objava izmena
 
-1. U Supabase SQL Editoru redom pokreni migracije koje još nisu pokrenute (poslednja je `supabase/migrations/006_paketi_porodice.sql`). Mogu bezbedno više puta. Prvo ih pokreni, pa tek onda objavi kod. Nove promenljive okruženja nisu potrebne: dnevni cron i mejl ostaju kako jesu.
+1. U Supabase SQL Editoru redom pokreni migracije koje još nisu pokrenute (poslednja je `supabase/migrations/007_probni_casovi.sql`). Mogu bezbedno više puta. Prvo ih pokreni, pa tek onda objavi kod. Nove promenljive okruženja nisu potrebne: dnevni cron i mejl ostaju kako jesu.
 2. Opciono, u Vercelu dodaj `CRON_SECRET` (dugačak slučajan niz) ako želiš automatska mesečna zaduženja. Bez njega se opcija ne prikazuje, a zaduženja se prave dugmetom na stranici Uplate.
 3. Objavi kod. Dnevni posao je u `vercel.json` (svako jutro u 7 ili 8 po Beogradu).
 
@@ -26,6 +26,12 @@ Kad upišeš ove dve promenljive i ponovo objaviš, pojavljuju se potvrda adrese
 Dugmad „Probaj 14 dana” na sajtu vode na `app.klasiko.rs/registracija?paket=...`. Škola dobija 14 dana probe na izabranom paketu.
 
 Sa uključenim mejlom nalog ne može da se koristi dok vlasnik ne otvori link iz mejla. Nepotvrđena škola stoji u Adminu sa oznakom „Email nije potvrđen” i ne ulazi u brojke. Nova registracija na istu adresu zamenjuje nepotvrđen nalog. Ako mejl ne stigne, resetuj vlasniku lozinku u Adminu: to potvrđuje nalog, a privremenu lozinku pošalješ na WhatsApp.
+
+## Probni časovi
+
+Stranica „Probni časovi” (`/probni`) je u meniju i za vlasnika i za predavača. Predavač upisuje svaki probni čas koji održi (datum, kandidat, kontakt, napomena) i kasnije ishod: upisao/la se ili nije. Vidi samo svoje probne časove. Vlasnik vidi sve, bira ko je držao čas kad sam upisuje, i iz probnog časa jednim klikom pravi karton učenika.
+
+Brojke za mesec (koliko probnih, koliko upisanih, koliko nije, koliko još čeka odluku) su na vrhu te stranice i u Izveštajima, gde su i podela po predavaču i izvoz u Excel. Računa se mesec u kom je probni čas održan. Probni časovi ne ulaze u prisustvo ni u „Časovi po predavaču”.
 
 ## Dvostepena prijava za admina
 
