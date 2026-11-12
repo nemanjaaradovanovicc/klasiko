@@ -11,6 +11,7 @@ import { slotConflicts } from '@/lib/groups';
 import { familyReference, ipsPayload, studentReference } from '@/lib/ips';
 import { trialReminderDue } from '@/lib/billing';
 import { isTrialOutcome, trialStats, trialsByTeacher } from '@/lib/trials';
+import { NO_TEACHER, isWithTeacher, studentsPerTeacher, teacherIdsOf } from '@/lib/students';
 
 const charges: MatchCharge[] = [
   { id: 'ana-10', period: '2026-10', remaining: 4000, first_name: 'Ana', last_name: 'Petrović', parent_name: 'Marija Petrović', ref_no: 1042 },
@@ -270,5 +271,26 @@ describe('probni časovi', () => {
     expect(['pending', 'enrolled', 'declined'].every(isTrialOutcome)).toBe(true);
     expect(isTrialOutcome('maybe')).toBe(false);
     expect(isTrialOutcome(null)).toBe(false);
+  });
+});
+
+describe('učenici po predavaču', () => {
+  const g = (teacher_id: string | null, active = true) => ({ groups: { teacher_id, active } });
+  const ana = { group_members: [g('milica'), g('milica'), g('jovana')] };
+  const luka = { group_members: [g('milica')] };
+  const mina = { group_members: [g(null)] };
+  const vuk = { group_members: [] };
+  const sara = { group_members: [g('jovana', false), { groups: null }] };
+  it('učenik se vodi kod predavača svake svoje aktivne grupe, jednom', () => {
+    expect(teacherIdsOf(ana)).toEqual(['milica', 'jovana']);
+    expect(teacherIdsOf(sara)).toEqual([]); // Arhivirana grupa se ne računa.
+    expect(isWithTeacher(ana, 'jovana')).toBe(true);
+    expect(isWithTeacher(luka, 'jovana')).toBe(false);
+  });
+  it('bez predavača su učenici bez grupe ili u grupi bez predavača', () => {
+    expect([ana, luka, mina, vuk, sara].map((s) => isWithTeacher(s, NO_TEACHER))).toEqual([false, false, true, true, true]);
+  });
+  it('broji učenike po predavaču', () => {
+    expect([...studentsPerTeacher([ana, luka, mina, vuk, sara])].sort()).toEqual([[NO_TEACHER, 3], ['jovana', 1], ['milica', 2]]);
   });
 });
