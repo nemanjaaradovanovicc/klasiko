@@ -21,6 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/ucenici', label: 'Učenici', icon: 'Users', mobile: true },
       { href: '/uplate', label: 'Uplate', icon: 'Wallet', mobile: true },
       { href: '/paketi', label: 'Paketi', icon: 'Package' },
+      { href: '/probni', label: 'Probni časovi', icon: 'Sparkles' },
       { href: '/grupe', label: 'Grupe', icon: 'UsersRound' },
       { href: '/raspored', label: 'Raspored', icon: 'CalendarDays' },
       { href: '/roditelji', label: 'Roditelji', icon: 'HeartHandshake' },
@@ -34,6 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/', label: 'Pregled', icon: 'LayoutDashboard', mobile: true },
       { href: '/prisustvo', label: 'Prisustvo', icon: 'CheckSquare', mobile: true },
       { href: '/paketi', label: 'Paketi', icon: 'Package', mobile: true },
+      { href: '/probni', label: 'Probni časovi', icon: 'Sparkles' },
       { href: '/raspored', label: 'Raspored', icon: 'CalendarDays' },
       { href: '/grupe', label: 'Moje grupe', icon: 'UsersRound', mobile: true },
       { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
@@ -54,11 +56,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/uplate/dugovanja', label: 'Ko duguje', hint: 'Ukupan dug po roditelju i podsetnici', icon: 'Wallet' },
       { href: '/grupe/nova', label: 'Nova grupa', hint: 'Naziv, predavač, cena i termin', icon: 'UsersRound' },
       { href: '/paketi', label: 'Paketi časova', hint: 'Katalog, kupovina i datumi uplate', icon: 'Package' },
+      { href: '/probni#novi', label: 'Probni čas', hint: 'Upis probnog časa i ishod posle njega', icon: 'Sparkles' },
     ];
   } else if (ctx.org) {
     quick = [
       { href: '/prisustvo', label: 'Upiši prisustvo', hint: 'Današnji časovi', icon: 'CheckSquare' },
       { href: '/paketi', label: 'Paketi časova', hint: 'Datum uplate i rok za svoje učenike', icon: 'Package' },
+      { href: '/probni#novi', label: 'Probni čas', hint: 'Upis probnog časa i ishod posle njega', icon: 'Sparkles' },
     ];
   } else if (ctx.isSuper) {
     quick = [

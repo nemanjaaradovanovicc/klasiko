@@ -50,12 +50,24 @@ function studentData(fd: FormData) {
 export async function createStudent(fd: FormData) {
   const ctx = await requireOwner();
   const data = studentData(fd);
-  if (!data.first_name) redirect('/ucenici/novi?err=' + encodeURIComponent('Unesi ime.'));
+  // Upis posle probnog časa: forma nosi id probnog, pa greška vraća na istu, popunjenu formu.
+  const trialRaw = s(fd, 'trial_id');
+  const trialId = trialRaw && /^[0-9a-f-]{36}$/i.test(trialRaw) ? trialRaw : null;
+  const formErr = (message: string) => `/ucenici/novi?${trialId ? `probni=${trialId}&` : ''}err=` + encodeURIComponent(message);
+  if (!data.first_name) redirect(formErr('Unesi ime.'));
   const supabase = await createClient();
   const limit = await studentLimitError(supabase, ctx.org, 1, ctx.isSuper);
-  if (limit) redirect('/ucenici/novi?err=' + encodeURIComponent(limit));
+  if (limit) redirect(formErr(limit));
   const { data: st, error } = await supabase.from('students').insert({ ...data, org_id: ctx.org.id }).select('id').single();
-  if (error || !st) redirect('/ucenici/novi?err=' + encodeURIComponent('Učenik nije sačuvan: ' + (error?.message ?? '')));
+  if (error || !st) redirect(formErr('Učenik nije sačuvan: ' + (error?.message ?? '')));
+  if (trialId) {
+    // Probni čas dobija ishod „upisao/la se” i vezu sa kartonom. Datum ranije upisanog ishoda se ne menja.
+    const { data: trial } = await supabase.from('trial_lessons').select('outcome, outcome_at').eq('id', trialId).eq('org_id', ctx.org.id).maybeSingle();
+    if (trial) {
+      await supabase.from('trial_lessons').update({ student_id: st.id, outcome: 'enrolled', outcome_at: trial.outcome === 'enrolled' && trial.outcome_at ? trial.outcome_at : todayISO() }).eq('id', trialId).eq('org_id', ctx.org.id);
+      revalidatePath('/probni');
+    }
+  }
   const groupId = s(fd, 'group_id');
   let waitlisted = false;
   if (groupId) {
