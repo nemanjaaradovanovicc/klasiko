@@ -217,6 +217,14 @@ ok((await rest(`group_waitlist?student_id=eq.${mina.id}`)).length === 1, 'zapis 
   ok(imp.value?.ok === 2 && imp.value?.duplicates === 2, 'uvoz preskače učenike koji već postoje', imp.value);
   const again = await owner.call('importStudents', [{ first_name: 'Novi', last_name: 'Ucenik', parent_phone: '0601234567' }]);
   ok(again.value?.ok === 0 && again.value?.duplicates === 1, 'ponovni uvoz ne pravi duplikate', again.value);
+  const all = (await owner.get('/ucenici')).text.replace(/<!-- -->/g, '');
+  ok(all.includes('Petar Predavač · 4') && all.includes('Bez predavača · 1'), 'spisak učenika nudi pregled po predavaču sa brojem učenika', all.match(/(Petar Predavač|Bez predavača|Svi) · \d+/g));
+  const hers = (await owner.get(`/ucenici?predavac=${teacherProfile.id}`)).text.replace(/<!-- -->/g, '');
+  ok(hers.includes('Ana') && hers.includes('Mina') && !hers.includes('Loš'), 'izbor predavača prikazuje samo njegove učenike');
+  const none = (await owner.get('/ucenici?predavac=bez')).text.replace(/<!-- -->/g, '');
+  ok(none.includes('Loš') && !none.includes('Ana Petrović'), '„Bez predavača” prikazuje učenike van grupa');
+  const bogus = (await owner.get('/ucenici?predavac=nepostojeci')).text;
+  ok(bogus.includes('Ana') && bogus.includes('Loš'), 'nepoznat predavač u adresi prikazuje sve učenike');
   await rest(`organizations?id=eq.${org.id}`, { method: 'PATCH', body: JSON.stringify({ plan: 'start' }) });
   const many = Array.from({ length: 60 }, (_, i) => ({ first_name: `Masa${i}`, last_name: 'Test' }));
   const over = await owner.call('importStudents', many);
