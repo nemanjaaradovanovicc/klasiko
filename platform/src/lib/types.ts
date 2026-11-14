@@ -90,7 +90,10 @@ export interface Group {
   fee_type: FeeType;
   package_classes: number | null;
   drop_in: boolean;
+  lesson_type: GroupLessonType | null;
 }
+
+export type GroupLessonType = 'individualni' | 'duo' | 'grupni' | 'radionica';
 
 export type FeeType = 'monthly' | 'package' | 'manual';
 export const FEE_TYPE_LABEL: Record<FeeType, string> = {

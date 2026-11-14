@@ -4,10 +4,10 @@ import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
-  LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield, Menu, X, LogOut, Receipt, HeartHandshake, ScanLine, Megaphone, ScrollText, Package, Sparkles,
+  LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield, Menu, X, LogOut, Receipt, HeartHandshake, ScanLine, Megaphone, ScrollText, Package, Sparkles, Video,
 } from 'lucide-react';
 
-const ICONS = { LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield, Receipt, HeartHandshake, ScanLine, Megaphone, ScrollText, Package, Sparkles } as const;
+const ICONS = { LayoutDashboard, Users, UsersRound, CalendarDays, CheckSquare, Wallet, BarChart3, Settings, Shield, Receipt, HeartHandshake, ScanLine, Megaphone, ScrollText, Package, Sparkles, Video } as const;
 export type IconName = keyof typeof ICONS;
 export interface NavItem { href: string; label: string; icon: IconName; mobile?: boolean }
 

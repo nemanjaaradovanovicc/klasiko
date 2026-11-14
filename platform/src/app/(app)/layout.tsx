@@ -28,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/obavestenja', label: 'Obaveštenja', icon: 'Megaphone' },
       { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
       { href: '/izvestaji', label: 'Izveštaji', icon: 'BarChart3' },
+      { href: '/zoom', label: 'Zoom trošak', icon: 'Video' },
       { href: '/podesavanja', label: 'Podešavanja', icon: 'Settings' },
     ];
   } else if (ctx.org) {
@@ -40,6 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/grupe', label: 'Moje grupe', icon: 'UsersRound', mobile: true },
       { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
       { href: '/obavestenja', label: 'Obaveštenja', icon: 'Megaphone' },
+      { href: '/zoom', label: 'Zoom trošak', icon: 'Video' },
     ];
   }
   if (ctx.isSuper) {

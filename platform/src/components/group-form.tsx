@@ -1,5 +1,6 @@
 import { Field, Select } from '@/components/ui';
 import { moneyCurrency } from '@/lib/format';
+import { GROUP_LESSON_TYPES, LESSON_KIND_LABEL } from '@/lib/lessons';
 import { FEE_TYPE_LABEL, type Group } from '@/lib/types';
 
 export const COLORS = ['#5B2A86', '#FF6B5E', '#2F7DBF', '#1F9D6B', '#E0A21B', '#C2417B', '#6B7280', '#0E9AA7'];
@@ -17,6 +18,10 @@ export function GroupFields({ g, teachers, rooms, currency, packagesOnly = false
         <Field label="Nivo ili uzrast" name="level" defaultValue={g?.level} placeholder="npr. B1, 7 do 9 godina, žuti pojas" />
         <Select label="Predavač" name="teacher_id" defaultValue={g?.teacher_id ?? ''} placeholder="Bez predavača" options={teachers.map((t) => ({ value: t.id, label: t.full_name }))} />
         <Select label="Sala" name="room_id" defaultValue={g?.room_id ?? ''} placeholder="Bez sale" options={rooms.map((r) => ({ value: r.id, label: r.name }))} />
+        <div>
+          <Select label="Vrsta časa" name="lesson_type" defaultValue={g?.lesson_type ?? ''} placeholder="Automatski" options={GROUP_LESSON_TYPES.map((value) => ({ value, label: LESSON_KIND_LABEL[value] }))} />
+          <p className="mt-1 text-[12px] font-semibold text-mut">Automatski: otvorena grupa je radionica, jedan aktivan učenik individualni, dva duo, ostalo grupni.</p>
+        </div>
         <Select label="Način naplate" name="fee_type" defaultValue={feeType} options={feeOptions} />
         {packagesOnly ? null : (
           <Field label={`Cena (${code})`} name="monthly_fee" type="number" min={0} step="1" defaultValue={g?.monthly_fee} hint={code === 'EUR' ? 'Mesečna članarina u evrima. Pakete definišeš na stranici Paketi.' : 'Mesečna članarina u dinarima. Pakete definišeš na stranici Paketi.'} />

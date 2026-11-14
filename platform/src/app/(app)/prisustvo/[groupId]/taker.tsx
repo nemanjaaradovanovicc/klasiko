@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Check, X, Minus } from 'lucide-react';
+import { GROUP_LESSON_TYPES, LESSON_KIND_LABEL } from '@/lib/lessons';
 import { saveAttendance, type AttStatus } from '../actions';
 
 interface S { id: string; name: string }
 
-type Draft = { marks: Record<string, AttStatus>; status: 'held' | 'cancelled'; note: string; teacherId: string };
+type Draft = { marks: Record<string, AttStatus>; status: 'held' | 'cancelled'; note: string; teacherId: string; lessonType?: string };
 
-export function Taker({ groupId, date, startTime, students, initial, initialStatus, initialNote, saved, absences = {}, teachers, initialTeacher = '', dropIn = false, roster = [] }: {
+export function Taker({ groupId, date, startTime, students, initial, initialStatus, initialNote, saved, absences = {}, teachers, initialTeacher = '', initialLessonType = '', dropIn = false, roster = [] }: {
   groupId: string; date: string; startTime: string; students: S[]; initial: Record<string, AttStatus>; initialStatus: 'held' | 'cancelled'; initialNote: string; saved: boolean;
-  absences?: Record<string, string>; teachers?: { id: string; full_name: string }[]; initialTeacher?: string;
+  absences?: Record<string, string>; teachers?: { id: string; full_name: string }[]; initialTeacher?: string; initialLessonType?: string;
   dropIn?: boolean; roster?: S[];
 }) {
   const [extras, setExtras] = useState<S[]>(() => {
@@ -30,6 +31,7 @@ export function Taker({ groupId, date, startTime, students, initial, initialStat
   const [status, setStatus] = useState(initialStatus);
   const [note, setNote] = useState(initialNote);
   const [teacherId, setTeacherId] = useState(initialTeacher);
+  const [lessonType, setLessonType] = useState(initialLessonType);
   const [msg, setMsg] = useState<{ ok?: boolean; error?: string; info?: string } | null>(saved ? { ok: true } : null);
   const [pending, start] = useTransition();
 
@@ -46,6 +48,7 @@ export function Taker({ groupId, date, startTime, students, initial, initialStat
       setStatus(d.status);
       setNote(d.note);
       if (d.teacherId !== undefined) setTeacherId(d.teacherId);
+      if (typeof d.lessonType === 'string') setLessonType(d.lessonType);
       dirty.current = true;
       setMsg({ info: 'Vraćen je nesačuvan unos sa ovog uređaja. Proveri i sačuvaj.' });
     } catch {}
@@ -53,15 +56,15 @@ export function Taker({ groupId, date, startTime, students, initial, initialStat
   }, []);
   useEffect(() => {
     if (!dirty.current) return;
-    try { localStorage.setItem(draftKey, JSON.stringify({ marks, status, note, teacherId } satisfies Draft)); } catch {}
-  }, [draftKey, marks, status, note, teacherId]);
+    try { localStorage.setItem(draftKey, JSON.stringify({ marks, status, note, teacherId, lessonType } satisfies Draft)); } catch {}
+  }, [draftKey, marks, status, note, teacherId, lessonType]);
 
   const touch = () => { dirty.current = true; setMsg(null); };
   const present = Object.values(marks).filter((v) => v === 'present').length;
   const set = (id: string, v: AttStatus) => { touch(); setMarks((m) => ({ ...m, [id]: v })); };
   const save = () => start(async () => {
     try {
-      const res = await saveAttendance({ groupId, date, startTime, status, note, marks, ...(teachers ? { teacherId: teacherId || null } : {}) });
+      const res = await saveAttendance({ groupId, date, startTime, status, note, marks, lessonType: lessonType || null, ...(teachers ? { teacherId: teacherId || null } : {}) });
       setMsg(res);
       if (res.ok) {
         dirty.current = false;
@@ -72,7 +75,7 @@ export function Taker({ groupId, date, startTime, students, initial, initialStat
       // Pad mreže: nacrt ostaje na uređaju i šalje se čim se veza vrati.
       dirty.current = true;
       retry.current = true;
-      try { localStorage.setItem(draftKey, JSON.stringify({ marks, status, note, teacherId } satisfies Draft)); } catch {}
+      try { localStorage.setItem(draftKey, JSON.stringify({ marks, status, note, teacherId, lessonType } satisfies Draft)); } catch {}
       setMsg({ error: 'Nema veze sa serverom. Unos je sačuvan na ovom uređaju i biće poslat čim se veza vrati.' });
     }
   });
@@ -148,6 +151,15 @@ export function Taker({ groupId, date, startTime, students, initial, initialStat
           </select>
         </label>
       )}
+
+      <label className="block">
+        <span className="label">Vrsta ovog časa</span>
+        <select className="input" value={lessonType} onChange={(e) => { touch(); setLessonType(e.target.value); }}>
+          <option value="">Kao grupa</option>
+          {GROUP_LESSON_TYPES.map((value) => <option key={value} value={value}>{LESSON_KIND_LABEL[value]}</option>)}
+        </select>
+        <span className="mt-1 block text-[12px] font-semibold text-mut">Prazno znači vrsta grupe. Ako grupa nema upisanu vrstu, računa se automatski.</span>
+      </label>
 
       <label className="block">
         <span className="label">Beleška o času</span>
