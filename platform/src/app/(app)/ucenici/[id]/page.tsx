@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { requireOwner } from '@/lib/auth';
+import { requireOrg } from '@/lib/auth';
+import { canEditQuestionnaire, canEditStudentRecord, type StudentProfile } from '@/lib/questionnaire';
+import { teacherStudentFlags } from '@/lib/student-access';
+import { PhotoConsentBanner, QuestionnaireForm, TeacherStudentCard } from './upitnik-form';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Flash, Badge, Stat } from '@/components/ui';
 import { StudentFields } from '@/components/student-form';
@@ -16,13 +19,29 @@ import { assignPackage, deletePackagePurchase } from '../../paketi/actions';
 import { CopyButton } from '@/components/copy-button';
 import { parentUrl } from '@/lib/parent';
 
-const OK: Record<string, string> = { '1': 'Sačuvano.', novi: 'Učenik je dodat.', ispisan: 'Učenik je ispisan i uklonjen iz grupa.', aktivan: 'Učenik je ponovo aktivan.', link: 'Link za roditelje je napravljen. Pošalji ga roditelju.', ugasen: 'Link je poništen i više ne radi.', cekanje: 'Grupa je popunjena, pa je učenik na listi čekanja.', avans: 'Avans je raspoređen na otvorena zaduženja.', paket: 'Paket je dodat.', obrisan: 'Paket je obrisan. Zaduženje, ako postoji, ostaje na Uplatama.' };
+const OK: Record<string, string> = { '1': 'Sačuvano.', novi: 'Učenik je dodat.', ispisan: 'Učenik je ispisan i uklonjen iz grupa.', aktivan: 'Učenik je ponovo aktivan.', link: 'Link za roditelje je napravljen. Pošalji ga roditelju.', ugasen: 'Link je poništen i više ne radi.', cekanje: 'Grupa je popunjena, pa je učenik na listi čekanja.', avans: 'Avans je raspoređen na otvorena zaduženja.', paket: 'Paket je dodat.', obrisan: 'Paket je obrisan. Zaduženje, ako postoji, ostaje na Uplatama.', upitnik: 'Upisni upitnik je sačuvan.' };
 
 export default async function StudentPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
-  const ctx = await requireOwner();
+  const ctx = await requireOrg();
   const { id } = await params;
   const sp = await searchParams;
   const supabase = await createClient();
+  if (!canEditStudentRecord(ctx)) {
+    const { data: s } = await supabase.from('students').select('*').eq('id', id).eq('org_id', ctx.org.id).maybeSingle<Student>();
+    if (!s) notFound();
+    const [flags, profileRes, memRes] = await Promise.all([
+      teacherStudentFlags(supabase, ctx.org.id, ctx.userId, id),
+      supabase.from('student_profiles').select('*').eq('student_id', id).eq('org_id', ctx.org.id).maybeSingle(),
+      supabase.from('group_members').select('group_id, groups(name, color)').eq('student_id', id),
+    ]);
+    if (!canEditQuestionnaire({ isOwner: false }, { sameOrg: true, ...flags })) notFound();
+    type GM = { group_id: string; groups: { name: string; color: string } | { name: string; color: string }[] | null };
+    const groups = ((memRes.data ?? []) as unknown as GM[]).flatMap((m) => {
+      const g = Array.isArray(m.groups) ? m.groups[0] : m.groups;
+      return g ? [{ id: m.group_id, name: g.name, color: g.color }] : [];
+    });
+    return <TeacherStudentCard s={s} profile={(profileRes.data ?? null) as StudentProfile | null} groups={groups} ok={sp.ok} err={sp.err} />;
+  }
   type M = { group_id: string; joined_at: string; groups: { name: string; color: string; monthly_fee: number | null; package_classes: number | null; fee_type: string } | null };
   type A = { status: string; session_id: string; sessions: { date: string; group_id: string; groups: { name: string } | null } | null };
   type C = { id: string; period: string; amount: number; currency: string | null; description: string | null; groups: { name: string } | null };
@@ -30,7 +49,7 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
   type Pkg = { id: string; classes_total: number; price: number; currency: string | null; purchased_at: string; expires_at: string | null; paid_at: string | null; group_id: string; groups: { name: string } | null };
   type Sib = { id: string; first_name: string; last_name: string; parent_phone: string | null; family_id: string | null };
   const today = todayISO();
-  const [{ data: s }, { data: members }, { data: groups }, attList0, chs, pays, { data: plink0 }, allStudents, balances, { data: pkgs }, { data: sharedPkgs }, { data: catalog }, { data: waiting }] = await Promise.all([
+  const [{ data: s }, { data: members }, { data: groups }, attList0, chs, pays, { data: plink0 }, allStudents, balances, { data: pkgs }, { data: sharedPkgs }, { data: catalog }, { data: waiting }, { data: profileRow }] = await Promise.all([
     supabase.from('students').select('*').eq('id', id).eq('org_id', ctx.org.id).single<Student>(),
     supabase.from('group_members').select('group_id, joined_at, groups(name, color, monthly_fee, package_classes, fee_type)').eq('student_id', id),
     supabase.from('groups').select('id,name').eq('org_id', ctx.org.id).eq('active', true).order('name'),
@@ -44,6 +63,7 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
     supabase.from('class_package_students').select(`class_packages(id, classes_total, price, currency, purchased_at, expires_at, paid_at, group_id, ${CLASS_PACKAGE_GROUP_EMBED})`).eq('student_id', id).eq('org_id', ctx.org.id),
     supabase.from('lesson_packages').select('id, name, lessons, price, currency').eq('org_id', ctx.org.id).eq('active', true).order('name'),
     supabase.from('group_waitlist').select('group_id, groups(name)').eq('student_id', id),
+    supabase.from('student_profiles').select('*').eq('student_id', id).eq('org_id', ctx.org.id).maybeSingle(),
   ]);
   if (!s) notFound();
 
@@ -68,6 +88,8 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
   const pkgList = [...owned, ...linkedPkgs.filter((p) => !owned.some((o) => o.id === p.id))];
   const catalogList = (catalog ?? []) as { id: string; name: string; lessons: number; price: number; currency: string }[];
   const waitGroups = (waiting ?? []) as unknown as { group_id: string; groups: { name: string } | null }[];
+  const profile = (profileRow ?? null) as StudentProfile | null;
+  const waPhone = profile?.messenger_phone || s.parent_phone || s.phone;
 
   return (
     <>
@@ -80,11 +102,12 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
             <Link href={`/ucenici/${s.id}/diploma`} className="btn btn-soft">Diploma</Link>
             <a href={`/ucenici/${s.id}/izvoz`} className="btn btn-soft">Izvoz podataka</a>
             {(s.parent_phone || s.phone) && <a className="btn btn-soft" href={`tel:${s.parent_phone || s.phone}`}>Pozovi</a>}
-            {(s.parent_phone || s.phone) && <a className="btn btn-soft" href={waUrl(s.parent_phone || s.phone)} target="_blank" rel="noopener">WhatsApp</a>}
+            {waPhone && <a className="btn btn-soft" href={waUrl(waPhone)} target="_blank" rel="noopener">WhatsApp</a>}
           </>
         )}
       />
       <Flash ok={sp.ok ? OK[sp.ok] : undefined} err={sp.err} />
+      <PhotoConsentBanner value={profile?.photo_consent} />
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Prisustvo" value={stats.pct === null ? '—' : `${stats.pct}%`} hint={`${stats.present} od ${stats.counted} časova${stats.excused ? `, opravdano ${stats.excused}` : ''}`} />
@@ -94,13 +117,20 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
-        <Card title="Podaci">
-          <form action={updateStudent} className="flex flex-col gap-4">
-            <input type="hidden" name="id" value={s.id} />
-            <StudentFields s={s} kids={ctx.org.kind !== 'edukativni_centar'} currency={ctx.org.currency} packagesOnly={ctx.org.packages_only} />
-            <div><button className="btn">Sačuvaj izmene</button></div>
-          </form>
-        </Card>
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card title="Podaci">
+            <form action={updateStudent} className="flex flex-col gap-4">
+              <input type="hidden" name="id" value={s.id} />
+              <StudentFields s={s} kids={ctx.org.kind !== 'edukativni_centar'} currency={ctx.org.currency} packagesOnly={ctx.org.packages_only} />
+              <div><button className="btn">Sačuvaj izmene</button></div>
+            </form>
+          </Card>
+          <div id="upitnik" className="scroll-mt-24">
+            <Card title="Upisni upitnik">
+              <QuestionnaireForm student={s} profile={profile} />
+            </Card>
+          </div>
+        </div>
 
         <div className="flex flex-col gap-6">
           <Card title="Link za roditelje">

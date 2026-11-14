@@ -83,7 +83,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
       {list.length === 0 ? (
         <Empty
           title={sp.q || sp.grupa ? 'Nema rezultata' : teacher ? 'Nema učenika kod ovog predavača' : 'Još nema učenika'}
-          text={sp.q || sp.grupa ? 'Probaj drugačiju pretragu.' : teacher ? 'Učenik se vodi kod predavača kad je u nekoj njegovoj grupi. Predavača grupe menjaš na stranici Grupe.' : 'Dodaj prvog učenika ili uvezi spisak iz Excel-a.'}
+          text={sp.q || sp.grupa ? 'Probaj drugačiju pretragu.' : teacher ? 'Učenik se vodi kod predavača kad je u nekoj njegovoj grupi. Predavača grupe menjaš na stranici Grupe.' : !ctx.isOwner ? 'Ovde su učenici koje vidiš. Otvori karton i popuni upisni upitnik.' : 'Dodaj prvog učenika ili uvezi spisak iz Excel-a.'}
           action={!sp.q && !sp.grupa && !teacher && ctx.isOwner ? <Link href="/ucenici/novi" className="btn">+ Novi učenik</Link> : undefined}
         />
       ) : (

@@ -35,6 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     items = [
       { href: '/', label: 'Pregled', icon: 'LayoutDashboard', mobile: true },
       { href: '/prisustvo', label: 'Prisustvo', icon: 'CheckSquare', mobile: true },
+      { href: '/ucenici', label: 'Učenici', icon: 'Users' },
       { href: '/paketi', label: 'Paketi', icon: 'Package', mobile: true },
       { href: '/probni', label: 'Probni časovi', icon: 'Sparkles' },
       { href: '/raspored', label: 'Raspored', icon: 'CalendarDays' },
