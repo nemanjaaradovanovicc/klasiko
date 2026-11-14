@@ -81,7 +81,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
           <Stat label="Časovi danas" value={todays.length} tone="brand" hint={`${todays.filter((s) => done.has(`${s.groups.id}:${time(s.start_time)}`)).length} upisano`} />
           <Stat label="Aktivni učenici" value={studentCount} hint={`${groupCount} grupa`} />
-          <Stat label={`Naplaćeno, ${periodLabel(period).toLowerCase()}`} value={formatTotals(charges.map((c) => ({ amount: Math.min(Number(c.amount), c.payments.reduce((x, p) => x + Number(p.amount), 0)), currency: c.currency })))} hint={expected ? `od ${formatTotals(charges.map((c) => ({ amount: Number(c.amount), currency: c.currency })))}` : 'nema zaduženja'} tone="ok" />
+          <Stat label={`Naplaćeno, ${periodLabel(period).toLowerCase()}`} value={formatTotals(charges.map((c) => ({ amount: Math.min(Number(c.amount), c.payments.reduce((x, p) => x + Number(p.amount), 0)), currency: c.currency })), ctx.org.currency)} hint={expected ? `od ${formatTotals(charges.map((c) => ({ amount: Number(c.amount), currency: c.currency })), ctx.org.currency)}` : 'nema zaduženja'} tone="ok" />
           <Stat label="Kasni sa uplatom" value={late.length} tone={late.length ? 'coral' : 'default'} hint={late.length ? 'svi meseci' : undefined} />
         </div>
       )}

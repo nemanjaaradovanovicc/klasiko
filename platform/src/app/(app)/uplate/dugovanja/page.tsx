@@ -26,14 +26,14 @@ export default async function DebtsPage({ searchParams }: { searchParams: Promis
   const rows = older ? all.filter((r) => r.oldest < period) : all;
   const withLinks = rows.map((r) => {
     const token = r.familyIds.map((id) => linkBy.get(id)).find(Boolean);
-    return { ...r, message: debtMessage(r, ctx.org.name, ctx.org.bank_account, token ? parentUrl(token) : null, ctx.org.payment_instructions) };
+    return { ...r, message: debtMessage(r, ctx.org.name, ctx.org.bank_account, token ? parentUrl(token) : null, ctx.org.payment_instructions, ctx.org.currency) };
   });
 
   return (
     <>
       <PageHeader title="Ko duguje" subtitle="Ukupan dug po roditelju, za sve mesece" back={{ href: '/uplate', label: 'Uplate' }} />
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3">
-        <Stat label="Ukupan dug" value={formatTotals(rows.flatMap((r) => r.charges.map((c) => ({ amount: c.remaining, currency: c.currency }))))} tone={rows.length ? 'coral' : 'ok'} />
+        <Stat label="Ukupan dug" value={formatTotals(rows.flatMap((r) => r.charges.map((c) => ({ amount: c.remaining, currency: c.currency }))), ctx.org.currency)} tone={rows.length ? 'coral' : 'ok'} />
         <Stat label="Roditelja sa dugom" value={rows.length} />
         <Stat label="Duguju i za ranije mesece" value={all.filter((r) => r.oldest < period).length} />
       </div>
@@ -62,7 +62,7 @@ export default async function DebtsPage({ searchParams }: { searchParams: Promis
                     <div className="truncate text-[12px] font-semibold text-mut">{r.parent ?? 'Roditelj nije upisan'}{r.lastReminder ? ` · podsetnik ${dateSr(r.lastReminder.slice(0, 10))}` : ''}</div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="text-[17px] font-extrabold tabular-nums text-coral-dark">{formatTotals(r.charges.map((c) => ({ amount: c.remaining, currency: c.currency })))}</div>
+                    <div className="text-[17px] font-extrabold tabular-nums text-coral-dark">{formatTotals(r.charges.map((c) => ({ amount: c.remaining, currency: c.currency })), ctx.org.currency)}</div>
                     {r.oldest < period && <Badge tone="coral">od {periodLabel(r.oldest).toLowerCase()}</Badge>}
                   </div>
                 </div>

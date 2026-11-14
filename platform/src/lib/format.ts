@@ -23,13 +23,14 @@ export function formatMoney(n: number | string | null | undefined, currency?: st
   return rsd(v);
 }
 
-export function formatTotals(items: { amount: number; currency?: string | null }[]): string {
+// Prazan zbir nema valutu na stavkama, pa je druga vrednost valuta škole. Bez nje ostaje RSD.
+export function formatTotals(items: { amount: number; currency?: string | null }[], fallbackCurrency?: string | null): string {
   const by = new Map<MoneyCurrency, number>();
   for (const it of items) {
     const c = moneyCurrency(it.currency);
     by.set(c, Math.round(((by.get(c) ?? 0) + Number(it.amount)) * 100) / 100);
   }
-  if (by.size === 0) return rsd(0);
+  if (by.size === 0) return formatMoney(0, fallbackCurrency);
   return [...by.entries()].map(([c, n]) => formatMoney(n, c)).join(' · ');
 }
 

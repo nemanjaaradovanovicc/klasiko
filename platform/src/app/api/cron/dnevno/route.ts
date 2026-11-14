@@ -133,7 +133,7 @@ async function sendAutoReminders(db: ReturnType<typeof createAdminClient>, org: 
         '',
         late ? 'Podsećamo da uplata još nije evidentirana:' : 'Podsećamo da uskoro dospeva uplata:',
         ...fresh.map((f) => `${fullName(f.charge.students!)}, ${periodLabel(f.charge.period)}${f.charge.description ? ` (${f.charge.description})` : ''}: ${formatMoney(f.remaining, f.charge.currency || org.currency)}`),
-        `Ukupno: ${formatTotals(fresh.map((f) => ({ amount: f.remaining, currency: f.charge.currency || org.currency })))}`,
+        `Ukupno: ${formatTotals(fresh.map((f) => ({ amount: f.remaining, currency: f.charge.currency || org.currency })), org.currency)}`,
         org.payment_instructions?.trim() ?? '',
         org.bank_account ? `Račun: ${org.bank_account}` : '',
         link ? `${dinar ? 'QR kod za uplatu i detalji' : 'Detalji'}: ${parentUrl(link.token)}` : '',

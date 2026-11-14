@@ -71,9 +71,9 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
       <Flash ok={sp.ok} err={sp.err} />
 
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Očekivano" value={formatTotals(rows.map((r) => ({ amount: Number(r.amount), currency: r.currency })))} hint={`${rows.length} zaduženja`} />
-        <Stat label="Naplaćeno" value={formatTotals(rows.map((r) => ({ amount: Math.min(r.paid, Number(r.amount)), currency: r.currency })))} tone="ok" hint={oneCurrency && expected ? `${Math.round((collected / expected) * 100)}%` : undefined} />
-        <Stat label="Preostalo" value={formatTotals(rows.map((r) => ({ amount: r.remaining, currency: r.currency })))} tone={rows.some((r) => r.remaining > 0) ? 'coral' : 'default'} />
+        <Stat label="Očekivano" value={formatTotals(rows.map((r) => ({ amount: Number(r.amount), currency: r.currency })), schoolCurrency)} hint={`${rows.length} zaduženja`} />
+        <Stat label="Naplaćeno" value={formatTotals(rows.map((r) => ({ amount: Math.min(r.paid, Number(r.amount)), currency: r.currency })), schoolCurrency)} tone="ok" hint={oneCurrency && expected ? `${Math.round((collected / expected) * 100)}%` : undefined} />
+        <Stat label="Preostalo" value={formatTotals(rows.map((r) => ({ amount: r.remaining, currency: r.currency })), schoolCurrency)} tone={rows.some((r) => r.remaining > 0) ? 'coral' : 'default'} />
         <Stat label="Kasni sa uplatom" value={late.length} tone={late.length ? 'coral' : 'default'} hint={`rok ${ctx.org.fee_due_day}. u mesecu`} />
       </div>
 

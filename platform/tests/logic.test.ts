@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { matchRows, matchesSearch, statementKeys, suggestAllocation, type MatchCharge, type StatementRow } from '@/lib/match';
 import { mapStatementColumns, toAmount, toDate } from '@/lib/statement';
-import { attendanceStats, isISODate, parsePeriod, periodLabel, currentPeriod, absenceStreaks } from '@/lib/format';
+import { attendanceStats, formatMoney, formatTotals, isISODate, parsePeriod, periodLabel, currentPeriod, absenceStreaks } from '@/lib/format';
 import { fixImportedPhone, intlPhone, phoneKey, waUrl } from '@/lib/phone';
 import { installmentPlan } from '@/lib/charges';
 import { allocateUsage, expiryAfterCancellations, packageBalance, packageReminderText, shouldRemindPackage, suggestedExpiry } from '@/lib/packages';
@@ -116,6 +116,13 @@ describe('format', () => {
   it('niz izostanaka', () => {
     const rows = [{ student_id: 'a', status: 'absent', date: '2026-11-03' }, { student_id: 'a', status: 'excused', date: '2026-11-02' }, { student_id: 'a', status: 'absent', date: '2026-11-01' }, { student_id: 'a', status: 'present', date: '2026-10-30' }];
     expect(absenceStreaks(rows)[0].streak).toBe(2);
+  });
+  it('prazan zbir koristi valutu škole, a stavke ostaju u svojoj valuti', () => {
+    expect(formatTotals([], 'EUR')).toBe('0 EUR');
+    expect(formatTotals([], 'eur')).toBe('0 EUR');
+    expect(formatMoney(0, 'EUR')).toBe('0 EUR');
+    expect(formatTotals([])).toBe('0 RSD');
+    expect(formatTotals([{ amount: 12.5, currency: 'EUR' }, { amount: 1000, currency: 'RSD' }], 'EUR')).toBe('12,50 EUR · 1.000 RSD');
   });
 });
 
