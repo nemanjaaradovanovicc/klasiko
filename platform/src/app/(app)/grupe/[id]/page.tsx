@@ -66,11 +66,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
               <ul className="flex flex-col divide-y divide-line">
                 {mem.map((m) => (
                   <li key={m.student_id} className="flex items-center justify-between gap-3 py-2.5">
-                    {ctx.isOwner ? (
-                      <Link href={`/ucenici/${m.student_id}`} className="min-w-0 truncate font-bold text-ink hover:text-brand">{fullName(m.students!)}</Link>
-                    ) : (
-                      <span className="min-w-0 truncate font-bold text-ink">{fullName(m.students!)}</span>
-                    )}
+                    <Link href={`/ucenici/${m.student_id}`} className="min-w-0 truncate font-bold text-ink hover:text-brand">{fullName(m.students!)}</Link>
                     <div className="flex shrink-0 items-center gap-3 whitespace-nowrap">
                       {(m.students!.parent_phone || m.students!.phone) && (
                         <a href={`tel:${m.students!.parent_phone || m.students!.phone}`} className="text-[13px] font-bold text-brand">{m.students!.parent_phone || m.students!.phone}</a>
