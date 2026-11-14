@@ -47,6 +47,33 @@ describe('mesečna zaduženja', () => {
     expect(Object.fromEntries(rows.map((r) => [r.student_id, r.amount]))).toEqual({ s1: 4000, s2: 2000, s3: 3000, s4: 3000 });
     expect(rows[0].due_date).toBe('2026-11-10');
     expect(rows[0].kind).toBe('monthly');
+    expect(rows.every((r) => (r as { currency?: string }).currency === 'RSD')).toBe(true);
+  });
+  it('upisuje valutu škole na mesečno zaduženje', async () => {
+    const { db, log } = fakeDb({
+      groups: [{ id: 'g', name: 'A', monthly_fee: 1500, group_members: [st('s1', 1)] }],
+      charges: [],
+      payments: [],
+    });
+    await createChargesForPeriod(db, { ...org, currency: 'EUR' }, '2026-11');
+    const eur = log.find((l) => l.op === 'insert')!.rows as { currency: string }[];
+    expect(eur[0].currency).toBe('EUR');
+    const again = fakeDb({
+      groups: [{ id: 'g', name: 'A', monthly_fee: 1500, group_members: [st('s1', 1)] }],
+      charges: [],
+      payments: [],
+    });
+    await createChargesForPeriod(again.db, { ...org, currency: 'eur' }, '2026-11');
+    expect((again.log.find((l) => l.op === 'insert')!.rows as { currency: string }[])[0].currency).toBe('EUR');
+  });
+  it('ne pravi mesečna zaduženja kad škola radi samo sa paketima', async () => {
+    const { db, log } = fakeDb({
+      groups: [{ id: 'g', name: 'A', monthly_fee: 1000, group_members: [st('s1', 1)] }],
+      charges: [],
+      payments: [],
+    });
+    expect(await createChargesForPeriod(db, { ...org, packages_only: true, currency: 'EUR' }, '2026-11')).toEqual({ created: 0, skipped: 0 });
+    expect(log).toEqual([]);
   });
   it('preskače neaktivne, već zadužene i upisane posle tog meseca', async () => {
     const { db, log } = fakeDb({
@@ -102,6 +129,25 @@ describe('avans', () => {
     });
     expect(await applyAdvances(db, 'o')).toBe(1);
     expect(log).toEqual([{ op: 'update', table: 'payments', rows: { charge_id: 'c', amount: 1000 }, id: 'p' }]);
+  });
+  it('avans u evrima ne pokriva dinarsko zaduženje', async () => {
+    const { db, log } = fakeDb({
+      payments: [{ id: 'p', amount: 1000, currency: 'EUR', ...base }],
+      charges: [{ id: 'c', student_id: 's', period: '2026-11', amount: 2000, currency: 'RSD', payments: [] }],
+    });
+    expect(await applyAdvances(db, 'o')).toBe(0);
+    expect(log).toEqual([]);
+  });
+  it('avans pokriva zaduženje samo u istoj valuti', async () => {
+    const { db, log } = fakeDb({
+      payments: [{ id: 'p', amount: 40, currency: 'EUR', ...base }],
+      charges: [
+        { id: 'rsd', student_id: 's', period: '2026-10', amount: 2000, currency: 'RSD', payments: [] },
+        { id: 'eur', student_id: 's', period: '2026-11', amount: 80, currency: 'EUR', payments: [] },
+      ],
+    });
+    expect(await applyAdvances(db, 'o')).toBe(1);
+    expect(log).toEqual([{ op: 'update', table: 'payments', rows: { charge_id: 'eur', amount: 40 }, id: 'p' }]);
   });
   it('veći avans se deli i ostatak ostaje avans', async () => {
     const { db, log } = fakeDb({

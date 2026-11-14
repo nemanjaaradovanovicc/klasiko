@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { formatMoney, isISODate, isPeriod, todayISO } from '@/lib/format';
+import { formatMoney, isISODate, isPeriod, moneyCurrency, todayISO } from '@/lib/format';
 import { matchRows, statementKeys, type Allocation, type StatementRow, type MatchResult } from '@/lib/match';
 import { chunks, fetchAll } from '@/lib/supabase/fetch-all';
 import { applyAdvances, createChargesForPeriod, installmentPlan } from '@/lib/charges';
@@ -13,8 +13,10 @@ import { applyAdvances, createChargesForPeriod, installmentPlan } from '@/lib/ch
 function back(period: string, q: string) {
   return `/uplate?mesec=${period}${q ? '&' + q : ''}`;
 }
-function currencyOf(v: FormDataEntryValue | null): 'RSD' | 'EUR' {
-  return String(v ?? '').toUpperCase() === 'EUR' ? 'EUR' : 'RSD';
+function currencyOf(v: FormDataEntryValue | null, fallback: 'RSD' | 'EUR' = 'RSD'): 'RSD' | 'EUR' {
+  const raw = String(v ?? '').trim().toUpperCase();
+  if (raw === 'EUR' || raw === 'RSD') return raw;
+  return fallback;
 }
 function parseMoney(v: FormDataEntryValue | null): number | null {
   const raw = String(v ?? '').trim().replace(/\s/g, '');
@@ -34,6 +36,7 @@ export async function generateCharges(fd: FormData) {
   const ctx = await requireOwner();
   const period = String(fd.get('period'));
   if (!isPeriod(period)) redirect('/uplate');
+  if (ctx.org.packages_only) redirect(back(period, 'err=' + encodeURIComponent('Škola radi samo sa paketima, pa se mesečna zaduženja ne prave.')));
   const supabase = await createClient();
   const res = await createChargesForPeriod(supabase, ctx.org, period);
   if (res.error) redirect(back(period, 'err=' + encodeURIComponent(res.error)));
@@ -51,7 +54,7 @@ export async function addCharge(fd: FormData) {
   if (!studentId || amount === null) redirect(back(period, 'err=' + encodeURIComponent('Izaberi učenika i unesi iznos.')));
   const supabase = await createClient();
   const { error } = await supabase.from('charges').insert({
-    org_id: ctx.org.id, student_id: studentId, group_id: null, period, amount, currency: currencyOf(fd.get('currency')), kind: 'extra',
+    org_id: ctx.org.id, student_id: studentId, group_id: null, period, amount, currency: currencyOf(fd.get('currency'), moneyCurrency(ctx.org.currency)), kind: 'extra',
     description: String(fd.get('description') || '').trim() || 'Dodatno zaduženje',
     due_date: `${period}-${String(ctx.org.fee_due_day).padStart(2, '0')}`,
   });
@@ -81,7 +84,7 @@ export async function createInstallments(fd: FormData) {
   if (students.length === 0) redirect(back(first, 'err=' + encodeURIComponent('U grupi nema aktivnih učenika.')));
   const plan = installmentPlan(total, count, first);
   const rows = students.flatMap((sid) => plan.map((p) => ({
-    org_id: ctx.org.id, student_id: sid, group_id: groupId || null, period: p.period, amount: p.amount, currency: currencyOf(fd.get('currency')), kind: 'installment',
+    org_id: ctx.org.id, student_id: sid, group_id: groupId || null, period: p.period, amount: p.amount, currency: currencyOf(fd.get('currency'), moneyCurrency(ctx.org.currency)), kind: 'installment',
     description: count > 1 ? `${title}, ${p.label}` : title, due_date: `${p.period}-${String(ctx.org.fee_due_day).padStart(2, '0')}`,
   })));
   const { error } = await supabase.from('charges').insert(rows);

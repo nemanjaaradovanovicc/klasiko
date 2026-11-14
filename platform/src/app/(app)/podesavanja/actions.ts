@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { changeUserEmail, createOrgUser, resetUserPassword, setActive, type Creds } from '@/lib/users';
 import { applyChosenPassword, passwordError } from '@/lib/passwords';
+import { moneyCurrency } from '@/lib/format';
 import { normalizeAccount } from '@/lib/ips';
 import { teacherLimitError } from '@/lib/plan';
 import { audit } from '@/lib/audit';
@@ -36,6 +37,7 @@ export async function updateSchool(fd: FormData) {
       bank_account: account,
       payee_name: s(fd, 'payee_name'),
       payment_instructions: s(fd, 'payment_instructions'),
+      currency: moneyCurrency(s(fd, 'currency')),
       default_fee: fee ? Number(fee) : null,
       fee_due_day: Math.min(28, Math.max(1, day || 10)),
     })
@@ -168,10 +170,13 @@ export async function updateAutomation(fd: FormData) {
     const x = Number(s(fd, k) ?? def);
     return Number.isFinite(x) ? Math.min(max, Math.max(min, x)) : def;
   };
+  const packagesOnly = fd.get('packages_only') === 'on';
+  const posted = (k: string) => s(fd, k) !== null;
   const supabase = await createClient();
   const { error } = await supabase.from('organizations').update({
-    auto_charges: fd.get('auto_charges') === 'on',
-    auto_charge_day: Math.round(num('auto_charge_day', 1, 28, 1)),
+    packages_only: packagesOnly,
+    auto_charges: packagesOnly ? false : fd.get('auto_charges') === 'on',
+    auto_charge_day: posted('auto_charge_day') ? Math.round(num('auto_charge_day', 1, 28, 1)) : ctx.org.auto_charge_day,
     auto_reminders: fd.get('auto_reminders') === 'on',
     reminder_days_before: Math.round(num('reminder_days_before', 0, 14, 3)),
     package_reminders: fd.get('package_reminders') === 'on',

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Flash, Stat, Badge, Empty } from '@/components/ui';
-import { currentPeriod, formatMoney, formatTotals, parsePeriod, periodLabel, shiftPeriod, fullName, dateSr, todayISO } from '@/lib/format';
+import { currentPeriod, formatMoney, formatTotals, moneyCurrency, parsePeriod, periodLabel, shiftPeriod, fullName, dateSr, todayISO } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ConfirmButton } from '@/components/confirm';
 import { waUrl } from '@/lib/phone';
@@ -53,6 +53,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
   const late = rows.filter((r) => !r.done && r.due_date && r.due_date < today);
   const shown = filter === 'neplaceno' ? rows.filter((r) => !r.done) : filter === 'placeno' ? rows.filter((r) => r.done) : rows;
   const label = periodLabel(period);
+  const schoolCurrency = moneyCurrency(ctx.org.currency);
 
   return (
     <>
@@ -77,10 +78,12 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <form action={generateCharges}>
-          <input type="hidden" name="period" value={period} />
-          <button className="btn">Napravi zaduženja za {label.toLowerCase()}</button>
-        </form>
+        {!ctx.org.packages_only && (
+          <form action={generateCharges}>
+            <input type="hidden" name="period" value={period} />
+            <button className="btn">Napravi zaduženja za {label.toLowerCase()}</button>
+          </form>
+        )}
         <Link href="/uplate/izvod" className="btn btn-soft">Uvezi izvod iz banke</Link>
         <Link href="/uplate/dugovanja" className="btn btn-soft">Ko duguje</Link>
         <div className="ml-auto flex gap-1 rounded-full bg-white p-1 ring-1 ring-line">
@@ -91,7 +94,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
       </div>
 
       {rows.length === 0 ? (
-        <Empty title="Nema zaduženja za ovaj mesec" text="Klikni „Napravi zaduženja” i Klasiko će svakom aktivnom učeniku u grupi obračunati članarinu po ceni grupe, uz popuste." />
+        <Empty title="Nema zaduženja za ovaj mesec" text={ctx.org.packages_only ? 'Dodatno zaduženje ili rate dodaš ispod, a pakete na stranici Paketi.' : 'Klikni „Napravi zaduženja” i Klasiko će svakom aktivnom učeniku u grupi obračunati članarinu po ceni grupe, uz popuste.'} />
       ) : (
         <div className="flex flex-col gap-2">
           {shown.map((r) => {
@@ -181,7 +184,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
             {students.map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
           </select>
           <input name="amount" type="number" min={1} step="0.01" placeholder="Iznos" className="input" required />
-          <select name="currency" className="input" defaultValue="RSD"><option value="RSD">RSD</option><option value="EUR">EUR</option></select>
+          <select name="currency" className="input" defaultValue={schoolCurrency}><option value="RSD">RSD</option><option value="EUR">EUR</option></select>
           <input name="description" placeholder="Opis" className="input" />
           <div className="sm:col-span-4"><button className="btn btn-soft">Dodaj zaduženje</button></div>
         </form>
@@ -201,7 +204,7 @@ export default async function PaymentsPage({ searchParams }: { searchParams: Pro
             {students.map((s) => <option key={s.id} value={s.id}>{fullName(s)}</option>)}
           </select>
           <input name="total" type="number" min={1} step="0.01" placeholder="Ukupan iznos po učeniku" className="input" required />
-          <select name="currency" className="input" defaultValue="RSD"><option value="RSD">RSD</option><option value="EUR">EUR</option></select>
+          <select name="currency" className="input" defaultValue={schoolCurrency}><option value="RSD">RSD</option><option value="EUR">EUR</option></select>
           <input name="count" type="number" min={1} max={12} step="1" placeholder="Broj rata" className="input" required />
           <input name="description" placeholder="Opis, npr. Polugodište" className="input sm:col-span-2" />
           <div className="sm:col-span-4"><button className="btn btn-soft">Napravi rate</button></div>

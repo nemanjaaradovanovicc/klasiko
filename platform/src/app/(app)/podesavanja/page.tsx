@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Field, Flash, Badge, Select, TextArea } from '@/components/ui';
 import { CredsForm, ResetButton } from '@/components/creds';
 import { PLANS, BILLING_LABEL, STATUS_LABEL, ROLE_LABEL, type Profile } from '@/lib/types';
-import { dateSr, rsd } from '@/lib/format';
+import { dateSr, moneyCurrency, rsd } from '@/lib/format';
 import { updateSchool, updateAutomation, addRoom, deleteRoom, addTeamMember, resetTeamPassword, toggleTeamMember, updateTeamEmail, setTeamPassword } from './actions';
 import { ConfirmButton } from '@/components/confirm';
 import { AUDIT_LABEL } from '@/lib/audit';
@@ -35,6 +35,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
   const qr = st && org.billing !== 'lifetime' && openInv.length === 0 ? planQr(st, org, org.plan, payBilling) : null;
   const plan = PLANS[org.plan];
   const acc = orgAccess(org);
+  const currency = moneyCurrency(org.currency);
 
   return (
     <>
@@ -57,7 +58,15 @@ export default async function Settings({ searchParams }: { searchParams: Promise
               <TextArea label="Uputstvo za uplatu" name="payment_instructions" defaultValue={org.payment_instructions} rows={5} placeholder={'Izlazi u podsetnicima roditeljima. Npr.\nPayPal: skola@example.com\nWestern Union, MoneyGram ili Ria: ime i grad primaoca\nDinarski račun: 160-0000000000000-00\nIBAN i SWIFT: ...'} />
               <span className="mt-1 block text-[12px] font-semibold text-mut">Slobodan tekst. IPS QR i dalje koristi samo tekući račun i samo za iznose u dinarima.</span>
             </div>
-            <Field label="Podrazumevana mesečna cena (RSD)" name="default_fee" type="number" min={0} defaultValue={org.default_fee} hint="Koristi se kad grupa nema svoju cenu" />
+            <div>
+              <Select label="Valuta škole" name="currency" defaultValue={currency} options={[{ value: 'RSD', label: 'RSD (dinar)' }, { value: 'EUR', label: 'EUR (evro)' }]} />
+              <span className="mt-1 block text-[12px] font-semibold text-mut">Cene, zaduženja i izveštaji koriste ovu valutu. IPS QR i dalje važi samo za dinare.</span>
+            </div>
+            {org.packages_only ? (
+              <input type="hidden" className="hidden" name="default_fee" value={org.default_fee ?? ''} />
+            ) : (
+              <Field label={`Podrazumevana mesečna cena (${currency})`} name="default_fee" type="number" min={0} defaultValue={org.default_fee} hint="Koristi se kad grupa nema svoju cenu" />
+            )}
             <Field label="Rok za uplatu (dan u mesecu)" name="fee_due_day" type="number" min={1} max={28} defaultValue={org.fee_due_day} />
             <div className="sm:col-span-2"><button className="btn">Sačuvaj</button></div>
           </form>
@@ -130,7 +139,13 @@ export default async function Settings({ searchParams }: { searchParams: Promise
       <div id="automatika" className="mt-6 grid scroll-mt-24 gap-6 xl:grid-cols-2">
         <Card title="Naplata i popusti">
           <form action={updateAutomation} className="flex flex-col gap-4">
-            {process.env.CRON_SECRET ? (
+            <label className="flex items-start gap-3">
+              <input type="checkbox" name="packages_only" defaultChecked={!!org.packages_only} className="mt-1 h-5 w-5 accent-[#5B2A86]" />
+              <span className="text-[14px] font-semibold text-ink-2"><b className="text-ink">Rad samo sa paketima</b>. Nema mesečne članarine: nove grupe idu na paket, a mesečna zaduženja se ne prave. Paketi, dodatna zaduženja i uplate rade kao i do sada.</span>
+            </label>
+            {org.packages_only ? (
+              <p className="text-[14px] font-semibold text-ink-2">Mesečna zaduženja su isključena. Pakete dodaješ na stranici Paketi, a dodatna zaduženja i rate na stranici Uplate.</p>
+            ) : process.env.CRON_SECRET ? (
               <>
                 <label className="flex items-start gap-3">
                   <input type="checkbox" name="auto_charges" defaultChecked={org.auto_charges} className="mt-1 h-5 w-5 accent-[#5B2A86]" />

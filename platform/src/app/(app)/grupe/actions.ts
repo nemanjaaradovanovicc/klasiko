@@ -59,6 +59,10 @@ export async function createGroup(fd: FormData) {
   const data = groupData(fd);
   if (!data.name) redirect('/grupe/nova?err=' + encodeURIComponent('Unesi naziv grupe.'));
   const supabase = await createClient();
+  if (ctx.org.packages_only) {
+    data.fee_type = data.fee_type === 'manual' ? 'manual' : 'package';
+    data.monthly_fee = null;
+  }
   const { data: g, error } = await supabase.from('groups').insert({ ...data, org_id: ctx.org.id }).select('id').single();
   if (error || !g) redirect('/grupe/nova?err=' + encodeURIComponent(error?.message ?? 'Greška'));
   const wd = n(fd, 'weekday');
@@ -82,7 +86,15 @@ export async function updateGroup(fd: FormData) {
   const ctx = await requireOwner();
   const id = String(fd.get('id'));
   const supabase = await createClient();
-  const { error } = await supabase.from('groups').update(groupData(fd)).eq('id', id).eq('org_id', ctx.org.id);
+  const data = groupData(fd);
+  if (ctx.org.packages_only && data.fee_type === 'monthly') {
+    const { data: existing } = await supabase.from('groups').select('fee_type').eq('id', id).eq('org_id', ctx.org.id).maybeSingle();
+    if (existing?.fee_type !== 'monthly') {
+      data.fee_type = 'package';
+      data.monthly_fee = null;
+    }
+  }
+  const { error } = await supabase.from('groups').update(data).eq('id', id).eq('org_id', ctx.org.id);
   revalidatePath('/grupe');
   redirect(`/grupe/${id}?${error ? 'err=' + encodeURIComponent(error.message) : 'ok=1'}`);
 }

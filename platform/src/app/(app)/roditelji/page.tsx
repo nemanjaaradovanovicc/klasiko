@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Flash, Badge, Empty } from '@/components/ui';
-import { attendanceStats, parsePeriod, periodLabel, rsd, shiftPeriod, fullName } from '@/lib/format';
+import { attendanceStats, formatTotals, moneyCurrency, parsePeriod, periodLabel, shiftPeriod, fullName } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { familyKey, familySuggestions } from '@/lib/families';
 import { waUrl } from '@/lib/phone';
@@ -23,16 +23,17 @@ export default async function ParentsPage({ searchParams }: { searchParams: Prom
     supabase.from('groups').select('id, name').eq('org_id', ctx.org.id).eq('active', true).order('name'),
     fetchAll<{ student_id: string; token: string; last_seen_at: string | null }>((a, b) => supabase.from('parent_links').select('student_id, token, last_seen_at').eq('org_id', ctx.org.id).eq('revoked', false).order('token').range(a, b)),
     fetchAll<{ student_id: string; session_id: string; status: string }>((a, b) => supabase.from('attendance').select('student_id, session_id, status, sessions!inner(date)').eq('org_id', ctx.org.id).gte('sessions.date', `${period}-01`).lt('sessions.date', `${shiftPeriod(period, 1)}-01`).order('session_id').order('student_id').range(a, b)),
-    fetchAll<{ id: string; student_id: string; amount: number; payments: { amount: number }[] }>((a, b) => supabase.from('charges').select('id, student_id, amount, payments(amount)').eq('org_id', ctx.org.id).lte('period', period).order('id').range(a, b)),
+    fetchAll<{ id: string; student_id: string; amount: number; currency: string | null; payments: { amount: number }[] }>((a, b) => supabase.from('charges').select('id, student_id, amount, currency, payments(amount)').eq('org_id', ctx.org.id).lte('period', period).order('id').range(a, b)),
   ]);
   const visible = sp.grupa ? sts.filter((s) => s.group_members.some((m) => m.group_id === sp.grupa)) : sts;
   const linkBy = new Map(links.map((l) => [l.student_id, l]));
   const attBy = new Map<string, { status: string }[]>();
   for (const a of att) attBy.set(a.student_id, [...(attBy.get(a.student_id) ?? []), a]);
-  const debtBy = new Map<string, number>();
+  const debtBy = new Map<string, { amount: number; currency: string | null }[]>();
   for (const c of charges) {
     const rem = Math.max(0, Number(c.amount) - c.payments.reduce((x, p) => x + Number(p.amount), 0));
-    debtBy.set(c.student_id, (debtBy.get(c.student_id) ?? 0) + rem);
+    if (rem <= 0) continue;
+    debtBy.set(c.student_id, [...(debtBy.get(c.student_id) ?? []), { amount: rem, currency: c.currency || ctx.org.currency }]);
   }
 
   // Jedan red po porodici: isti roditelj dobija jednu poruku i jedan link za svu decu.
@@ -91,7 +92,9 @@ export default async function ParentsPage({ searchParams }: { searchParams: Prom
         <ul className="flex flex-col gap-2">
           {rows.map((kids) => {
             const first = kids[0];
-            const debt = kids.reduce((a, s) => a + (debtBy.get(s.id) ?? 0), 0);
+            const debtItems = kids.flatMap((s) => debtBy.get(s.id) ?? []);
+            const debtLabel = formatTotals(debtItems);
+            const dinarDebt = debtItems.some((d) => moneyCurrency(d.currency) === 'RSD');
             const link = kids.map((s) => linkBy.get(s.id)).find(Boolean);
             const phone = kids.map((s) => s.parent_phone || s.phone).find(Boolean);
             const parent = kids.map((s) => s.parent_name).find(Boolean);
@@ -102,8 +105,8 @@ export default async function ParentsPage({ searchParams }: { searchParams: Prom
                 const st = attendanceStats(attBy.get(s.id) ?? []);
                 return `${fullName(s)}: ${st.counted ? `prisustvo ${st.pct}% (${st.present} od ${st.counted} časova)` : 'nema upisanih časova'}.`;
               }),
-              debt > 0 ? `Za uplatu: ${rsd(debt)}.` : 'Članarina je plaćena, hvala!',
-              link ? `Detalji${debt > 0 ? ' i QR kod za uplatu' : ''}: ${parentUrl(link.token)}` : '',
+              debtItems.length > 0 ? `Za uplatu: ${debtLabel}.` : (ctx.org.packages_only ? 'Nema otvorenih zaduženja.' : 'Članarina je plaćena, hvala!'),
+              link ? `Detalji${debtItems.length > 0 && dinarDebt ? ' i QR kod za uplatu' : ''}: ${parentUrl(link.token)}` : '',
               ctx.org.name,
             ].filter(Boolean).join('\n');
             return (
@@ -115,7 +118,7 @@ export default async function ParentsPage({ searchParams }: { searchParams: Prom
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <Badge tone={allAtt.pct === null ? 'gray' : allAtt.pct < 70 ? 'coral' : 'ok'}>{allAtt.pct === null ? 'bez časova' : `${allAtt.pct}%`}</Badge>
-                    {debt > 0 ? <Badge tone="coral">{rsd(debt)}</Badge> : <Badge tone="ok">plaćeno</Badge>}
+                    {debtItems.length > 0 ? <Badge tone="coral">{debtLabel}</Badge> : <Badge tone="ok">plaćeno</Badge>}
                   </div>
                 </div>
                 <div className="mt-2.5 flex flex-wrap gap-2">

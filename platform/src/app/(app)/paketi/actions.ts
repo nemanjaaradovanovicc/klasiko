@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireOrg, requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { isISODate, todayISO } from '@/lib/format';
+import { isISODate, moneyCurrency, todayISO } from '@/lib/format';
 import { suggestedExpiry } from '@/lib/packages';
 import { weeklyFrequency } from '@/lib/schedule';
 
@@ -20,8 +20,10 @@ function safeBack(v: FormDataEntryValue | null, fallback: string): string {
 function go(back: string, q: string) {
   redirect(`${back}${back.includes('?') ? '&' : '?'}${q}`);
 }
-function currencyOf(v: string | null): 'RSD' | 'EUR' {
-  return v?.toUpperCase() === 'EUR' ? 'EUR' : 'RSD';
+function currencyOf(v: string | null, fallback: 'RSD' | 'EUR' = 'RSD'): 'RSD' | 'EUR' {
+  const raw = (v || '').toUpperCase();
+  if (raw === 'EUR' || raw === 'RSD') return raw;
+  return fallback;
 }
 
 async function ensurePayment(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string, userId: string, row: { id: string; student_id: string; group_id: string; price: number; currency: string; charge_id: string | null; classes_total: number }, paidAt: string | null, description: string) {
@@ -76,7 +78,7 @@ export async function createCatalog(fd: FormData) {
     name,
     lessons,
     price,
-    currency: currencyOf(s(fd, 'currency')),
+    currency: currencyOf(s(fd, 'currency'), moneyCurrency(ctx.org.currency)),
     shared: fd.get('shared') === 'on',
     active: true,
   });
@@ -138,7 +140,7 @@ export async function assignPackage(fd: FormData) {
   const supabase = await createClient();
   let lessons = Number(fd.get('classes'));
   let price = Number(String(fd.get('price') ?? '').replace(',', '.'));
-  let currency = currencyOf(s(fd, 'currency'));
+  let currency = currencyOf(s(fd, 'currency'), moneyCurrency(ctx.org.currency));
   let shared = fd.get('shared') === 'on';
   let catalogId: string | null = null;
   let catalogName: string | null = null;

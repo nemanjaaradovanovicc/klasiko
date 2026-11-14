@@ -50,6 +50,7 @@ function studentData(fd: FormData) {
 export async function createStudent(fd: FormData) {
   const ctx = await requireOwner();
   const data = studentData(fd);
+  if (ctx.org.packages_only) data.custom_fee = null;
   // Upis posle probnog časa: forma nosi id probnog, pa greška vraća na istu, popunjenu formu.
   const trialRaw = s(fd, 'trial_id');
   const trialId = trialRaw && /^[0-9a-f-]{36}$/i.test(trialRaw) ? trialRaw : null;

@@ -5,7 +5,7 @@ import { PageHeader, Card, Field, Flash, Badge, Select } from '@/components/ui';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { packageBalances, type Balance } from '@/lib/packages-db';
 import { hasNextPackage, packageReminderText, shouldRemindPackage } from '@/lib/packages';
-import { dateSr, formatMoney, fullName, todayISO } from '@/lib/format';
+import { dateSr, formatMoney, fullName, moneyCurrency, todayISO } from '@/lib/format';
 import { parentUrl } from '@/lib/parent';
 import { ConfirmButton } from '@/components/confirm';
 import { createCatalog, updateCatalog, deleteCatalog, assignPackage, savePackagePayment, deletePackagePurchase } from './actions';
@@ -25,6 +25,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const supabase = await createClient();
   const today = todayISO();
+  const schoolCurrency = moneyCurrency(ctx.org.currency);
   type Cat = { id: string; name: string; lessons: number; price: number; currency: string; shared: boolean; active: boolean };
   type G = { id: string; name: string; drop_in: boolean; fee_type: string };
   type M = { group_id: string; student_id: string; students: { id: string; first_name: string; last_name: string; active: boolean } | null };
@@ -120,7 +121,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
             <div className="sm:col-span-2"><Field label="Novi paket" name="name" required placeholder="npr. 10 individualnih časova" /></div>
             <Field label="Broj časova" name="lessons" type="number" min={1} step="1" required placeholder="10" />
             <Field label="Cena" name="price" type="number" min={0} step="0.01" required placeholder="250" />
-            <Select label="Valuta" name="currency" defaultValue="EUR" options={[{ value: 'EUR', label: 'EUR' }, { value: 'RSD', label: 'RSD' }]} />
+            <Select label="Valuta" name="currency" defaultValue={schoolCurrency} options={[{ value: 'EUR', label: 'EUR' }, { value: 'RSD', label: 'RSD' }]} />
             <label className="flex items-start gap-2 text-[14px] font-semibold text-ink-2"><input type="checkbox" name="shared" className="mt-1 h-5 w-5 accent-[#5B2A86]" /> Zajednički čas (duo): izabrana deca dele jedan broj časova</label>
             <div className="sm:col-span-2"><button className="btn">Dodaj u katalog</button></div>
           </form>
@@ -138,7 +139,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Broj časova (ručno)" name="classes" type="number" min={1} step="1" hint="Ignoriše se kad je izabran paket" />
             <Field label="Cena (ručno)" name="price" type="number" min={0} step="0.01" />
-            <Select label="Valuta (ručno)" name="currency" defaultValue="EUR" options={[{ value: 'EUR', label: 'EUR' }, { value: 'RSD', label: 'RSD' }]} />
+            <Select label="Valuta (ručno)" name="currency" defaultValue={schoolCurrency} options={[{ value: 'EUR', label: 'EUR' }, { value: 'RSD', label: 'RSD' }]} />
           </div>
           <label className="flex items-start gap-2 text-[14px] font-semibold text-ink-2"><input type="checkbox" name="shared" className="mt-1 h-5 w-5 accent-[#5B2A86]" /> Ručni unos je zajednički čas (duo). Za paket iz kataloga važi ono što piše u katalogu.</label>
           <label className="block">

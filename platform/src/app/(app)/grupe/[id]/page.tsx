@@ -131,7 +131,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
             <Card title="Podešavanja grupe">
               <form action={updateGroup} className="flex flex-col gap-4">
                 <input type="hidden" name="id" value={g.id} />
-                <GroupFields g={g} teachers={teachers ?? []} rooms={rooms ?? []} />
+                <GroupFields g={g} teachers={teachers ?? []} rooms={rooms ?? []} currency={ctx.org.currency} packagesOnly={ctx.org.packages_only} />
                 <div><button className="btn">Sačuvaj</button></div>
               </form>
             </Card>

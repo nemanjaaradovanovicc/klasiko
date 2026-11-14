@@ -2,6 +2,7 @@ export type Role = 'superadmin' | 'owner' | 'teacher';
 export type OrgStatus = 'trial' | 'active' | 'suspended' | 'cancelled';
 export type Plan = 'start' | 'rast' | 'pro';
 export type Billing = 'monthly' | 'yearly' | 'lifetime';
+export type MoneyCurrency = 'RSD' | 'EUR';
 
 export interface Organization {
   id: string;
@@ -17,6 +18,8 @@ export interface Organization {
   payee_name: string | null;
   fee_due_day: number;
   default_fee: number | null;
+  currency: MoneyCurrency;
+  packages_only: boolean;
   plan: Plan;
   billing: Billing;
   status: OrgStatus;

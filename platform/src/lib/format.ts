@@ -1,6 +1,12 @@
+import type { MoneyCurrency } from '@/lib/types';
+
 export const WEEKDAYS = ['', 'Ponedeljak', 'Utorak', 'Sreda', 'Četvrtak', 'Petak', 'Subota', 'Nedelja'];
 export const WEEKDAYS_SHORT = ['', 'Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
 export const MONTHS = ['januar', 'februar', 'mart', 'april', 'maj', 'jun', 'jul', 'avgust', 'septembar', 'oktobar', 'novembar', 'decembar'];
+
+export function moneyCurrency(v: string | null | undefined): MoneyCurrency {
+  return (v || '').toUpperCase() === 'EUR' ? 'EUR' : 'RSD';
+}
 
 export function rsd(n: number | string | null | undefined): string {
   const v = Number(n ?? 0);
@@ -9,7 +15,7 @@ export function rsd(n: number | string | null | undefined): string {
 
 export function formatMoney(n: number | string | null | undefined, currency?: string | null): string {
   const v = Number(n ?? 0);
-  const c = (currency || 'RSD').toUpperCase();
+  const c = moneyCurrency(currency);
   if (c === 'EUR') {
     const whole = Math.abs(v - Math.round(v)) < 0.001;
     return new Intl.NumberFormat('sr-Latn-RS', { minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 }).format(v) + ' EUR';
@@ -18,9 +24,9 @@ export function formatMoney(n: number | string | null | undefined, currency?: st
 }
 
 export function formatTotals(items: { amount: number; currency?: string | null }[]): string {
-  const by = new Map<string, number>();
+  const by = new Map<MoneyCurrency, number>();
   for (const it of items) {
-    const c = (it.currency || 'RSD').toUpperCase();
+    const c = moneyCurrency(it.currency);
     by.set(c, Math.round(((by.get(c) ?? 0) + Number(it.amount)) * 100) / 100);
   }
   if (by.size === 0) return rsd(0);
