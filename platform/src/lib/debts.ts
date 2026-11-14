@@ -46,12 +46,12 @@ export async function loadDebts(db: SupabaseClient, orgId: string, upToPeriod: s
   return [...rows.values()].sort((a, b) => a.oldest.localeCompare(b.oldest) || b.total - a.total);
 }
 
-export function debtMessage(row: Pick<DebtRow, 'students' | 'charges' | 'total'>, orgName: string, bankAccount: string | null, link?: string | null, instructions?: string | null): string {
+export function debtMessage(row: Pick<DebtRow, 'students' | 'charges' | 'total'>, orgName: string, bankAccount: string | null, link?: string | null, instructions?: string | null, currency?: string | null): string {
   const names = new Map(row.students.map((s) => [s.id, fullName(s)]));
   return [
     `Dobar dan! Podsetnik za uplatu, ${[...names.values()].join(', ')}:`,
     ...row.charges.map((c) => `${periodLabel(c.period)}${row.students.length > 1 ? `, ${names.get(c.student_id)}` : ''}${c.description ? ` (${c.description})` : ''}: ${formatMoney(c.remaining, c.currency)}`),
-    `Ukupno: ${formatTotals(row.charges.map((c) => ({ amount: c.remaining, currency: c.currency })))}`,
+    `Ukupno: ${formatTotals(row.charges.map((c) => ({ amount: c.remaining, currency: c.currency })), currency)}`,
     instructions?.trim() ?? '',
     bankAccount ? `Račun: ${bankAccount}` : '',
     link ? `QR kod za uplatu i detalji: ${link}` : '',

@@ -29,7 +29,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
   type St = { id: string; org_id: string; first_name: string; last_name: string; ref_no: number; active: boolean; family_id: string | null };
   const [{ data: linked }, { data: org }] = await Promise.all([
     db.from('students').select('id, org_id, first_name, last_name, ref_no, active, family_id').eq('id', link.student_id).eq('org_id', link.org_id).maybeSingle<St>(),
-    db.from('organizations').select('name, phone, email, bank_account, payee_name, city, status, payment_instructions').eq('id', link.org_id).single(),
+    db.from('organizations').select('name, phone, email, bank_account, payee_name, city, status, payment_instructions, currency').eq('id', link.org_id).single(),
   ]);
   if (!linked || !org || org.status === 'cancelled' || !linked.active) notFound();
   const { data: famRows } = linked.family_id
@@ -89,7 +89,7 @@ export default async function ParentPage({ params, searchParams }: { params: Pro
           <section className="rounded-3xl bg-white p-5 ring-1 ring-line">
             <div className="flex items-baseline justify-between gap-2">
               <h2 className="text-[17px] font-extrabold text-ink">Za uplatu</h2>
-              <span className="text-[22px] font-extrabold tabular-nums text-coral-dark">{formatTotals(unpaid.map((c) => ({ amount: c.remaining, currency: c.currency })))}</span>
+              <span className="text-[22px] font-extrabold tabular-nums text-coral-dark">{formatTotals(unpaid.map((c) => ({ amount: c.remaining, currency: c.currency })), org.currency)}</span>
             </div>
             {org.payment_instructions?.trim() && <p className="mt-2 whitespace-pre-line text-[13px] font-semibold text-ink-2">{org.payment_instructions.trim()}</p>}
             {totalQr && (

@@ -93,7 +93,7 @@ export default async function ParentsPage({ searchParams }: { searchParams: Prom
           {rows.map((kids) => {
             const first = kids[0];
             const debtItems = kids.flatMap((s) => debtBy.get(s.id) ?? []);
-            const debtLabel = formatTotals(debtItems);
+            const debtLabel = formatTotals(debtItems, ctx.org.currency);
             const dinarDebt = debtItems.some((d) => moneyCurrency(d.currency) === 'RSD');
             const link = kids.map((s) => linkBy.get(s.id)).find(Boolean);
             const phone = kids.map((s) => s.parent_phone || s.phone).find(Boolean);

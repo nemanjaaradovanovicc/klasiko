@@ -127,12 +127,12 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
         }
       />
       <div className={`mb-6 grid grid-cols-2 gap-3 ${showMembership ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-        <Stat label="Primljene uplate" value={thisItems.length ? formatTotals(thisItems) : formatMoney(0, schoolCurrency)} tone="brand" />
+        <Stat label="Primljene uplate" value={formatTotals(thisItems, schoolCurrency)} tone="brand" />
         {showMembership && (
           <Stat
             label="Naplaćenost članarina"
-            value={oneFeeCurrency ? (expectedSum ? `${Math.round((collectedSum / expectedSum) * 100)}%` : '—') : formatTotals(collectedItems)}
-            hint={expectedSum ? (oneFeeCurrency ? `${formatMoney(collectedSum, feeCurrency)} od ${formatMoney(expectedSum, feeCurrency)}` : `${formatTotals(collectedItems)} od ${formatTotals(expectedItems)}`) : 'nema zaduženja'}
+            value={oneFeeCurrency ? (expectedSum ? `${Math.round((collectedSum / expectedSum) * 100)}%` : '—') : formatTotals(collectedItems, schoolCurrency)}
+            hint={expectedSum ? (oneFeeCurrency ? `${formatMoney(collectedSum, feeCurrency)} od ${formatMoney(expectedSum, feeCurrency)}` : `${formatTotals(collectedItems, schoolCurrency)} od ${formatTotals(expectedItems, schoolCurrency)}`) : 'nema zaduženja'}
           />
         )}
         <Stat label="Prosečno prisustvo" value={rate === null ? '—' : `${rate}%`} hint={`${sess.length} održanih časova`} />
@@ -147,7 +147,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
                 <div className="min-h-8 text-center text-[10px] font-extrabold leading-tight tabular-nums text-mut">
                   {[...bucket(x.items).entries()].filter(([, n]) => n > 0).map(([c, n]) => <div key={c}>{formatMoney(n, c)}</div>)}
                 </div>
-                <div className={`w-full rounded-t-lg ${x.m === period ? 'bg-brand' : 'bg-brand/25'}`} style={{ height: `${Math.max(4, bar(x.items) * 150)}px` }} title={x.items.length ? formatTotals(x.items) : formatMoney(0, schoolCurrency)} />
+                <div className={`w-full rounded-t-lg ${x.m === period ? 'bg-brand' : 'bg-brand/25'}`} style={{ height: `${Math.max(4, bar(x.items) * 150)}px` }} title={formatTotals(x.items, schoolCurrency)} />
                 <div className="text-[11px] font-bold text-mut">{periodLabel(x.m).slice(0, 3)}</div>
               </div>
             ))}
