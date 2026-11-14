@@ -5,11 +5,27 @@ import { PageHeader, Card, Stat, Badge } from '@/components/ui';
 import { attendanceStats, currentPeriod, formatMoney, formatTotals, moneyCurrency, parsePeriod, periodLabel, shiftPeriod, fullName, dateSr, time } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ExportButton } from './export';
+import { PrintButton } from '@/components/print-button';
 import { TRIAL_OUTCOME_LABEL, trialStats, trialsByTeacher, type TrialLesson } from '@/lib/trials';
+import { LESSON_KIND_LABEL, REPORT_LESSON_KINDS, activeMemberCount, aggregateTeacherMonth, lessonTypeForSession, sumTeacherLessons, type ReportLessonKind } from '@/lib/lessons';
 
 export const metadata = { title: 'Izveštaji' };
 
 const METHOD: Record<string, string> = { cash: 'Gotovina', bank: 'Račun', card: 'Kartica', other: 'Drugo' };
+
+function studentActive(students: { active: boolean } | { active: boolean }[] | null | undefined): boolean {
+  if (!students) return false;
+  return Array.isArray(students) ? students.some((s) => s.active) : students.active === true;
+}
+
+function csvHref(header: string[], rows: (string | number | null)[][]): string {
+  const cell = (v: string | number | null) => {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const body = [header, ...rows].map((r) => r.map(cell).join(';')).join('\r\n');
+  return 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + body);
+}
 
 export default async function Reports({ searchParams }: { searchParams: Promise<{ mesec?: string }> }) {
   const ctx = await requireOwner();
@@ -21,18 +37,20 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   const supabase = await createClient();
   type P = { id: string; amount: number; currency: string | null; paid_at: string; method: string; students: { first_name: string; last_name: string } | null; charges: { period: string; description: string | null } | null };
   type C = { id: string; amount: number; currency: string | null; kind: string; payments: { amount: number }[] };
-  type Se = { id: string; group_id: string; status: string; date: string; start_time: string; end_time: string | null; teacher_id: string | null; attendance: { status: string }[] };
+  type Se = { id: string; group_id: string; status: string; date: string; start_time: string; end_time: string | null; teacher_id: string | null; lesson_type: string | null; attendance: { status: string }[] };
+  type Zoom = { teacher_id: string; amount: number; currency: string | null; kind: string | null };
   type St = { id: string; first_name: string; last_name: string; birth_date: string | null; phone: string | null; email: string | null; parent_name: string | null; parent_phone: string | null; parent_email: string | null; joined_at: string; left_at: string | null; active: boolean; custom_fee: number | null; discount_pct: number; group_members: { groups: { name: string } | null }[] };
   type Tr = Pick<TrialLesson, 'id' | 'date' | 'start_time' | 'teacher_id' | 'group_id' | 'first_name' | 'last_name' | 'phone' | 'email' | 'note' | 'outcome' | 'outcome_at'>;
-  const [pays, chs, allSess, sts, { data: groups }, { data: profiles }, { data: slots }, trials] = await Promise.all([
+  const [pays, chs, allSess, sts, { data: groups }, { data: profiles }, { data: slots }, trials, { data: zoom }] = await Promise.all([
     fetchAll<P>((a, b) => supabase.from('payments').select('id, amount, currency, paid_at, method, students(first_name, last_name), charges(period, description)').eq('org_id', ctx.org.id).gte('paid_at', sixAgo).lt('paid_at', end).order('id').range(a, b)),
     fetchAll<C>((a, b) => supabase.from('charges').select('id, amount, currency, kind, payments(amount)').eq('org_id', ctx.org.id).eq('period', period).order('id').range(a, b)),
-    fetchAll<Se>((a, b) => supabase.from('sessions').select('id, group_id, status, date, start_time, end_time, teacher_id, attendance(status)').eq('org_id', ctx.org.id).gte('date', start).lt('date', end).neq('status', 'planned').order('id').range(a, b)),
+    fetchAll<Se>((a, b) => supabase.from('sessions').select('id, group_id, status, date, start_time, end_time, teacher_id, lesson_type, attendance(status)').eq('org_id', ctx.org.id).gte('date', start).lt('date', end).neq('status', 'planned').order('id').range(a, b)),
     fetchAll<St>((a, b) => supabase.from('students').select('id, first_name, last_name, birth_date, phone, email, parent_name, parent_phone, parent_email, joined_at, left_at, active, custom_fee, discount_pct, group_members(groups(name))').eq('org_id', ctx.org.id).order('last_name').order('id').range(a, b)),
-    supabase.from('groups').select('id, name, color, capacity, teacher_id, active, group_members(student_id)').eq('org_id', ctx.org.id).order('name'),
+    supabase.from('groups').select('id, name, color, capacity, teacher_id, active, drop_in, lesson_type, group_members(student_id, students(active))').eq('org_id', ctx.org.id).order('name'),
     supabase.from('profiles').select('id, full_name, role').eq('org_id', ctx.org.id),
     supabase.from('schedule_slots').select('group_id, weekday, start_time, end_time').eq('org_id', ctx.org.id),
     fetchAll<Tr>((a, b) => supabase.from('trial_lessons').select('id, date, start_time, teacher_id, group_id, first_name, last_name, phone, email, note, outcome, outcome_at').eq('org_id', ctx.org.id).gte('date', start).lt('date', end).order('date').order('id').range(a, b)),
+    supabase.from('teacher_expenses').select('teacher_id, amount, currency, kind').eq('org_id', ctx.org.id).eq('month', start).eq('kind', 'zoom'),
   ]);
 
   const months = [5, 4, 3, 2, 1, 0].map((i) => shiftPeriod(period, -i));
@@ -73,10 +91,11 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   const newCount = sts.filter((s) => s.joined_at >= start && s.joined_at < end).length;
   const leftCount = sts.filter((s) => s.left_at && s.left_at >= start && s.left_at < end).length;
 
-  type G = { id: string; name: string; color: string; capacity: number | null; teacher_id: string | null; group_members: { student_id: string }[] };
+  type G = { id: string; name: string; color: string; capacity: number | null; teacher_id: string | null; active?: boolean; drop_in?: boolean; lesson_type: string | null; group_members: { student_id: string; students: { active: boolean } | { active: boolean }[] | null }[] };
   const allGroups = (groups ?? []) as unknown as G[];
-  const grs = allGroups.filter((g) => (g as unknown as { active?: boolean }).active !== false);
+  const grs = allGroups.filter((g) => g.active !== false);
   const groupById = new Map(allGroups.map((g) => [g.id, g]));
+  const membersOf = (g: G | undefined) => activeMemberCount((g?.group_members ?? []).map((m) => ({ active: studentActive(m.students) })));
 
   // Izveštaj po predavaču: održani i otkazani časovi i sati (trajanje iz termina u rasporedu, inače 60 min).
   const names = new Map((profiles ?? []).map((p) => [p.id, p.full_name || 'Bez imena']));
@@ -94,15 +113,26 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
     if (!sl) return 60;
     return span(time(String(sl.start_time)), time(String(sl.end_time)));
   };
-  const perTeacher = new Map<string, { name: string; held: number; cancelled: number; minutes: number }>();
-  for (const se of allSess) {
-    const tid = se.teacher_id ?? groupById.get(se.group_id)?.teacher_id ?? 'none';
-    const row = perTeacher.get(tid) ?? { name: tid === 'none' ? 'Bez predavača' : names.get(tid) ?? 'Bivši korisnik', held: 0, cancelled: 0, minutes: 0 };
-    if (se.status === 'held') { row.held++; row.minutes += minutesOf(se); } else row.cancelled++;
-    perTeacher.set(tid, row);
-  }
-  const teacherRows = [...perTeacher.values()].sort((a, b) => b.held - a.held);
+  const typeOf = (se: Se) => {
+    const g = groupById.get(se.group_id);
+    return lessonTypeForSession({ sessionType: se.lesson_type, groupType: g?.lesson_type, dropIn: !!g?.drop_in, activeMembers: membersOf(g) });
+  };
+  const teacherRows = aggregateTeacherMonth({
+    sessions: allSess.map((se) => ({ status: se.status, teacherId: se.teacher_id, groupId: se.group_id, minutes: se.status === 'held' ? minutesOf(se) : 0, lessonType: se.lesson_type })),
+    trials: trials.map((t) => ({ teacherId: t.teacher_id })),
+    groups: allGroups.map((g) => ({ id: g.id, teacherId: g.teacher_id, lessonType: g.lesson_type, dropIn: !!g.drop_in, activeMembers: membersOf(g) })),
+    names,
+    expenses: ((zoom ?? []) as Zoom[]).map((e) => ({ teacherId: e.teacher_id, amount: Number(e.amount), currency: e.currency, kind: e.kind })),
+  });
+  const teacherTotals = sumTeacherLessons(teacherRows);
   const hours = (m: number) => (m / 60).toLocaleString('sr-Latn-RS', { maximumFractionDigits: 1 });
+  const zoomText = (items: { amount: number; currency: string }[]) => (items.length ? formatTotals(items) : '');
+  const summaryHeader = ['Predavač', 'Probni', 'Individualni', 'Duo', 'Grupni', 'Radionica', 'Održano', 'Otkazano', 'Sati', 'Zoom'];
+  const summaryLine = (name: string, counts: Record<ReportLessonKind, number>, held: number, cancelled: number, minutes: number, zoomItems: { amount: number; currency: string }[]) => [name, ...REPORT_LESSON_KINDS.map((k) => counts[k]), held, cancelled, hours(minutes), zoomText(zoomItems)];
+  const summaryRows = [
+    ...teacherRows.map((t) => summaryLine(t.name, t.counts, t.held, t.cancelled, t.minutes, t.zoom)),
+    ...(teacherRows.length ? [summaryLine('Ukupno', teacherTotals.counts, teacherTotals.held, teacherTotals.cancelled, teacherTotals.minutes, teacherTotals.zoom)] : []),
+  ];
   const groupStats = grs.map((g) => {
     const gs = sess.filter((s) => s.group_id === g.id);
     return { ...g, sessions: gs.length, rate: attendanceStats(gs.flatMap((s) => s.attendance)).pct };
@@ -176,30 +206,54 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
       </div>
 
       <Card title="Časovi po predavaču" className="mt-6" actions={teacherRows.length > 0 ? (
-        <ExportButton
-          label="Excel"
-          fileName={`klasiko-casovi-predavaci-${period}.xlsx`}
-          header={['Datum', 'Grupa', 'Početak', 'Predavač', 'Status', 'Trajanje (min)']}
-          rows={[...allSess].sort((a, b) => a.date.localeCompare(b.date) || a.start_time.localeCompare(b.start_time)).map((se) => [dateSr(se.date), groupById.get(se.group_id)?.name ?? '', se.start_time.slice(0, 5), names.get(se.teacher_id ?? groupById.get(se.group_id)?.teacher_id ?? '') ?? 'Bez predavača', se.status === 'held' ? 'održan' : 'otkazan', se.status === 'held' ? minutesOf(se) : 0])}
-        />
+        <span className="flex flex-wrap items-center gap-2">
+          <ExportButton
+            label="Excel časovi"
+            fileName={`klasiko-casovi-predavaci-${period}.xlsx`}
+            header={['Datum', 'Grupa', 'Početak', 'Predavač', 'Status', 'Vrsta', 'Trajanje (min)']}
+            rows={[...allSess].sort((a, b) => a.date.localeCompare(b.date) || a.start_time.localeCompare(b.start_time)).map((se) => [dateSr(se.date), groupById.get(se.group_id)?.name ?? '', se.start_time.slice(0, 5), names.get(se.teacher_id ?? groupById.get(se.group_id)?.teacher_id ?? '') ?? 'Bez predavača', se.status === 'held' ? 'održan' : 'otkazan', se.status === 'held' ? LESSON_KIND_LABEL[typeOf(se)] : '', se.status === 'held' ? minutesOf(se) : 0])}
+          />
+          <ExportButton label="Excel pregled" fileName={`klasiko-pregled-predavaci-${period}.xlsx`} header={summaryHeader} rows={summaryRows} />
+          <a className="btn btn-soft" href={csvHref(summaryHeader, summaryRows)} download={`klasiko-pregled-predavaci-${period}.csv`}>CSV</a>
+          <PrintButton label="Štampaj" />
+        </span>
       ) : undefined}>
         {teacherRows.length === 0 ? (
-          <p className="text-[14px] font-semibold text-mut">Nema upisanih časova u ovom mesecu.</p>
+          <p className="text-[14px] font-semibold text-mut">Nema upisanih časova ni Zoom troška u ovom mesecu.</p>
         ) : (
-          <ul className="flex flex-col divide-y divide-line">
-            {teacherRows.map((t) => (
-              <li key={t.name} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <span className="min-w-0 font-extrabold text-ink">{t.name}</span>
-                <span className="flex flex-wrap gap-1.5">
-                  <Badge tone="ok">{t.held} održano</Badge>
-                  {t.cancelled > 0 && <Badge tone="gray">{t.cancelled} otkazano</Badge>}
-                  <Badge>{hours(t.minutes)} h</Badge>
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full min-w-[760px] border-collapse text-[13px] print:min-w-0">
+              <thead>
+                <tr>
+                  {summaryHeader.map((h) => <th key={h} className="th whitespace-nowrap">{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {teacherRows.map((t) => (
+                  <tr key={t.id} className="print:break-inside-avoid">
+                    <td className="td font-extrabold text-ink">{t.name}</td>
+                    {REPORT_LESSON_KINDS.map((k) => <td key={k} className="td tabular-nums">{t.counts[k]}</td>)}
+                    <td className="td tabular-nums">{t.held}</td>
+                    <td className="td tabular-nums">{t.cancelled}</td>
+                    <td className="td tabular-nums">{hours(t.minutes)}</td>
+                    <td className="td tabular-nums">{t.zoom.length ? formatTotals(t.zoom) : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td className="td font-extrabold text-ink">Ukupno</td>
+                  {REPORT_LESSON_KINDS.map((k) => <td key={k} className="td font-extrabold tabular-nums">{teacherTotals.counts[k]}</td>)}
+                  <td className="td font-extrabold tabular-nums">{teacherTotals.held}</td>
+                  <td className="td font-extrabold tabular-nums">{teacherTotals.cancelled}</td>
+                  <td className="td font-extrabold tabular-nums">{hours(teacherTotals.minutes)}</td>
+                  <td className="td font-extrabold tabular-nums">{teacherTotals.zoom.length ? formatTotals(teacherTotals.zoom) : formatMoney(0, schoolCurrency)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         )}
-        <p className="mt-3 text-[12px] font-semibold text-mut">Računaju se časovi za koje je upisano prisustvo, na predavača koji je držao čas. Vlasnik predavača menja pri upisu prisustva. Zakazane nadoknade se računaju tek kad se održe. Opravdani izostanci ne ulaze u procenat prisustva.</p>
+        <p className="mt-3 text-[12px] font-semibold text-mut">Održani časovi su podeljeni po vrsti. Probni dolaze iz posebnog upisa i ulaze u zbir održanih, bez sati. Ako grupa nema upisanu vrstu: otvorena grupa je radionica, jedan aktivan učenik individualni, dva duo, ostalo grupni. Vrsta upisana na sam čas ima prednost. Sati su trajanje redovnih časova (iz rasporeda, inače 60 minuta). Zoom je iznos koji je predavač uneo za {label.toLowerCase()}. <Link href={`/zoom?mesec=${period}`} className="font-extrabold text-brand">Unos Zoom troška</Link>. Zakazane nadoknade se računaju tek kad se održe.</p>
       </Card>
 
       <Card title="Probni časovi" className="mt-6" actions={
@@ -240,7 +294,7 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
             </ul>
           </>
         )}
-        <p className="mt-3 text-[12px] font-semibold text-mut">Računaju se probni časovi održani u ovom mesecu, bez obzira na to kada je upisan ishod. Vode se odvojeno od redovnih časova, pa ne ulaze u „Časovi po predavaču” ni u prisustvo.</p>
+        <p className="mt-3 text-[12px] font-semibold text-mut">Računaju se probni časovi održani u ovom mesecu, bez obzira na to kada je upisan ishod. U „Časovi po predavaču” ulaze kao probni. Ne ulaze u prisustvo.</p>
       </Card>
 
       <Card title="Izvoz u Excel" className="mt-6">

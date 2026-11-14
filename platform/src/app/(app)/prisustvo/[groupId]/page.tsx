@@ -23,7 +23,7 @@ export default async function TakeAttendance({ params, searchParams }: { params:
   if (!g) notFound();
   const [{ data: members }, { data: session }, { data: notices }, { data: teachers }, { data: rosterRows }] = await Promise.all([
     supabase.from('group_members').select('students(id, first_name, last_name, active)').eq('group_id', groupId),
-    supabase.from('sessions').select('id, status, note, makeup_for, teacher_id, attendance(student_id, status)').eq('group_id', groupId).eq('date', date).eq('start_time', startTime + ':00').maybeSingle(),
+    supabase.from('sessions').select('id, status, note, makeup_for, teacher_id, lesson_type, attendance(student_id, status)').eq('group_id', groupId).eq('date', date).eq('start_time', startTime + ':00').maybeSingle(),
     supabase.from('absence_notices').select('student_id, note').eq('org_id', ctx.org.id).eq('date', date),
     ctx.isOwner ? supabase.from('profiles').select('id, full_name').eq('org_id', ctx.org.id).eq('active', true).order('full_name') : Promise.resolve({ data: null }),
     g.drop_in ? supabase.from('students').select('id, first_name, last_name').eq('org_id', ctx.org.id).eq('active', true).order('last_name') : Promise.resolve({ data: [] as { id: string; first_name: string; last_name: string }[] }),
@@ -62,6 +62,7 @@ export default async function TakeAttendance({ params, searchParams }: { params:
         absences={Object.fromEntries((notices ?? []).map((n) => [n.student_id, n.note ?? '']))}
         teachers={teachers ?? undefined}
         initialTeacher={session?.teacher_id ?? g.teacher_id ?? ''}
+        initialLessonType={session?.lesson_type ?? ''}
       />
       {session?.status === 'cancelled' && (
         <Card title="Nadoknada" className="mt-6">

@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { freeSeats, slotConflicts, type SlotLike } from '@/lib/groups';
 import { audit } from '@/lib/audit';
 import { isISODate, isoWeekday } from '@/lib/format';
+import { isGroupLessonType } from '@/lib/lessons';
 
 function s(fd: FormData, k: string): string | null {
   const v = String(fd.get(k) ?? '').trim();
@@ -20,6 +21,7 @@ function n(fd: FormData, k: string): number | null {
 }
 function groupData(fd: FormData) {
   const fee = s(fd, 'fee_type');
+  const lessonType = s(fd, 'lesson_type');
   return {
     name: s(fd, 'name') ?? '',
     level: s(fd, 'level'),
@@ -31,6 +33,7 @@ function groupData(fd: FormData) {
     fee_type: fee === 'package' || fee === 'manual' ? fee : 'monthly',
     package_classes: fee === 'package' ? n(fd, 'package_classes') : null,
     drop_in: fd.get('drop_in') === 'on',
+    lesson_type: isGroupLessonType(lessonType) ? lessonType : null,
   };
 }
 

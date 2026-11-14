@@ -213,6 +213,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <div className="mt-3 flex flex-wrap gap-2">
               <Link href="/grupe" className="btn btn-soft">Pogledaj grupe</Link>
               <Link href="/paketi" className="btn btn-soft">Paketi časova</Link>
+              <Link href="/zoom" className="btn btn-soft">Zoom trošak</Link>
             </div>
           </Card>
         )}

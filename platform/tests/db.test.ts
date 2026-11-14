@@ -266,11 +266,57 @@ describe('probni časovi', () => {
     expect(await fails(OWN_A, `update organizations set currency = 'USD' where id = '${ORG_A}'`)).toBe(true);
     await as(OWN_A, `update organizations set currency = 'RSD', packages_only = false where id = '${ORG_A}'`);
   });
+  it('vrsta časa na grupi i času je jedna od četiri, ili prazna', async () => {
+    expect(await fails(OWN_A, `update groups set lesson_type = 'probni' where id = '${G_A}'`)).toBe(true);
+    const [row] = await as<{ lesson_type: string }>(OWN_A, `update groups set lesson_type = 'duo' where id = '${G_A}' returning lesson_type`);
+    expect(row.lesson_type).toBe('duo');
+    const [cleared] = await as<{ lesson_type: string | null }>(OWN_A, `update groups set lesson_type = null where id = '${G_A}' returning lesson_type`);
+    expect(cleared.lesson_type).toBeNull();
+    const [{ id }] = await as<{ id: string }>(OWN_A, `insert into sessions (org_id, group_id, date, start_time, lesson_type) values ('${ORG_A}', '${G_A}', '2026-12-01', '18:00', 'radionica') returning id`);
+    expect(await fails(OWN_A, `update sessions set lesson_type = 'probni' where id = '${id}'`)).toBe(true);
+    const [kept] = await as<{ lesson_type: string | null }>(OWN_A, `select lesson_type from sessions where id = '${id}'`);
+    expect(kept.lesson_type).toBe('radionica');
+  });
   it('brisanje učenika ostavlja probni čas i njegov ishod', async () => {
     const [{ id: st }] = await as<{ id: string }>(OWN_A, `insert into students (org_id, first_name) values ('${ORG_A}', 'Privremeni') returning id`);
     const [{ id }] = await as<{ id: string }>(OWN_A, `insert into trial_lessons (org_id, teacher_id, first_name, outcome, student_id) values ('${ORG_A}', '${TEA_A}', 'Privremeni', 'enrolled', '${st}') returning id`);
     await as(OWN_A, `delete from students where id = '${st}'`);
     const [row] = await as<{ outcome: string; student_id: string | null }>(OWN_A, `select outcome, student_id from trial_lessons where id = '${id}'`);
     expect(row).toEqual({ outcome: 'enrolled', student_id: null });
+  });
+});
+
+describe('zoom trošak predavača', () => {
+  it('predavač upisuje svoj iznos, valuta dolazi iz škole, a mesec se skraćuje na prvi', async () => {
+    await db.exec(`update organizations set currency = 'EUR' where id = '${ORG_A}'`);
+    try {
+      const [row] = await as<{ amount: number; currency: string; month: string; kind: string }>(TEA_A, `insert into teacher_expenses (org_id, teacher_id, month, amount) values ('${ORG_A}', '${TEA_A}', '2026-10-18', 12.5) returning amount::float8 as amount, currency, to_char(month, 'YYYY-MM-DD') as month, kind`);
+      expect(row).toEqual({ amount: 12.5, currency: 'EUR', month: '2026-10-01', kind: 'zoom' });
+      expect(await fails(TEA_A, `insert into teacher_expenses (org_id, teacher_id, month, amount) values ('${ORG_A}', '${TEA_A}', '2026-10-01', 1)`)).toBe(true);
+      const [updated] = await as<{ amount: number }>(TEA_A, `insert into teacher_expenses (org_id, teacher_id, month, kind, amount, currency) values ('${ORG_A}', '${TEA_A}', '2026-10-02', 'zoom', 20, 'EUR') on conflict (org_id, teacher_id, month, kind) do update set amount = excluded.amount returning amount::float8 as amount`);
+      expect(updated.amount).toBe(20);
+    } finally {
+      await db.exec(`update organizations set currency = 'RSD' where id = '${ORG_A}'`);
+    }
+  });
+  it('predavač vidi i menja samo svoj red, vlasnik sve, druga škola ništa', async () => {
+    await as(OWN_A, `insert into teacher_expenses (org_id, teacher_id, month, amount, currency) values ('${ORG_A}', '${OWN_A}', '2026-10-01', 4, 'RSD')`);
+    expect((await as<{ teacher_id: string }>(TEA_A, `select teacher_id from teacher_expenses where month = '2026-10-01'`)).map((r) => r.teacher_id)).toEqual([TEA_A]);
+    expect((await as(OWN_A, `select teacher_id from teacher_expenses where month = '2026-10-01'`)).length).toBe(2);
+    expect(await as(OWN_B, `select id from teacher_expenses`)).toEqual([]);
+    expect(await fails(TEA_A, `insert into teacher_expenses (org_id, teacher_id, month, amount, currency) values ('${ORG_A}', '${OWN_A}', '2026-09-01', 1, 'RSD')`)).toBe(true);
+    expect(await fails(TEA_A, `update teacher_expenses set teacher_id = '${OWN_A}' where teacher_id = '${TEA_A}'`)).toBe(true);
+    expect(await as(TEA_A, `update teacher_expenses set amount = 1 where teacher_id = '${OWN_A}' returning id`)).toEqual([]);
+    const [own] = await as<{ amount: number }>(OWN_A, `update teacher_expenses set amount = 7 where teacher_id = '${TEA_A}' and month = '2026-10-01' returning amount::float8 as amount`);
+    expect(own.amount).toBe(7);
+    expect(await as(TEA_A, `delete from teacher_expenses where teacher_id = '${TEA_A}' returning id`)).toEqual([]);
+    expect((await as(OWN_A, `delete from teacher_expenses where month = '2026-10-01' returning id`)).length).toBe(2);
+  });
+  it('odbija tuđu školu, negativan iznos i nepoznatu valutu', async () => {
+    expect(await fails(OWN_A, `insert into teacher_expenses (org_id, teacher_id, month, amount, currency) values ('${ORG_A}', '${OWN_B}', '2026-09-01', 1, 'RSD')`)).toBe(true);
+    expect(await fails(TEA_A, `insert into teacher_expenses (org_id, teacher_id, month, amount, currency) values ('${ORG_B}', '${TEA_A}', '2026-09-01', 1, 'RSD')`)).toBe(true);
+    expect(await fails(OWN_A, `insert into teacher_expenses (org_id, teacher_id, month, amount, currency) values ('${ORG_A}', '${TEA_A}', '2026-09-01', -1, 'RSD')`)).toBe(true);
+    expect(await fails(OWN_A, `insert into teacher_expenses (org_id, teacher_id, month, amount, currency) values ('${ORG_A}', '${TEA_A}', '2026-09-01', 1, 'USD')`)).toBe(true);
+    expect(await fails(OWN_B, `insert into teacher_expenses (org_id, teacher_id, month, amount, currency) values ('${ORG_A}', '${TEA_A}', '2026-09-01', 1, 'RSD')`)).toBe(true);
   });
 });

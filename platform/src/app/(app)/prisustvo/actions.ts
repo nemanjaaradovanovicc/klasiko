@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { dateSr, isISODate } from '@/lib/format';
+import { isGroupLessonType } from '@/lib/lessons';
 import { syncPackageExtension } from '@/lib/packages-db';
 
 export type AttStatus = 'present' | 'absent' | 'excused';
@@ -17,6 +18,7 @@ export async function saveAttendance(input: {
   note: string;
   marks: Record<string, AttStatus>;
   teacherId?: string | null;
+  lessonType?: string | null;
 }): Promise<{ ok?: boolean; error?: string }> {
   const ctx = await requireOrg();
   if (!isISODate(input.date) || !/^\d{2}:\d{2}$/.test(input.startTime)) return { error: 'Neispravan datum ili vreme.' };
@@ -49,10 +51,11 @@ export async function saveAttendance(input: {
     teacherId = ctx.userId;
   }
 
+  const lessonType = isGroupLessonType(input.lessonType) ? input.lessonType : null;
   const { data: session, error } = await supabase
     .from('sessions')
     .upsert(
-      { org_id: ctx.org.id, group_id: input.groupId, date: input.date, start_time: input.startTime, status: input.status, note: input.note || null, teacher_id: teacherId },
+      { org_id: ctx.org.id, group_id: input.groupId, date: input.date, start_time: input.startTime, status: input.status, note: input.note || null, teacher_id: teacherId, lesson_type: lessonType },
       { onConflict: 'group_id,date,start_time' },
     )
     .select('id')

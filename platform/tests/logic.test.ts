@@ -12,6 +12,7 @@ import { familyReference, ipsPayload, studentReference } from '@/lib/ips';
 import { trialReminderDue } from '@/lib/billing';
 import { isTrialOutcome, trialStats, trialsByTeacher } from '@/lib/trials';
 import { NO_TEACHER, isWithTeacher, studentsPerTeacher, teacherIdsOf } from '@/lib/students';
+import { activeMemberCount, aggregateTeacherMonth, inferLessonType, isGroupLessonType, lessonTypeForSession, sumTeacherLessons } from '@/lib/lessons';
 
 const charges: MatchCharge[] = [
   { id: 'ana-10', period: '2026-10', remaining: 4000, first_name: 'Ana', last_name: 'Petrović', parent_name: 'Marija Petrović', ref_no: 1042 },
@@ -292,5 +293,99 @@ describe('učenici po predavaču', () => {
   });
   it('broji učenike po predavaču', () => {
     expect([...studentsPerTeacher([ana, luka, mina, vuk, sara])].sort()).toEqual([[NO_TEACHER, 3], ['jovana', 1], ['milica', 2]]);
+  });
+});
+
+describe('vrsta časa', () => {
+  it('prihvata samo četiri vrste grupe, ne i probni', () => {
+    expect(['individualni', 'duo', 'grupni', 'radionica'].every(isGroupLessonType)).toBe(true);
+    expect(isGroupLessonType('probni')).toBe(false);
+    expect(isGroupLessonType(null)).toBe(false);
+    expect(isGroupLessonType('')).toBe(false);
+  });
+  it('prazna vrsta se zaključuje iz otvorene grupe i broja aktivnih članova', () => {
+    expect(inferLessonType({ dropIn: true, activeMembers: 1 })).toBe('radionica');
+    expect(inferLessonType({ lessonType: null, activeMembers: 1 })).toBe('individualni');
+    expect(inferLessonType({ activeMembers: 2 })).toBe('duo');
+    expect(inferLessonType({ activeMembers: 0 })).toBe('grupni');
+    expect(inferLessonType({ activeMembers: 8 })).toBe('grupni');
+    expect(inferLessonType({ lessonType: 'duo', dropIn: true, activeMembers: 1 })).toBe('duo');
+    expect(inferLessonType({ lessonType: 'probni', activeMembers: 2 })).toBe('duo');
+  });
+  it('broji samo aktivne članove', () => {
+    expect(activeMemberCount([{ active: true }, { active: false }, { active: null }, {}])).toBe(1);
+    expect(activeMemberCount([])).toBe(0);
+  });
+  it('vrsta na času ima prednost nad grupom', () => {
+    expect(lessonTypeForSession({ sessionType: 'individualni', groupType: 'grupni', dropIn: true, activeMembers: 6 })).toBe('individualni');
+    expect(lessonTypeForSession({ sessionType: 'probni', groupType: null, dropIn: true })).toBe('radionica');
+    expect(lessonTypeForSession({ sessionType: null, groupType: 'radionica', activeMembers: 1 })).toBe('radionica');
+  });
+});
+
+describe('časovi po predavaču', () => {
+  const names = new Map([['ana', 'Ana'], ['maja', 'Maja']]);
+  const groups = [
+    { id: 'g1', teacherId: 'ana', lessonType: null, dropIn: false, activeMembers: 1 },
+    { id: 'g2', teacherId: 'ana', lessonType: null, dropIn: false, activeMembers: 2 },
+    { id: 'g3', teacherId: 'maja', lessonType: 'grupni', dropIn: false, activeMembers: 1 },
+    { id: 'open', teacherId: 'maja', lessonType: null, dropIn: true, activeMembers: 0 },
+  ];
+  const rows = aggregateTeacherMonth({
+    names,
+    groups,
+    sessions: [
+      { status: 'held', teacherId: null, groupId: 'g1', minutes: 60 },
+      { status: 'held', teacherId: 'ana', groupId: 'g2', minutes: 45 },
+      { status: 'held', teacherId: 'ana', groupId: 'g3', minutes: 30, lessonType: 'individualni' },
+      { status: 'cancelled', teacherId: 'ana', groupId: 'g1', minutes: 60 },
+      { status: 'planned', teacherId: 'ana', groupId: 'g1', minutes: 60 },
+      { status: 'held', teacherId: null, groupId: 'open', minutes: 50 },
+      { status: 'held', teacherId: null, groupId: 'missing', minutes: 60 },
+    ],
+    trials: [{ teacherId: 'maja' }, { teacherId: null }],
+    expenses: [
+      { teacherId: 'ana', amount: 10, currency: 'RSD', kind: 'zoom' },
+      { teacherId: 'maja', amount: 3, currency: 'EUR', kind: 'zoom' },
+      { teacherId: 'maja', amount: 99, currency: 'RSD', kind: 'sala' },
+      { teacherId: 'luka', amount: 5, currency: 'RSD', kind: 'zoom' },
+    ],
+  });
+
+  it('deli održane časove na probni, individualni, duo, grupni i radionicu', () => {
+    const ana = rows.find((r) => r.id === 'ana');
+    const maja = rows.find((r) => r.id === 'maja');
+    const none = rows.find((r) => r.id === 'none');
+    expect(ana).toMatchObject({
+      held: 3,
+      cancelled: 1,
+      minutes: 135,
+      counts: { probni: 0, individualni: 2, duo: 1, grupni: 0, radionica: 0 },
+      zoom: [{ amount: 10, currency: 'RSD' }],
+    });
+    // Čas grupe Maje koji je Ana održala ide Ani, a vrsta sa časa (individualni) pobedi upisanu grupnu.
+    expect(maja).toMatchObject({
+      held: 2,
+      cancelled: 0,
+      minutes: 50,
+      counts: { probni: 1, individualni: 0, duo: 0, grupni: 0, radionica: 1 },
+      zoom: [{ amount: 3, currency: 'EUR' }],
+    });
+    expect(none).toMatchObject({ name: 'Bez predavača', held: 2, minutes: 60, counts: { probni: 1, grupni: 1, individualni: 0, duo: 0, radionica: 0 } });
+  });
+  it('predavač samo sa Zoom troškom ulazi u izveštaj, a druga vrsta troška ne', () => {
+    expect(rows.find((r) => r.id === 'luka')).toMatchObject({ name: 'Bivši korisnik', held: 0, minutes: 0, zoom: [{ amount: 5, currency: 'RSD' }] });
+    expect(rows.find((r) => r.id === 'maja')?.zoom).toEqual([{ amount: 3, currency: 'EUR' }]);
+  });
+  it('zbir ne meša valute i sabira vrste', () => {
+    const total = sumTeacherLessons(rows);
+    expect(total.counts).toEqual({ probni: 2, individualni: 2, duo: 1, grupni: 1, radionica: 1 });
+    expect(total.held).toBe(7);
+    expect(total.cancelled).toBe(1);
+    expect(total.minutes).toBe(245);
+    expect(total.zoom).toEqual([{ amount: 15, currency: 'RSD' }, { amount: 3, currency: 'EUR' }]);
+  });
+  it('redosled je od najviše održanih časova, pa po imenu', () => {
+    expect(rows.map((r) => r.id)).toEqual(['ana', 'none', 'maja', 'luka']);
   });
 });

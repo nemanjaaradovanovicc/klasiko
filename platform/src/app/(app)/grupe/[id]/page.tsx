@@ -14,6 +14,7 @@ import { parsePeriod, shiftPeriod } from '@/lib/format';
 import { ConfirmButton, TypedConfirm } from '@/components/confirm';
 import { promoteFromWaitlist, removeFromWaitlist } from '../actions';
 import { fetchAll } from '@/lib/supabase/fetch-all';
+import { inferLessonType, LESSON_KIND_LABEL } from '@/lib/lessons';
 
 const OK: Record<string, string> = { '1': 'Sačuvano.', nova: 'Grupa je napravljena. Dodaj učenike i termine.', termin: 'Termin je dodat u raspored.', clanovi: 'Učenici su dodati.', cekanje: 'Grupa je popunjena, pa su učenici bez mesta na listi čekanja.' };
 
@@ -42,6 +43,8 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
   const onWait = new Set(waitList.map((w) => w.student_id));
   const candidates = all.filter((s) => !inGroup.has(s.id) && !onWait.has(s.id));
   const seatsLeft = g.capacity ? Math.max(0, g.capacity - mem.length) : null;
+  const activeMembers = mem.filter((m) => m.students?.active).length;
+  const lessonLabel = LESSON_KIND_LABEL[inferLessonType({ lessonType: g.lesson_type, dropIn: g.drop_in, activeMembers })];
   type S = { id: string; weekday: number; start_time: string; end_time: string; recurrence: string | null; anchor_date: string | null; rooms: { name: string } | null };
   const sl = (slots ?? []) as unknown as S[];
   const today = todayISO();
@@ -51,7 +54,7 @@ export default async function GroupPage({ params, searchParams }: { params: Prom
     <>
       <PageHeader
         title={g.name}
-        subtitle={<span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />{g.drop_in ? 'Otvorena grupa, prijava po času' : `${mem.length} učenika${g.capacity ? ` od ${g.capacity}` : ''}`}{!g.active ? ' · u arhivi' : ''}</span>}
+        subtitle={<span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />{g.drop_in ? 'Otvorena grupa, prijava po času' : `${mem.length} učenika${g.capacity ? ` od ${g.capacity}` : ''}`} · {lessonLabel}{g.lesson_type ? '' : ' (automatski)'}{!g.active ? ' · u arhivi' : ''}</span>}
         back={{ href: '/grupe', label: ctx.isOwner ? 'Grupe' : 'Moje grupe' }}
         actions={<>{todaySlot && <Link href={`/prisustvo/${g.id}?datum=${today}&vreme=${time(todaySlot.start_time)}`} className="btn">Prisustvo danas</Link>}<Link href={`/paketi?grupa=${g.id}`} className="btn btn-soft">Paketi</Link>{ctx.isOwner && <Link href={`/grupe/${g.id}/diplome`} className="btn btn-soft">Diplome</Link>}</>}
       />
