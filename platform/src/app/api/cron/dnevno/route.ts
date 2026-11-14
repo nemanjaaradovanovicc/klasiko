@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { orgAccess } from '@/lib/auth';
-import { addDays, currentPeriod, fullName, periodLabel, rsd, todayISO } from '@/lib/format';
+import { addDays, currentPeriod, formatMoney, formatTotals, fullName, moneyCurrency, periodLabel, todayISO } from '@/lib/format';
 import { createChargesForPeriod } from '@/lib/charges';
 import { emailEnabled, sendEmail } from '@/lib/email';
 import { fetchAll } from '@/lib/supabase/fetch-all';
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     if (!orgAccess(org).ok) continue;
     try {
       // Jednom po mesecu: obrisano zaduženje se ne vraća samo od sebe sledećeg dana.
-      if (org.auto_charges && day >= org.auto_charge_day && org.last_auto_period !== period) {
+      if (!org.packages_only && org.auto_charges && day >= org.auto_charge_day && org.last_auto_period !== period) {
         const res = await createChargesForPeriod(db, org, period);
         if (res.error) summary.errors.push(`${org.id}: ${res.error}`);
         else {
@@ -91,11 +91,11 @@ async function sendTrialReminders(db: ReturnType<typeof createAdminClient>, toda
 }
 
 async function sendAutoReminders(db: ReturnType<typeof createAdminClient>, org: Organization, today: string): Promise<number> {
-  type C = { id: string; period: string; due_date: string | null; description: string | null; amount: number; student_id: string; payments: { amount: number }[]; students: { id: string; first_name: string; last_name: string; parent_email: string | null; email: string | null; active: boolean; family_id: string | null } | null };
+  type C = { id: string; period: string; due_date: string | null; description: string | null; amount: number; currency: string | null; student_id: string; payments: { amount: number }[]; students: { id: string; first_name: string; last_name: string; parent_email: string | null; email: string | null; active: boolean; family_id: string | null } | null };
   // Samo zaduženja čiji je rok u prozoru, da se stari dugovi ne šalju svaki dan.
   const from = addDays(today, -(AFTER_DUE_DAYS + 7));
   const to = addDays(today, org.reminder_days_before);
-  const charges = await fetchAll<C>((a, b) => db.from('charges').select('id, period, due_date, description, amount, student_id, payments(amount), students(id, first_name, last_name, parent_email, email, active, family_id)').eq('org_id', org.id).gte('due_date', from).lte('due_date', to).order('id').range(a, b));
+  const charges = await fetchAll<C>((a, b) => db.from('charges').select('id, period, due_date, description, amount, currency, student_id, payments(amount), students(id, first_name, last_name, parent_email, email, active, family_id)').eq('org_id', org.id).gte('due_date', from).lte('due_date', to).order('id').range(a, b));
 
   const byEmail = new Map<string, { kind: 'before_due' | 'after_due'; charge: C; remaining: number }[]>();
   for (const c of charges) {
@@ -122,8 +122,8 @@ async function sendAutoReminders(db: ReturnType<typeof createAdminClient>, org: 
     const { data: siblings } = families.length ? await db.from('students').select('id').eq('org_id', org.id).in('family_id', families) : { data: [] };
     const linkIds = [...new Set([...fresh.map((f) => f.charge.student_id), ...(siblings ?? []).map((x) => x.id)])];
     const { data: link } = await db.from('parent_links').select('token').eq('org_id', org.id).eq('revoked', false).in('student_id', linkIds).limit(1).maybeSingle();
-    const total = fresh.reduce((a, f) => a + f.remaining, 0);
     const late = fresh.some((f) => f.kind === 'after_due');
+    const dinar = fresh.some((f) => moneyCurrency(f.charge.currency || org.currency) === 'RSD');
     const res = await sendEmail({
       to: address,
       replyTo: org.email,
@@ -132,11 +132,11 @@ async function sendAutoReminders(db: ReturnType<typeof createAdminClient>, org: 
         'Dobar dan!',
         '',
         late ? 'Podsećamo da uplata još nije evidentirana:' : 'Podsećamo da uskoro dospeva uplata:',
-        ...fresh.map((f) => `${fullName(f.charge.students!)}, ${periodLabel(f.charge.period)}${f.charge.description ? ` (${f.charge.description})` : ''}: ${rsd(f.remaining)}`),
-        `Ukupno: ${rsd(total)}`,
+        ...fresh.map((f) => `${fullName(f.charge.students!)}, ${periodLabel(f.charge.period)}${f.charge.description ? ` (${f.charge.description})` : ''}: ${formatMoney(f.remaining, f.charge.currency || org.currency)}`),
+        `Ukupno: ${formatTotals(fresh.map((f) => ({ amount: f.remaining, currency: f.charge.currency || org.currency })))}`,
         org.payment_instructions?.trim() ?? '',
         org.bank_account ? `Račun: ${org.bank_account}` : '',
-        link ? `QR kod za uplatu i detalji: ${parentUrl(link.token)}` : '',
+        link ? `${dinar ? 'QR kod za uplatu i detalji' : 'Detalji'}: ${parentUrl(link.token)}` : '',
         '',
         `Ako ste već uplatili, zanemarite poruku. Hvala! ${org.name}`,
       ].filter((l, i, arr) => l !== '' || arr[i - 1] !== '').join('\n'),

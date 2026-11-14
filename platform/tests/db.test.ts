@@ -255,6 +255,17 @@ describe('probni časovi', () => {
     expect(await fails(OWN_B, `insert into trial_lessons (org_id, first_name) values ('${ORG_A}', 'x')`)).toBe(true);
     expect(await fails(OWN_A, `insert into trial_lessons (org_id, first_name, outcome) values ('${ORG_A}', 'x', 'mozda')`)).toBe(true);
   });
+  it('vlasnik bira valutu škole i rad samo sa paketima', async () => {
+    const { rows: fresh } = await db.query<{ currency: string; packages_only: boolean }>(`select currency, packages_only from organizations where id = '${ORG_B}'`);
+    expect(fresh[0]).toEqual({ currency: 'RSD', packages_only: false });
+    const [row] = await as<{ currency: string; packages_only: boolean }>(OWN_A, `update organizations set currency = 'EUR', packages_only = true where id = '${ORG_A}' returning currency, packages_only`);
+    expect(row).toEqual({ currency: 'EUR', packages_only: true });
+    expect(await as<{ currency: string }>(TEA_A, `update organizations set currency = 'RSD', packages_only = false where id = '${ORG_A}' returning currency`)).toEqual([]);
+    const { rows } = await db.query<{ currency: string; packages_only: boolean }>(`select currency, packages_only from organizations where id = '${ORG_A}'`);
+    expect(rows[0]).toEqual({ currency: 'EUR', packages_only: true });
+    expect(await fails(OWN_A, `update organizations set currency = 'USD' where id = '${ORG_A}'`)).toBe(true);
+    await as(OWN_A, `update organizations set currency = 'RSD', packages_only = false where id = '${ORG_A}'`);
+  });
   it('brisanje učenika ostavlja probni čas i njegov ishod', async () => {
     const [{ id: st }] = await as<{ id: string }>(OWN_A, `insert into students (org_id, first_name) values ('${ORG_A}', 'Privremeni') returning id`);
     const [{ id }] = await as<{ id: string }>(OWN_A, `insert into trial_lessons (org_id, teacher_id, first_name, outcome, student_id) values ('${ORG_A}', '${TEA_A}', 'Privremeni', 'enrolled', '${st}') returning id`);

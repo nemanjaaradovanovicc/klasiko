@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireOrg } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Empty, Badge, Flash } from '@/components/ui';
-import { WEEKDAYS_SHORT, time, rsd } from '@/lib/format';
+import { WEEKDAYS_SHORT, time, formatMoney } from '@/lib/format';
 
 export const metadata = { title: 'Grupe' };
 
@@ -32,7 +32,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
       />
       <Flash ok={sp.ok === 'obrisana' ? 'Grupa je obrisana.' : undefined} />
       {groups.length === 0 ? (
-        <Empty title="Nema grupa" text={ctx.isOwner ? 'Napravi prvu grupu: naziv, predavač, sala, cena i termin.' : 'Vlasnik škole ti još nije dodelio grupe.'} action={ctx.isOwner ? <Link href="/grupe/nova" className="btn">+ Nova grupa</Link> : undefined} />
+        <Empty title="Nema grupa" text={ctx.isOwner ? (ctx.org.packages_only ? 'Napravi prvu grupu: naziv, predavač, sala i termin.' : 'Napravi prvu grupu: naziv, predavač, sala, cena i termin.') : 'Vlasnik škole ti još nije dodelio grupe.'} action={ctx.isOwner ? <Link href="/grupe/nova" className="btn">+ Nova grupa</Link> : undefined} />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {groups.map((g) => {
@@ -55,7 +55,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
                     <span key={i} className="rounded-lg bg-soft px-2 py-1 text-[12px] font-bold text-ink-2">{WEEKDAYS_SHORT[sl.weekday]} {time(sl.start_time)}{sl.recurrence === 'biweekly' ? ' · svake 2.' : ''}</span>
                   ))}
                 </div>
-                {ctx.isOwner && g.monthly_fee !== null && <div className="mt-3 text-[13px] font-bold text-brand">{rsd(g.monthly_fee)} {g.fee_type === 'package' ? 'paket' : 'mesečno'}</div>}
+                {ctx.isOwner && g.monthly_fee !== null && <div className="mt-3 text-[13px] font-bold text-brand">{formatMoney(g.monthly_fee, ctx.org.currency)} {g.fee_type === 'package' ? 'paket' : 'mesečno'}</div>}
               </Link>
             );
           })}

@@ -31,7 +31,7 @@ export default async function NewStudent({ searchParams }: { searchParams: Promi
         <form action={createStudent} className="flex flex-col gap-4">
           {fromTrial && <input type="hidden" name="trial_id" value={fromTrial.id} />}
           <Select label="Grupa" name="group_id" defaultValue={sp.grupa ?? fromTrial?.group_id ?? ''} placeholder="Bez grupe (dodaćeš kasnije)" options={(groups ?? []).map((g) => ({ value: g.id, label: g.name }))} />
-          <StudentFields s={{ joined_at: todayISO(), discount_pct: 0, ...(fromTrial ? { first_name: fromTrial.first_name, last_name: fromTrial.last_name, phone: fromTrial.phone, email: fromTrial.email } : {}) }} kids={ctx.org.kind !== 'edukativni_centar'} />
+          <StudentFields s={{ joined_at: todayISO(), discount_pct: 0, ...(fromTrial ? { first_name: fromTrial.first_name, last_name: fromTrial.last_name, phone: fromTrial.phone, email: fromTrial.email } : {}) }} kids={ctx.org.kind !== 'edukativni_centar'} currency={ctx.org.currency} packagesOnly={ctx.org.packages_only} />
           <div className="flex flex-wrap gap-2">
             <button className="btn">Sačuvaj</button>
             {!fromTrial && <button className="btn btn-soft" name="again" value="1">Sačuvaj i dodaj još</button>}

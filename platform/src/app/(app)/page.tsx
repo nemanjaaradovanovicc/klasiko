@@ -6,7 +6,7 @@ import { InstallCard } from '@/components/pwa';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { lowPackages } from '@/lib/packages-db';
 import { waUrl } from '@/lib/phone';
-import { currentPeriod, dateLong, isoWeekday, formatMoney, formatTotals, time, todayISO, fullName, periodLabel, addDays, absenceStreaks } from '@/lib/format';
+import { currentPeriod, dateLong, isoWeekday, formatMoney, formatTotals, moneyCurrency, time, todayISO, fullName, periodLabel, addDays, absenceStreaks } from '@/lib/format';
 import { slotOccursOn } from '@/lib/schedule';
 
 export const metadata = { title: 'Pregled' };
@@ -63,10 +63,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
   const steps = [
     { done: roomCount > 0, label: 'Dodaj sale ili učionice', href: '/podesavanja#sale' },
-    { done: groupCount > 0, label: 'Napravi grupe sa cenom i terminima', href: '/grupe/nova' },
+    { done: groupCount > 0, label: ctx.org.packages_only ? 'Napravi grupe i termine' : 'Napravi grupe sa cenom i terminima', href: '/grupe/nova' },
     { done: studentCount > 0, label: 'Dodaj učenike ili ih uvezi iz Excel-a', href: '/ucenici/uvoz' },
-    { done: !!ctx.org.bank_account, label: 'Unesi tekući račun za IPS QR uplate', href: '/podesavanja' },
-    { done: charges.length > 0, label: 'Napravi zaduženja za ovaj mesec', href: '/uplate' },
+    ...(moneyCurrency(ctx.org.currency) === 'EUR' ? [] : [{ done: !!ctx.org.bank_account, label: 'Unesi tekući račun za IPS QR uplate', href: '/podesavanja' }]),
+    ...(ctx.org.packages_only ? [] : [{ done: charges.length > 0, label: 'Napravi zaduženja za ovaj mesec', href: '/uplate' }]),
   ];
   const showSteps = ctx.isOwner && steps.some((s) => !s.done);
   const first = (ctx.profile.full_name || '').split(' ')[0];

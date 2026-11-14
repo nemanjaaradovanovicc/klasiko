@@ -21,7 +21,7 @@ export default async function NewGroup({ searchParams }: { searchParams: Promise
       <Flash err={sp.err} />
       <Card>
         <form action={createGroup} className="flex flex-col gap-5">
-          <GroupFields teachers={teachers ?? []} rooms={rooms ?? []} g={{ monthly_fee: ctx.org.default_fee }} />
+          <GroupFields teachers={teachers ?? []} rooms={rooms ?? []} currency={ctx.org.currency} packagesOnly={ctx.org.packages_only} g={{ fee_type: ctx.org.packages_only ? 'package' : 'monthly', monthly_fee: ctx.org.packages_only ? null : ctx.org.default_fee }} />
           <div>
             <div className="mb-2 text-[13px] font-extrabold uppercase tracking-wider text-mut">Prvi termin (opciono, više termina dodaješ posle)</div>
             <div className="grid gap-3 sm:grid-cols-3">

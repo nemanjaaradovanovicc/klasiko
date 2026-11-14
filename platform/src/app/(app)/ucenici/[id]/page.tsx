@@ -4,7 +4,7 @@ import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Flash, Badge, Stat } from '@/components/ui';
 import { StudentFields } from '@/components/student-form';
-import { attendanceStats, formatMoney, formatTotals, fullName, dateSr, periodLabel, todayISO } from '@/lib/format';
+import { attendanceStats, formatMoney, formatTotals, fullName, dateSr, moneyCurrency, periodLabel, todayISO } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ConfirmButton, TypedConfirm } from '@/components/confirm';
 import { CLASS_PACKAGE_GROUP_EMBED, packageBalances } from '@/lib/packages-db';
@@ -55,7 +55,7 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
   for (const p of pays) if (p.charge_id) paidByCharge.set(p.charge_id, (paidByCharge.get(p.charge_id) ?? 0) + Number(p.amount));
   const dueLabel = formatTotals(chs.map((c) => ({ amount: Number(c.amount), currency: c.currency })));
   const paidLabel = formatTotals(pays.map((p) => ({ amount: Number(p.amount), currency: p.currency })));
-  const advance = pays.filter((p) => !p.charge_id).reduce((a, p) => a + Number(p.amount), 0);
+  const advanceItems = pays.filter((p) => !p.charge_id && Number(p.amount) > 0).map((p) => ({ amount: Number(p.amount), currency: p.currency || ctx.org.currency }));
 
   const siblings = s.family_id ? allStudents.filter((x) => x.family_id === s.family_id && x.id !== s.id) : [];
   const key = phoneKey(s.parent_phone);
@@ -96,7 +96,7 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
         <Card title="Podaci">
           <form action={updateStudent} className="flex flex-col gap-4">
             <input type="hidden" name="id" value={s.id} />
-            <StudentFields s={s} kids={ctx.org.kind !== 'edukativni_centar'} />
+            <StudentFields s={s} kids={ctx.org.kind !== 'edukativni_centar'} currency={ctx.org.currency} packagesOnly={ctx.org.packages_only} />
             <div><button className="btn">Sačuvaj izmene</button></div>
           </form>
         </Card>
@@ -237,7 +237,7 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
                   ))}
                   <input name="classes" type="number" min={1} step="1" className="input" placeholder="Broj časova" />
                   <input name="price" type="number" min={0} step="0.01" className="input" placeholder="Cena" />
-                  <select name="currency" className="input" defaultValue="EUR"><option value="EUR">EUR</option><option value="RSD">RSD</option></select>
+                  <select name="currency" className="input" defaultValue={moneyCurrency(ctx.org.currency)}><option value="RSD">RSD</option><option value="EUR">EUR</option></select>
                   <label className="block"><span className="label">Datum uplate</span><input name="paid_at" type="date" className="input" /></label>
                   <label className="flex items-start gap-2 sm:col-span-2 text-[13px] font-semibold text-ink-2"><input type="checkbox" name="auto_expires" defaultChecked className="mt-0.5 h-4 w-4 accent-[#5B2A86]" />Rok po rasporedu (10 časova jednom nedeljno traje 10 nedelja). Ako predavač otkaže čas bez nadoknade, rok se produžava.</label>
                   <label className="block sm:col-span-2"><span className="label">Važi do, ako isključiš rok po rasporedu</span><input name="expires_at" type="date" className="input" /></label>
@@ -249,9 +249,9 @@ export default async function StudentPage({ params, searchParams }: { params: Pr
           )}
 
           <Card title="Članarine" actions={<Link href="/uplate" className="text-[13px] font-bold text-brand">Sve uplate →</Link>}>
-            {advance > 0 && (
+            {advanceItems.length > 0 && (
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ok-soft px-3 py-2">
-                <span className="text-[14px] font-extrabold text-ok">Avans: {formatMoney(advance)}</span>
+                <span className="text-[14px] font-extrabold text-ok">Avans: {formatTotals(advanceItems)}</span>
                 <form action={distributeAdvance}><input type="hidden" name="student_id" value={s.id} /><button className="btn btn-sm btn-soft">Rasporedi na zaduženja</button></form>
               </div>
             )}

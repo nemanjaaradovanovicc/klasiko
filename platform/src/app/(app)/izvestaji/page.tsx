@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Stat, Badge } from '@/components/ui';
-import { attendanceStats, currentPeriod, parsePeriod, periodLabel, shiftPeriod, rsd, fullName, dateSr, time } from '@/lib/format';
+import { attendanceStats, currentPeriod, formatMoney, formatTotals, moneyCurrency, parsePeriod, periodLabel, shiftPeriod, fullName, dateSr, time } from '@/lib/format';
 import { fetchAll } from '@/lib/supabase/fetch-all';
 import { ExportButton } from './export';
 import { TRIAL_OUTCOME_LABEL, trialStats, trialsByTeacher, type TrialLesson } from '@/lib/trials';
@@ -19,14 +19,14 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   const end = `${shiftPeriod(period, 1)}-01`;
   const sixAgo = `${shiftPeriod(period, -5)}-01`;
   const supabase = await createClient();
-  type P = { id: string; amount: number; paid_at: string; method: string; students: { first_name: string; last_name: string } | null; charges: { period: string; description: string | null } | null };
-  type C = { id: string; amount: number; payments: { amount: number }[] };
+  type P = { id: string; amount: number; currency: string | null; paid_at: string; method: string; students: { first_name: string; last_name: string } | null; charges: { period: string; description: string | null } | null };
+  type C = { id: string; amount: number; currency: string | null; kind: string; payments: { amount: number }[] };
   type Se = { id: string; group_id: string; status: string; date: string; start_time: string; end_time: string | null; teacher_id: string | null; attendance: { status: string }[] };
   type St = { id: string; first_name: string; last_name: string; birth_date: string | null; phone: string | null; email: string | null; parent_name: string | null; parent_phone: string | null; parent_email: string | null; joined_at: string; left_at: string | null; active: boolean; custom_fee: number | null; discount_pct: number; group_members: { groups: { name: string } | null }[] };
   type Tr = Pick<TrialLesson, 'id' | 'date' | 'start_time' | 'teacher_id' | 'group_id' | 'first_name' | 'last_name' | 'phone' | 'email' | 'note' | 'outcome' | 'outcome_at'>;
   const [pays, chs, allSess, sts, { data: groups }, { data: profiles }, { data: slots }, trials] = await Promise.all([
-    fetchAll<P>((a, b) => supabase.from('payments').select('id, amount, paid_at, method, students(first_name, last_name), charges(period, description)').eq('org_id', ctx.org.id).gte('paid_at', sixAgo).lt('paid_at', end).order('id').range(a, b)),
-    fetchAll<C>((a, b) => supabase.from('charges').select('id, amount, payments(amount)').eq('org_id', ctx.org.id).eq('period', period).order('id').range(a, b)),
+    fetchAll<P>((a, b) => supabase.from('payments').select('id, amount, currency, paid_at, method, students(first_name, last_name), charges(period, description)').eq('org_id', ctx.org.id).gte('paid_at', sixAgo).lt('paid_at', end).order('id').range(a, b)),
+    fetchAll<C>((a, b) => supabase.from('charges').select('id, amount, currency, kind, payments(amount)').eq('org_id', ctx.org.id).eq('period', period).order('id').range(a, b)),
     fetchAll<Se>((a, b) => supabase.from('sessions').select('id, group_id, status, date, start_time, end_time, teacher_id, attendance(status)').eq('org_id', ctx.org.id).gte('date', start).lt('date', end).neq('status', 'planned').order('id').range(a, b)),
     fetchAll<St>((a, b) => supabase.from('students').select('id, first_name, last_name, birth_date, phone, email, parent_name, parent_phone, parent_email, joined_at, left_at, active, custom_fee, discount_pct, group_members(groups(name))').eq('org_id', ctx.org.id).order('last_name').order('id').range(a, b)),
     supabase.from('groups').select('id, name, color, capacity, teacher_id, active, group_members(student_id)').eq('org_id', ctx.org.id).order('name'),
@@ -36,12 +36,36 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
   ]);
 
   const months = [5, 4, 3, 2, 1, 0].map((i) => shiftPeriod(period, -i));
-  const byMonth = months.map((m) => ({ m, sum: pays.filter((p) => p.paid_at.startsWith(m)).reduce((a, p) => a + Number(p.amount), 0) }));
-  const max = Math.max(1, ...byMonth.map((x) => x.sum));
-  const thisMonth = byMonth[5].sum;
+  const moneyOf = (rows: { amount: number; currency: string | null }[]) => rows.map((p) => ({ amount: Number(p.amount), currency: p.currency }));
+  const byMonth = months.map((m) => ({ m, items: moneyOf(pays.filter((p) => p.paid_at.startsWith(m))) }));
+  const bucket = (items: { amount: number; currency?: string | null }[]) => {
+    const by = new Map<string, number>();
+    for (const it of items) {
+      const c = moneyCurrency(it.currency);
+      by.set(c, (by.get(c) ?? 0) + it.amount);
+    }
+    return by;
+  };
+  // Visina stuba je udeo u sopstvenoj valuti. Dinari i evri se ne sabiraju, niti se iznos deli na hiljade.
+  const maxima = new Map<string, number>();
+  for (const x of byMonth) for (const [c, n] of bucket(x.items)) maxima.set(c, Math.max(maxima.get(c) ?? 0, n));
+  const bar = (items: { amount: number; currency?: string | null }[]) => {
+    let h = 0;
+    for (const [c, n] of bucket(items)) h = Math.max(h, n / (maxima.get(c) || 1));
+    return h;
+  };
+  const thisItems = byMonth[5].items;
+  const schoolCurrency = moneyCurrency(ctx.org.currency);
 
-  const expected = chs.reduce((a, c) => a + Number(c.amount), 0);
-  const collected = chs.reduce((a, c) => a + Math.min(Number(c.amount), c.payments.reduce((x, p) => x + Number(p.amount), 0)), 0);
+  const feeCharges = ctx.org.packages_only ? chs.filter((c) => c.kind === 'monthly') : chs;
+  const showMembership = !ctx.org.packages_only || feeCharges.length > 0;
+  const expectedItems = feeCharges.map((c) => ({ amount: Number(c.amount), currency: c.currency }));
+  const collectedItems = feeCharges.map((c) => ({ amount: Math.min(Number(c.amount), c.payments.reduce((x, p) => x + Number(p.amount), 0)), currency: c.currency }));
+  const feeCurrencies = new Set(feeCharges.map((c) => moneyCurrency(c.currency)));
+  const oneFeeCurrency = feeCurrencies.size <= 1;
+  const expectedSum = expectedItems.reduce((a, i) => a + i.amount, 0);
+  const collectedSum = collectedItems.reduce((a, i) => a + i.amount, 0);
+  const feeCurrency = oneFeeCurrency ? ([...feeCurrencies][0] ?? schoolCurrency) : schoolCurrency;
 
   const sess = allSess.filter((s) => s.status === 'held');
   const rate = attendanceStats(sess.flatMap((s) => s.attendance)).pct;
@@ -102,9 +126,15 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
           </>
         }
       />
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Primljene uplate" value={rsd(thisMonth)} tone="brand" />
-        <Stat label="Naplaćenost članarina" value={expected ? `${Math.round((collected / expected) * 100)}%` : '—'} hint={expected ? `${rsd(collected)} od ${rsd(expected)}` : 'nema zaduženja'} />
+      <div className={`mb-6 grid grid-cols-2 gap-3 ${showMembership ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+        <Stat label="Primljene uplate" value={thisItems.length ? formatTotals(thisItems) : formatMoney(0, schoolCurrency)} tone="brand" />
+        {showMembership && (
+          <Stat
+            label="Naplaćenost članarina"
+            value={oneFeeCurrency ? (expectedSum ? `${Math.round((collectedSum / expectedSum) * 100)}%` : '—') : formatTotals(collectedItems)}
+            hint={expectedSum ? (oneFeeCurrency ? `${formatMoney(collectedSum, feeCurrency)} od ${formatMoney(expectedSum, feeCurrency)}` : `${formatTotals(collectedItems)} od ${formatTotals(expectedItems)}`) : 'nema zaduženja'}
+          />
+        )}
         <Stat label="Prosečno prisustvo" value={rate === null ? '—' : `${rate}%`} hint={`${sess.length} održanih časova`} />
         <Stat label="Novi / ispisani" value={`${newCount} / ${leftCount}`} hint={`${sts.filter((s) => s.active).length} aktivnih ukupno`} />
       </div>
@@ -114,8 +144,10 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
           <div className="flex h-48 items-end gap-3">
             {byMonth.map((x) => (
               <div key={x.m} className="flex flex-1 flex-col items-center gap-1.5">
-                <div className="text-[11px] font-extrabold tabular-nums text-mut">{x.sum ? Math.round(x.sum / 1000) + 'k' : ''}</div>
-                <div className={`w-full rounded-t-lg ${x.m === period ? 'bg-brand' : 'bg-brand/25'}`} style={{ height: `${Math.max(4, (x.sum / max) * 150)}px` }} title={rsd(x.sum)} />
+                <div className="min-h-8 text-center text-[10px] font-extrabold leading-tight tabular-nums text-mut">
+                  {[...bucket(x.items).entries()].filter(([, n]) => n > 0).map(([c, n]) => <div key={c}>{formatMoney(n, c)}</div>)}
+                </div>
+                <div className={`w-full rounded-t-lg ${x.m === period ? 'bg-brand' : 'bg-brand/25'}`} style={{ height: `${Math.max(4, bar(x.items) * 150)}px` }} title={x.items.length ? formatTotals(x.items) : formatMoney(0, schoolCurrency)} />
                 <div className="text-[11px] font-bold text-mut">{periodLabel(x.m).slice(0, 3)}</div>
               </div>
             ))}
@@ -216,14 +248,14 @@ export default async function Reports({ searchParams }: { searchParams: Promise<
           <ExportButton
             label="Svi učenici"
             fileName={`klasiko-ucenici-${period}.xlsx`}
-            header={['Ime', 'Prezime', 'Datum rođenja', 'Telefon', 'Email', 'Roditelj', 'Telefon roditelja', 'Email roditelja', 'Grupe', 'Upisan', 'Status', 'Posebna cena', 'Popust %']}
-            rows={sts.map((s) => [s.first_name, s.last_name, dateSr(s.birth_date), s.phone, s.email, s.parent_name, s.parent_phone, s.parent_email, s.group_members.map((m) => m.groups?.name).filter(Boolean).join(', '), dateSr(s.joined_at), s.active ? 'aktivan' : `ispisan ${dateSr(s.left_at)}`, s.custom_fee, Number(s.discount_pct)])}
+            header={['Ime', 'Prezime', 'Datum rođenja', 'Telefon', 'Email', 'Roditelj', 'Telefon roditelja', 'Email roditelja', 'Grupe', 'Upisan', 'Status', ...(ctx.org.packages_only ? [] : [`Posebna cena (${schoolCurrency})`]), 'Popust %']}
+            rows={sts.map((s) => [s.first_name, s.last_name, dateSr(s.birth_date), s.phone, s.email, s.parent_name, s.parent_phone, s.parent_email, s.group_members.map((m) => m.groups?.name).filter(Boolean).join(', '), dateSr(s.joined_at), s.active ? 'aktivan' : `ispisan ${dateSr(s.left_at)}`, ...(ctx.org.packages_only ? [] : [s.custom_fee]), Number(s.discount_pct)])}
           />
           <ExportButton
             label={`Uplate, ${label.toLowerCase()}`}
             fileName={`klasiko-uplate-${period}.xlsx`}
-            header={['Datum', 'Učenik', 'Za period', 'Opis', 'Način', 'Iznos']}
-            rows={pays.filter((p) => p.paid_at.startsWith(period)).sort((a, b) => a.paid_at.localeCompare(b.paid_at)).map((p) => [dateSr(p.paid_at), p.students ? fullName(p.students) : '', p.charges ? periodLabel(p.charges.period) : 'Avans', p.charges?.description ?? '', METHOD[p.method], Number(p.amount)])}
+            header={['Datum', 'Učenik', 'Za period', 'Opis', 'Način', 'Iznos', 'Valuta']}
+            rows={pays.filter((p) => p.paid_at.startsWith(period)).sort((a, b) => a.paid_at.localeCompare(b.paid_at)).map((p) => [dateSr(p.paid_at), p.students ? fullName(p.students) : '', p.charges ? periodLabel(p.charges.period) : 'Avans', p.charges?.description ?? '', METHOD[p.method], Number(p.amount), moneyCurrency(p.currency)])}
           />
         </div>
       </Card>
