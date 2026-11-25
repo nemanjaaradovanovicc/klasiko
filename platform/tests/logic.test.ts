@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { matchRows, matchesSearch, statementKeys, suggestAllocation, type MatchCharge, type StatementRow } from '@/lib/match';
 import { mapStatementColumns, toAmount, toDate } from '@/lib/statement';
-import { attendanceStats, formatMoney, formatTotals, isISODate, parsePeriod, periodLabel, currentPeriod, absenceStreaks } from '@/lib/format';
+import { attendanceStats, dateTimeSr, formatMoney, formatTotals, isISODate, parsePeriod, periodLabel, currentPeriod, absenceStreaks } from '@/lib/format';
 import { fixImportedPhone, intlPhone, phoneKey, waUrl } from '@/lib/phone';
 import { installmentPlan } from '@/lib/charges';
 import { allocateUsage, expiryAfterCancellations, packageBalance, packageReminderText, shouldRemindPackage, suggestedExpiry } from '@/lib/packages';
@@ -13,6 +13,7 @@ import { trialReminderDue } from '@/lib/billing';
 import { isTrialOutcome, trialStats, trialsByTeacher } from '@/lib/trials';
 import { NO_TEACHER, isWithTeacher, studentsPerTeacher, teacherIdsOf } from '@/lib/students';
 import { activeMemberCount, aggregateTeacherMonth, inferLessonType, isGroupLessonType, lessonTypeForSession, sumTeacherLessons } from '@/lib/lessons';
+import { attendanceSummary, nextSessionAudit, sessionAuditView } from '@/lib/session-audit';
 
 const charges: MatchCharge[] = [
   { id: 'ana-10', period: '2026-10', remaining: 4000, first_name: 'Ana', last_name: 'Petrović', parent_name: 'Marija Petrović', ref_no: 1042 },
@@ -394,5 +395,36 @@ describe('časovi po predavaču', () => {
   });
   it('redosled je od najviše održanih časova, pa po imenu', () => {
     expect(rows.map((r) => r.id)).toEqual(['ana', 'none', 'maja', 'luka']);
+  });
+});
+
+describe('upis časa', () => {
+  const at = '2026-11-25T13:30:00.000Z';
+  const later = '2026-11-25T15:00:00.000Z';
+  it('datum i vreme su po Beogradu', () => {
+    expect(dateTimeSr('2026-11-25T13:30:00.000Z')).toBe('25. 11. 2026. 14:30');
+    expect(dateTimeSr('2026-07-25T12:30:00.000Z')).toBe('25. 7. 2026. 14:30');
+  });
+  it('prvi upis je Uneo, ista beleška u istom trenutku nije izmena', () => {
+    const row = nextSessionAudit({ previous: null, status: 'held', note: 'Radili smo', marksChanged: true, actorId: 'ana', at });
+    expect(sessionAuditView(row)).toEqual({ entered: { by: 'ana', at }, changed: null });
+    expect(attendanceSummary('held', [{ status: 'present' }, { status: 'present' }, { status: 'absent' }])).toBe('2/3 prisutno');
+    expect(attendanceSummary('cancelled', [])).toBe('Otkazan');
+  });
+  it('naknadna izmena oznake ili beleške je Izmenio, a prvi upis ostaje', () => {
+    const first = nextSessionAudit({ previous: null, status: 'held', note: null, marksChanged: false, actorId: 'ana', at });
+    const marks = nextSessionAudit({ previous: { ...first, status: 'held', note: null }, status: 'held', note: null, marksChanged: true, actorId: 'marko', at: later });
+    expect(sessionAuditView(marks)).toEqual({ entered: { by: 'ana', at }, changed: { by: 'marko', at: later } });
+    const note = nextSessionAudit({ previous: { ...first, status: 'held', note: null }, status: 'held', note: 'Domaći', marksChanged: false, actorId: 'ana', at: later });
+    expect(sessionAuditView(note).changed).toEqual({ by: 'ana', at: later });
+    const same = nextSessionAudit({ previous: { ...first, status: 'held', note: null }, status: 'held', note: null, marksChanged: false, actorId: 'marko', at: later });
+    expect(sessionAuditView(same).changed).toBeNull();
+  });
+  it('planirani čas postaje prvi upis, a ne izmena', () => {
+    const row = nextSessionAudit({
+      previous: { status: 'planned', note: 'Nadoknada', attendance_recorded_by: null, attendance_recorded_at: null, attendance_updated_by: null, attendance_updated_at: null, note_updated_by: null, note_updated_at: null },
+      status: 'held', note: 'Nadoknada', marksChanged: true, actorId: 'ana', at,
+    });
+    expect(sessionAuditView(row)).toEqual({ entered: { by: 'ana', at }, changed: null });
   });
 });

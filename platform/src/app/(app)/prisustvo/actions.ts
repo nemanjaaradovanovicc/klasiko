@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { dateSr, isISODate } from '@/lib/format';
 import { isGroupLessonType } from '@/lib/lessons';
 import { syncPackageExtension } from '@/lib/packages-db';
+import { nextSessionAudit, type SessionAudit } from '@/lib/session-audit';
 
 export type AttStatus = 'present' | 'absent' | 'excused';
 
@@ -28,7 +29,7 @@ export async function saveAttendance(input: {
   if (!group) return { error: 'Grupa nije pronađena.' };
   const [{ data: members }, { data: existing }] = await Promise.all([
     supabase.from('group_members').select('student_id').eq('group_id', input.groupId),
-    supabase.from('sessions').select('teacher_id').eq('group_id', input.groupId).eq('date', input.date).eq('start_time', input.startTime + ':00').maybeSingle(),
+    supabase.from('sessions').select('id, teacher_id, status, note, attendance_recorded_by, attendance_recorded_at, attendance_updated_by, attendance_updated_at, note_updated_by, note_updated_at, attendance(student_id, status)').eq('group_id', input.groupId).eq('date', input.date).eq('start_time', input.startTime + ':00').maybeSingle(),
   ]);
   const markIds = Object.keys(input.marks);
   let allowed: Set<string>;
@@ -52,10 +53,30 @@ export async function saveAttendance(input: {
   }
 
   const lessonType = isGroupLessonType(input.lessonType) ? input.lessonType : null;
+  const note = input.note || null;
+  const prevMarks = new Map(((existing?.attendance ?? []) as { student_id: string; status: string }[]).map((a) => [a.student_id, a.status]));
+  const nextMarks = Object.entries(input.marks).filter(([sid]) => allowed.has(sid));
+  const marksChanged = input.status === 'cancelled'
+    ? prevMarks.size > 0
+    : nextMarks.some(([sid, status]) => prevMarks.get(sid) !== status);
+  const previous: (SessionAudit & { status: string | null; note: string | null }) | null = existing
+    ? {
+        status: existing.status,
+        note: existing.note,
+        attendance_recorded_by: existing.attendance_recorded_by,
+        attendance_recorded_at: existing.attendance_recorded_at,
+        attendance_updated_by: existing.attendance_updated_by,
+        attendance_updated_at: existing.attendance_updated_at,
+        note_updated_by: existing.note_updated_by,
+        note_updated_at: existing.note_updated_at,
+      }
+    : null;
+  // Okidač prepisuje ovo preko auth.uid() kad je prijava tu. Iste kolone šalje i server, istim pravilom.
+  const audit = nextSessionAudit({ previous, status: input.status, note, marksChanged, actorId: ctx.userId, at: new Date().toISOString() });
   const { data: session, error } = await supabase
     .from('sessions')
     .upsert(
-      { org_id: ctx.org.id, group_id: input.groupId, date: input.date, start_time: input.startTime, status: input.status, note: input.note || null, teacher_id: teacherId, lesson_type: lessonType },
+      { org_id: ctx.org.id, group_id: input.groupId, date: input.date, start_time: input.startTime, status: input.status, note, teacher_id: teacherId, lesson_type: lessonType, ...audit },
       { onConflict: 'group_id,date,start_time' },
     )
     .select('id')
@@ -74,6 +95,7 @@ export async function saveAttendance(input: {
   }
   await syncPackageExtension(supabase, ctx.org.id, session.id);
   revalidatePath('/prisustvo');
+  revalidatePath('/evidencija-casova');
   revalidatePath('/paketi');
   revalidatePath('/');
   return { ok: true };
