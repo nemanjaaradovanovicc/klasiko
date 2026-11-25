@@ -320,3 +320,34 @@ describe('zoom trošak predavača', () => {
     expect(await fails(OWN_B, `insert into teacher_expenses (org_id, teacher_id, month, amount, currency) values ('${ORG_A}', '${TEA_A}', '2026-09-01', 1, 'RSD')`)).toBe(true);
   });
 });
+
+describe('upis časa', () => {
+  it('beleži ko je prvi uneo prisustvo i belešku, i ignoriše tuđi id', async () => {
+    const [{ id }] = await as<{ id: string }>(TEA_A, `insert into sessions (org_id, group_id, date, start_time, status, note, attendance_recorded_by) values ('${ORG_A}', '${G_A}', '2026-04-11', '09:00', 'held', 'Krenuli', '${OWN_A}') returning id`);
+    await as(TEA_A, `insert into attendance (session_id, student_id, org_id, status) values ('${id}', '${ST_A}', '${ORG_A}', 'present'), ('${id}', '${ST_A2}', '${ORG_A}', 'absent')`);
+    const [row] = await as<{ attendance_recorded_by: string; attendance_updated_at: string | null; note_updated_by: string }>(TEA_A, `select attendance_recorded_by, attendance_updated_at, note_updated_by from sessions where id = '${id}'`);
+    expect(row).toMatchObject({ attendance_recorded_by: TEA_A, attendance_updated_at: null, note_updated_by: TEA_A });
+    expect(await as(OWN_B, `select id from sessions where id = '${id}'`)).toEqual([]);
+  });
+  it('izmena oznake i beleške pamti poslednjeg, a prvi upis ostaje', async () => {
+    const [{ id }] = await as<{ id: string }>(TEA_A, `select id from sessions where date = '2026-04-11' and group_id = '${G_A}'`);
+    const [before] = await as<{ attendance_recorded_at: string }>(TEA_A, `select attendance_recorded_at from sessions where id = '${id}'`);
+    await as(OWN_A, `update attendance set status = 'excused' where session_id = '${id}' and student_id = '${ST_A2}'`);
+    const [marks] = await as<{ attendance_recorded_by: string; attendance_updated_by: string; attendance_recorded_at: string }>(OWN_A, `select attendance_recorded_by, attendance_updated_by, attendance_recorded_at from sessions where id = '${id}'`);
+    expect(marks.attendance_recorded_by).toBe(TEA_A);
+    expect(marks.attendance_updated_by).toBe(OWN_A);
+    expect(new Date(marks.attendance_recorded_at).toISOString()).toBe(new Date(before.attendance_recorded_at).toISOString());
+    await as(TEA_A, `update sessions set note = 'Domaći', note_updated_by = '${OWN_B}', attendance_recorded_by = '${OWN_B}' where id = '${id}'`);
+    const [note] = await as<{ note_updated_by: string; attendance_recorded_by: string; attendance_updated_by: string }>(TEA_A, `select note_updated_by, attendance_recorded_by, attendance_updated_by from sessions where id = '${id}'`);
+    expect(note).toEqual({ note_updated_by: TEA_A, attendance_recorded_by: TEA_A, attendance_updated_by: OWN_A });
+  });
+  it('planirani čas nema upis, a otkazivanje postojećeg jeste izmena', async () => {
+    const [planned] = await as<{ attendance_recorded_at: string | null; note_updated_at: string | null }>(TEA_A, `insert into sessions (org_id, group_id, date, start_time, status, note) values ('${ORG_A}', '${G_A}', '2026-04-12', '09:00', 'planned', 'Nadoknada') returning attendance_recorded_at, note_updated_at`);
+    expect(planned).toEqual({ attendance_recorded_at: null, note_updated_at: null });
+    const [{ id }] = await as<{ id: string }>(TEA_A, `select id from sessions where date = '2026-04-11' and group_id = '${G_A}'`);
+    await as(OWN_A, `update sessions set status = 'cancelled' where id = '${id}'`);
+    await as(OWN_A, `delete from attendance where session_id = '${id}'`);
+    const [row] = await as<{ attendance_recorded_by: string; attendance_updated_by: string; status: string }>(OWN_A, `select attendance_recorded_by, attendance_updated_by, status from sessions where id = '${id}'`);
+    expect(row).toEqual({ attendance_recorded_by: TEA_A, attendance_updated_by: OWN_A, status: 'cancelled' });
+  });
+});

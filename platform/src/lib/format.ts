@@ -65,6 +65,24 @@ export function dateSr(iso: string | null | undefined): string {
   return `${d}. ${m}. ${y}.`;
 }
 
+// Datum i vreme u Beogradu, isti oblik kao dateSr plus sat i minut.
+export function dateTimeSr(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const when = new Date(iso);
+  if (Number.isNaN(when.getTime())) return '';
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Belgrade',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(when);
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${Number(get('day'))}. ${Number(get('month'))}. ${get('year')}. ${get('hour')}:${get('minute')}`;
+}
+
 export function dateLong(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
   return `${WEEKDAYS[isoWeekday(iso)]}, ${d}. ${MONTHS[m - 1]} ${y}.`;

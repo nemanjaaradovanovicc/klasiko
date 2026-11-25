@@ -28,6 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       { href: '/obavestenja', label: 'Obaveštenja', icon: 'Megaphone' },
       { href: '/dolasci', label: 'Dolasci (QR)', icon: 'ScanLine' },
       { href: '/izvestaji', label: 'Izveštaji', icon: 'BarChart3' },
+      { href: '/evidencija-casova', label: 'Dnevnik časova', icon: 'BookOpen' },
       { href: '/zoom', label: 'Zoom trošak', icon: 'Video' },
       { href: '/podesavanja', label: 'Podešavanja', icon: 'Settings' },
     ];
